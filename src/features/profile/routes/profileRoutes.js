@@ -1,13 +1,14 @@
 import express from "express";
-import jwtAuthenticate from "../../../middleware/jwtmiddleware.js";
+import { requireLogin, requireUser } from "../../../middleware/jwtmiddleware.js";
 import { ProfileController } from "../controllers/profileController.js";
 
 const router = express.Router();
 const profileController = new ProfileController();
 
-router.get('/profile', jwtAuthenticate, profileController.getProfile.bind(profileController));
-router.post('/profile', jwtAuthenticate, profileController.updateProfile.bind(profileController));
-router.post('/profile/address', jwtAuthenticate, profileController.address.bind(profileController));
-router.get('/profile/addresses', jwtAuthenticate, profileController.getAddresses.bind(profileController));
+// User-only profile and address management endpoints
+router.get('/profile', requireLogin, requireUser, profileController.getProfile.bind(profileController));
+router.post('/profile', requireLogin, requireUser, profileController.updateProfile.bind(profileController));
+router.post('/profile/address', requireLogin, requireUser, profileController.address.bind(profileController));
+router.get('/profile/addresses', requireLogin, requireUser, profileController.getAddresses.bind(profileController));
 
 export default router;

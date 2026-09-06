@@ -32,7 +32,7 @@ export class RegisterService{
             password_hash:hashedPassword
         });
         //generating token
-        const token=this.generateToken(user.id);
+        const token=this.generateToken(user);
         const {password_hash,...safeuser}=user
         return {
             safeuser,
@@ -60,8 +60,16 @@ export class RegisterService{
             throw new Error("If less than 12 characters, password must contain a special character");
         }
     }
-    generateToken(userId){
-        return jwt.sign({userId},process.env.JWT_SECRET,{expiresIn:'7d'});
+    generateToken(user){
+        return jwt.sign(
+            {
+                userId: user.id || user,
+                email: user.email,
+                role: user.role || 'USER'
+            },
+            process.env.JWT_SECRET,
+            { expiresIn: '7d' }
+        );
     }
 };
 

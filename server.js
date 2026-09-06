@@ -4,7 +4,7 @@ import {fileURLToPath} from 'url';
 import "dotenv/config"
 import authRoutes from './src/features/auth/routes/authRoutes.js'
 import profileRoutes from './src/features/profile/routes/profileRoutes.js'
-import jwtAuthenticate from './src/middleware/jwtmiddleware.js'
+import { requireLogin, requireUser, requireAdmin, attachUserContext } from './src/middleware/jwtmiddleware.js'
 
 const app=express();
 const PORT = process.env.PORT || 3001;
@@ -24,6 +24,7 @@ app.set('views', viewsPath);
 app.use(express.json());
 app.use(express.static(publicPath));
 app.use(express.urlencoded({ extended: true }));
+app.use(attachUserContext);
 
 // Return malformed JSON as an API error instead of Express' HTML stack trace.
 app.use((error, req, res, next) => {
@@ -146,26 +147,59 @@ app.get('/product/:id', (req, res) => {
 app.get('/cart',     stub('Shopping Cart'));
 app.get('/checkout', stub('Checkout'));
 
-// Account
-app.get('/orders', (req, res) => {
+// Account (User Only)
+app.get('/orders', requireLogin, requireUser, (req, res) => {
   res.render('pages/account/orders', {
     title: `My Orders — ${site.name}`,
     site,
-  });
-});
-app.get('/profile', (req, res) => {
-  res.render('pages/account/profile', {
-    title: `My Profile — ${site.name}`,
-    site,
-    user: null,
+    user: req.user,
   });
 });
 
-app.get('/profile/addresses', (req, res) => {
+app.get('/profile', requireLogin, requireUser, (req, res) => {
+  res.render('pages/account/profile', {
+    title: `My Profile — ${site.name}`,
+    site,
+    user: req.user,
+  });
+});
+
+app.get('/profile/addresses', requireLogin, requireUser, (req, res) => {
   res.render('pages/account/profile', {
     title: `Manage Addresses — ${site.name}`,
     site,
-    user: null,
+    user: req.user,
+  });
+});
+
+// Admin Panel (Admin Only)
+app.get('/admin', requireLogin, requireAdmin, (req, res) => {
+  res.render('pages/stub', {
+    title:       `Admin Control Center — ${site.name}`,
+    pageLabel:   'Admin Dashboard & Operations',
+    currentPath: req.path,
+    site,
+    adminUser:   req.user,
+  });
+});
+
+// Admin API Endpoints (Admin Only)
+app.get('/api/admin/dashboard', requireLogin, requireAdmin, (req, res) => {
+  res.json({
+    success: true,
+    code: 'ADMIN_DASHBOARD_DATA',
+    message: 'Welcome to the admin dashboard.',
+    data: {
+      adminId: req.user.userId,
+      email: req.user.email,
+      role: req.user.role,
+      systemStatus: 'Operational',
+      metrics: {
+        totalOrders: 0,
+        activeUsers: 1,
+        totalInventory: 24,
+      },
+    },
   });
 });
 

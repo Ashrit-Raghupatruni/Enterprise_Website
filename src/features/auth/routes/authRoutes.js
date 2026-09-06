@@ -9,7 +9,15 @@ router.post('/login',    authController.login.bind(authController));
 router.post('/logout',   authController.logout.bind(authController));
 
 router.get('/login', (req, res) => {
-    res.render("pages/auth/auth");
+    res.render("pages/auth/auth", { title: 'Login', activeTab: 'login' });
+});
+
+router.get('/signup', (req, res) => {
+    res.render("pages/auth/auth", { title: 'Sign Up', activeTab: 'register' });
+});
+
+router.get('/auth', (req, res) => {
+    res.render("pages/auth/auth", { title: 'Authentication', activeTab: 'login' });
 });
 
 export default router;
