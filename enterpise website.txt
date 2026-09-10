@@ -1,0 +1,21 @@
+At least eight characters My scandal uppercase lowercase and numbers If a less than 12 characters a must contain a special character, Login page of both admin and User panel
+
+Password
+---------
+|Password|
+----------
+\\  X Must contain at least 8 characters
+\\  X Must contain uppercase, lowercase letters, and numbers
+\\  X If less than 12 characters, must contain a special character
+
+\\ -> these 3 need to work on live based on conditions the ('X' -> 'tick')
+
+
+add auth constrains
+
+
+in middle ware, check the role of admin role and user role based on jwt tockens, user need not to have access on admin and vice-versa
+also need to check it is user or admin, if it is user it need to give data that requires to user and for admin accordingly.
+if user need to access any feature u=it need to check and ask for login (require login), and require user and require admin.
+for user, he need to access onlt user user api poins and routes and vice versa for admin accordingly,
+check role via jwt decrypted token and if it is error it need to show error codes.

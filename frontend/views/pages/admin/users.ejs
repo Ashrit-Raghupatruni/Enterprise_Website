@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <%- include('../../partials/admin/admin-head') %>
+</head>
+<body class="admin-body">
+
+  <%- include('../../partials/admin/admin-header') %>
+
+  <div class="admin-layout">
+
+    <%- include('../../partials/admin/admin-sidebar') %>
+
+    <main class="admin-main" id="main-content">
+      <div class="admin-container">
+
+        <!-- Page Header -->
+        <div class="admin-page-header">
+          <div class="admin-page-header__title-group">
+            <span class="admin-page-header__eyebrow">Customer Management</span>
+            <h1 class="admin-page-header__title">Registered Users</h1>
+            <p class="admin-page-header__subtitle">View customer accounts, contact information, delivery addresses, and purchasing statistics.</p>
+          </div>
+        </div>
+
+        <!-- ── Toolbar & Filters ── -->
+        <div class="admin-toolbar">
+          <div class="admin-toolbar__left">
+            <div class="admin-search-input-wrap">
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="9" cy="9" r="6"/><path d="M13.5 13.5L17 17"/>
+              </svg>
+              <input type="search" id="userSearchInput" class="admin-search-input" placeholder="Search by name, email, or phone number..."/>
+            </div>
+
+            <select id="userRoleFilter" class="admin-select">
+              <option value="all">All Roles</option>
+              <option value="USER">Customer (USER)</option>
+              <option value="ADMIN">Administrator (ADMIN)</option>
+            </select>
+          </div>
+          <div style="font-size: var(--text-xs); color: var(--color-text-muted); font-weight: var(--font-semibold);">
+            Total: <span id="usersCountDisplay">6</span> registered accounts
+          </div>
+        </div>
+
+        <!-- ── Users Table Card ── -->
+        <div class="admin-card">
+          <div class="admin-card__body">
+            <div class="admin-table-wrap">
+              <table class="admin-table" id="usersTable">
+                <thead>
+                  <tr>
+                    <th>User</th>
+                    <th>Email Address</th>
+                    <th>Phone</th>
+                    <th>Role</th>
+                    <th>Joined</th>
+                    <th>Orders</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="usersTableBody">
+                  <!-- Populated by admin.js -->
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Empty State -->
+            <div class="admin-empty-state" id="usersEmptyState" style="display: none;">
+              <div class="admin-empty-state__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="9" cy="7" r="4"></circle>
+                </svg>
+              </div>
+              <h3 class="admin-empty-state__title">No Users Found</h3>
+              <p class="admin-empty-state__desc">No registered user matches the search criteria or selected role filter.</p>
+              <button type="button" class="btn btn--outline btn--sm" id="resetUserFiltersBtn">Clear Search</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+  </div>
+
+  <%- include('../../partials/admin/admin-footer') %>
+  <%- include('../../partials/admin/admin-modals') %>
+
+  <!-- Data & Scripts -->
+  <script src="/assets/data/admin-mock-data.js"></script>
+  <script src="/assets/js/admin.js" defer></script>
+
+</body>
+</html>

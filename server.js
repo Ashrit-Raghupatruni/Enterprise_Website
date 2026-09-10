@@ -5,6 +5,7 @@ import "dotenv/config"
 import authRoutes from './src/features/auth/routes/authRoutes.js'
 import profileRoutes from './src/features/profile/routes/profileRoutes.js'
 import productRoutes from './src/features/products/routes/productRoutes.js'
+import adminRoutes from './src/features/admin/routes/adminRoutes.js'
 import jwtAuthenticate from './src/middleware/jwtmiddleware.js'
 
 const app=express();
@@ -45,6 +46,9 @@ app.use("/api", profileRoutes);
 
 // Product API Routes
 app.use("/api", productRoutes);
+
+// Admin Routes
+app.use("/admin", adminRoutes);
 
 // ─── Site-wide constants ─────────────────────────────────────────────────────
 const site = {
