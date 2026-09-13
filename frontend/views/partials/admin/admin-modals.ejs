@@ -1,0 +1,206 @@
+<%#
+  admin-modals.ejs — Centralized Admin Panel Modals & Drawers.
+  Follows accessible modal/drawer patterns from the existing login-required-modal and orders drawer.
+%>
+
+<!-- ════════════════════════════════════════
+     1. BANNER MODAL (Add / Edit)
+════════════════════════════════════════ -->
+<div class="admin-modal-backdrop" id="bannerModal" role="dialog" aria-modal="true" aria-labelledby="bannerModalTitle" aria-hidden="true">
+  <div class="admin-modal">
+    <div class="admin-modal__header">
+      <h3 class="admin-modal__title" id="bannerModalTitle">Add New Banner</h3>
+      <button class="admin-modal__close" data-close-modal="bannerModal" aria-label="Close modal">&times;</button>
+    </div>
+    <form id="bannerForm" class="admin-modal__body">
+      <input type="hidden" id="bannerFormId" name="id" value=""/>
+
+      <div class="admin-form-group">
+        <label class="admin-label" for="bannerEyebrow">Eyebrow / Sub-tag</label>
+        <input type="text" id="bannerEyebrow" name="eyebrow" class="admin-input" placeholder="e.g. Festival Season Offers" required/>
+      </div>
+
+      <div class="admin-form-group">
+        <label class="admin-label" for="bannerTitle">Banner Title</label>
+        <input type="text" id="bannerTitle" name="title" class="admin-input" placeholder="e.g. Latest Smartphones" required/>
+      </div>
+
+      <div class="admin-form-group">
+        <label class="admin-label" for="bannerSubtitle">Description / Subtitle</label>
+        <textarea id="bannerSubtitle" name="subtitle" class="admin-textarea" rows="2" placeholder="Short marketing description..."></textarea>
+      </div>
+
+      <div class="admin-form-row">
+        <div class="admin-form-group">
+          <label class="admin-label" for="bannerCtaText">CTA Button Text</label>
+          <input type="text" id="bannerCtaText" name="ctaText" class="admin-input" placeholder="Shop Now" required/>
+        </div>
+        <div class="admin-form-group">
+          <label class="admin-label" for="bannerSlug">Target Slug / Route</label>
+          <input type="text" id="bannerSlug" name="slug" class="admin-input" placeholder="mobiles or tvs" required/>
+        </div>
+      </div>
+
+      <div class="admin-form-row">
+        <div class="admin-form-group">
+          <label class="admin-label" for="bannerBadge">Promo Badge</label>
+          <input type="text" id="bannerBadge" name="badge" class="admin-input" placeholder="Up to ₹5,000 Off"/>
+        </div>
+        <div class="admin-form-group">
+          <label class="admin-label" for="bannerStatus">Status</label>
+          <select id="bannerStatus" name="status" class="admin-form-select">
+            <option value="Active">Active (Visible on Home)</option>
+            <option value="Inactive">Inactive (Hidden)</option>
+          </select>
+        </div>
+      </div>
+    </form>
+    <div class="admin-modal__footer">
+      <button type="button" class="btn btn--outline btn--sm" data-close-modal="bannerModal">Cancel</button>
+      <button type="button" class="btn btn--primary btn--sm" id="saveBannerBtn">Save Banner</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     2. PRODUCT MODAL (Add / Edit)
+════════════════════════════════════════ -->
+<div class="admin-modal-backdrop" id="productModal" role="dialog" aria-modal="true" aria-labelledby="productModalTitle" aria-hidden="true">
+  <div class="admin-modal">
+    <div class="admin-modal__header">
+      <h3 class="admin-modal__title" id="productModalTitle">Add New Product</h3>
+      <button class="admin-modal__close" data-close-modal="productModal" aria-label="Close modal">&times;</button>
+    </div>
+    <form id="productForm" class="admin-modal__body">
+      <input type="hidden" id="productFormId" name="id" value=""/>
+
+      <div class="admin-form-group">
+        <label class="admin-label" for="productName">Product Name</label>
+        <input type="text" id="productName" name="name" class="admin-input" placeholder="e.g. Samsung Galaxy S25 Ultra 5G" required/>
+      </div>
+
+      <div class="admin-form-row">
+        <div class="admin-form-group">
+          <label class="admin-label" for="productBrand">Brand</label>
+          <input type="text" id="productBrand" name="brand" class="admin-input" placeholder="e.g. Samsung, Apple" required/>
+        </div>
+        <div class="admin-form-group">
+          <label class="admin-label" for="productCategory">Category</label>
+          <select id="productCategory" name="category" class="admin-form-select">
+            <option value="Mobiles">Mobiles</option>
+            <option value="TVs">TVs</option>
+            <option value="Air Conditioners">Air Conditioners</option>
+            <option value="Refrigerators">Refrigerators</option>
+            <option value="Home Theatres">Home Theatres</option>
+            <option value="Kitchen Appliances">Kitchen Appliances</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="admin-form-row">
+        <div class="admin-form-group">
+          <label class="admin-label" for="productPrice">Price (₹)</label>
+          <input type="number" id="productPrice" name="price" class="admin-input" placeholder="134999" required/>
+        </div>
+        <div class="admin-form-group">
+          <label class="admin-label" for="productStock">Initial Stock Qty</label>
+          <input type="number" id="productStock" name="stock" class="admin-input" placeholder="15" required/>
+        </div>
+      </div>
+
+      <div class="admin-form-row">
+        <div class="admin-form-group">
+          <label class="admin-label" for="productSlug">URL Slug</label>
+          <input type="text" id="productSlug" name="slug" class="admin-input" placeholder="samsung-galaxy-s25-ultra" required/>
+        </div>
+        <div class="admin-form-group">
+          <label class="admin-label" for="productAvailability">Availability</label>
+          <select id="productAvailability" name="availability" class="admin-form-select">
+            <option value="AVAILABLE">Available</option>
+            <option value="NOT_AVAILABLE">Not Available / Out of Stock</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="admin-form-group">
+        <label class="admin-label" for="productDescription">Description</label>
+        <textarea id="productDescription" name="description" class="admin-textarea" rows="2" placeholder="Key specifications, display details, warranty..."></textarea>
+      </div>
+    </form>
+    <div class="admin-modal__footer">
+      <button type="button" class="btn btn--outline btn--sm" data-close-modal="productModal">Cancel</button>
+      <button type="button" class="btn btn--primary btn--sm" id="saveProductBtn">Save Product</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     3. STOCK ADJUSTMENT MODAL
+════════════════════════════════════════ -->
+<div class="admin-modal-backdrop" id="stockModal" role="dialog" aria-modal="true" aria-labelledby="stockModalTitle" aria-hidden="true">
+  <div class="admin-modal" style="max-width: 440px;">
+    <div class="admin-modal__header">
+      <h3 class="admin-modal__title" id="stockModalTitle">Update Inventory Stock</h3>
+      <button class="admin-modal__close" data-close-modal="stockModal" aria-label="Close modal">&times;</button>
+    </div>
+    <div class="admin-modal__body">
+      <input type="hidden" id="stockProductId" value=""/>
+      <p style="font-size: var(--text-sm); font-weight: var(--font-bold); margin-bottom: var(--space-4);" id="stockProductName">
+        Product Name
+      </p>
+      <div class="admin-form-group">
+        <label class="admin-label" for="stockQuantityInput">Current Stock Units</label>
+        <div style="display: flex; align-items: center; gap: var(--space-3);">
+          <button type="button" class="btn btn--outline btn--sm" id="stockDecBtn" style="padding: var(--space-2) var(--space-4);">-</button>
+          <input type="number" id="stockQuantityInput" class="admin-input" style="text-align: center; font-size: var(--text-lg); font-weight: var(--font-bold);" value="10" min="0"/>
+          <button type="button" class="btn btn--outline btn--sm" id="stockIncBtn" style="padding: var(--space-2) var(--space-4);">+</button>
+        </div>
+      </div>
+      <div class="admin-form-group" style="margin-bottom: 0;">
+        <label class="admin-label" for="stockStatusSelect">Calculated Stock State</label>
+        <select id="stockStatusSelect" class="admin-form-select">
+          <option value="In Stock">In Stock</option>
+          <option value="Low Stock">Low Stock (< 5 units)</option>
+          <option value="Out of Stock">Out of Stock (0 units)</option>
+        </select>
+      </div>
+    </div>
+    <div class="admin-modal__footer">
+      <button type="button" class="btn btn--outline btn--sm" data-close-modal="stockModal">Cancel</button>
+      <button type="button" class="btn btn--primary btn--sm" id="saveStockBtn">Update Stock</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     4. USER DETAILS DRAWER
+════════════════════════════════════════ -->
+<div class="admin-drawer-overlay" id="userDrawerOverlay" aria-hidden="true"></div>
+<aside class="admin-drawer" id="userDrawer" role="dialog" aria-modal="true" aria-labelledby="userDrawerTitle" aria-hidden="true">
+  <div class="admin-drawer__header">
+    <h3 class="admin-drawer__title" id="userDrawerTitle">Customer Details</h3>
+    <button class="admin-drawer__close admin-modal__close" id="userDrawerClose" aria-label="Close drawer">&times;</button>
+  </div>
+  <div class="admin-drawer__body" id="userDrawerBody">
+    <!-- Dynamically populated by admin.js -->
+  </div>
+</aside>
+
+<!-- ════════════════════════════════════════
+     5. ORDER DETAILS DRAWER
+════════════════════════════════════════ -->
+<div class="admin-drawer-overlay" id="orderDrawerOverlay" aria-hidden="true"></div>
+<aside class="admin-drawer" id="orderDrawer" role="dialog" aria-modal="true" aria-labelledby="orderDrawerTitle" aria-hidden="true">
+  <div class="admin-drawer__header">
+    <h3 class="admin-drawer__title" id="orderDrawerTitle">Order Management Details</h3>
+    <button class="admin-drawer__close admin-modal__close" id="orderDrawerClose" aria-label="Close drawer">&times;</button>
+  </div>
+  <div class="admin-drawer__body" id="orderDrawerBody">
+    <!-- Dynamically populated by admin.js -->
+  </div>
+</aside>
+
+<!-- ════════════════════════════════════════
+     6. REUSABLE TOAST CONTAINER
+════════════════════════════════════════ -->
+<div class="admin-toast-container" id="adminToastContainer" aria-live="polite"></div>

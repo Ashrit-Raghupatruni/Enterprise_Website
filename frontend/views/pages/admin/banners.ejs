@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <%- include('../../partials/admin/admin-head') %>
+</head>
+<body class="admin-body">
+
+  <%- include('../../partials/admin/admin-header') %>
+
+  <div class="admin-layout">
+
+    <%- include('../../partials/admin/admin-sidebar') %>
+
+    <main class="admin-main" id="main-content">
+      <div class="admin-container">
+
+        <!-- Page Header -->
+        <div class="admin-page-header">
+          <div class="admin-page-header__title-group">
+            <span class="admin-page-header__eyebrow">Marketing & Promotions</span>
+            <h1 class="admin-page-header__title">Banner Management</h1>
+            <p class="admin-page-header__subtitle">Manage homepage hero banners, promotional slugs, and active campaigns.</p>
+          </div>
+          <div class="admin-page-header__actions">
+            <button type="button" class="btn btn--primary btn--sm" id="addNewBannerBtn" data-open-modal="bannerModal">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+              <span>Add New Banner</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- ── Toolbar & Filters ── -->
+        <div class="admin-toolbar">
+          <div class="admin-toolbar__left">
+            <div class="admin-search-input-wrap">
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="9" cy="9" r="6"/><path d="M13.5 13.5L17 17"/>
+              </svg>
+              <input type="search" id="bannerSearchInput" class="admin-search-input" placeholder="Search banners by title, slug or tag..."/>
+            </div>
+            <select id="bannerStatusFilter" class="admin-select">
+              <option value="all">All Banners (6)</option>
+              <option value="Active">Active Only (5)</option>
+              <option value="Inactive">Inactive Only (1)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- ── Banners Grid ── -->
+        <div class="admin-banners-grid" id="bannersGrid">
+          <!-- Dynamically populated by admin.js -->
+        </div>
+
+        <!-- ── Empty State ── -->
+        <div class="admin-empty-state" id="bannersEmptyState" style="display: none;">
+          <div class="admin-empty-state__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+              <line x1="8" y1="21" x2="16" y2="21"></line>
+              <line x1="12" y1="17" x2="12" y2="21"></line>
+            </svg>
+          </div>
+          <h3 class="admin-empty-state__title">No Banners Found</h3>
+          <p class="admin-empty-state__desc">Try adjusting your search query or status filter, or create a brand new campaign banner.</p>
+          <button type="button" class="btn btn--primary btn--sm" data-open-modal="bannerModal">Create Banner</button>
+        </div>
+
+      </div>
+    </main>
+
+  </div>
+
+  <%- include('../../partials/admin/admin-footer') %>
+  <%- include('../../partials/admin/admin-modals') %>
+
+  <!-- Data & Scripts -->
+  <script src="/assets/data/admin-mock-data.js"></script>
+  <script src="/assets/js/admin.js" defer></script>
+
+</body>
+</html>

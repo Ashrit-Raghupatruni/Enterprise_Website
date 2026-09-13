@@ -1,0 +1,73 @@
+<%#
+  admin-header.ejs — Admin Panel Header.
+  Reuses the exact brand identity from the User Panel while showing administrative context.
+%>
+
+<header class="admin-header" role="banner">
+  <div class="admin-header__wrapper">
+
+    <!-- Left: Mobile Toggle + Logo + Admin Tag -->
+    <div class="admin-header__left">
+      <button class="admin-header__toggle-btn" id="adminSidebarToggle" aria-label="Toggle Navigation Menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+      </button>
+
+      <a href="/admin/dashboard" class="admin-header__brand" aria-label="Enterprise Admin Dashboard">
+        <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <rect width="32" height="32" rx="8" fill="var(--color-primary-700)"/>
+          <path d="M8 10h16M8 16h10M8 22h13" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round"/>
+          <circle cx="24" cy="22" r="3" fill="var(--color-accent-500)"/>
+        </svg>
+        <div class="hdr__logo-text">
+          <span class="hdr__logo-name" style="color:var(--color-text-primary)">Enterprise</span>
+          <span class="hdr__logo-sub" style="color:var(--color-text-muted)">Store <span class="hdr__logo-tag" style="background-color:var(--color-accent-500)">Plus</span></span>
+        </div>
+      </a>
+
+      <span class="admin-header__badge-tag">Admin Panel</span>
+    </div>
+
+    <!-- Center: Global Admin Search -->
+    <div class="admin-header__search-wrap" role="search">
+      <div class="admin-header__search-box">
+        <svg class="admin-header__search-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="9" cy="9" r="6"/>
+          <path d="M13.5 13.5L17 17"/>
+        </svg>
+        <input
+          type="search"
+          id="adminGlobalSearch"
+          class="admin-header__search-input"
+          placeholder="Quick search products, orders, or users..."
+          autocomplete="off"
+          aria-label="Admin search"
+        />
+      </div>
+    </div>
+
+    <!-- Right: View Store link & Admin Profile -->
+    <div class="admin-header__right">
+      <a href="/home" class="admin-header__store-link" title="Open Customer Storefront" target="_blank" rel="noopener">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+          <polyline points="15 3 21 3 21 9"></polyline>
+          <line x1="10" y1="14" x2="21" y2="3"></line>
+        </svg>
+        <span>View Store</span>
+      </a>
+
+      <div class="admin-header__user" id="adminUserDropdownBtn" tabindex="0" role="button" aria-label="Admin Profile Menu">
+        <div class="admin-header__user-avatar">AU</div>
+        <div class="admin-header__user-info">
+          <span class="admin-header__user-name">Admin</span>
+          <span class="admin-header__user-role">Super Admin</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</header>

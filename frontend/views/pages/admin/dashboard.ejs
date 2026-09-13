@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <%- include('../../partials/admin/admin-head') %>
+</head>
+<body class="admin-body">
+
+  <%- include('../../partials/admin/admin-header') %>
+
+  <div class="admin-layout">
+
+    <%- include('../../partials/admin/admin-sidebar') %>
+
+    <main class="admin-main" id="main-content">
+      <div class="admin-container">
+
+        <!-- Page Header -->
+        <div class="admin-page-header">
+          <div class="admin-page-header__title-group">
+            <span class="admin-page-header__eyebrow">Overview</span>
+            <h1 class="admin-page-header__title">Store Dashboard</h1>
+            <p class="admin-page-header__subtitle">Real-time business performance, inventory alerts, and order activity.</p>
+          </div>
+          <div class="admin-page-header__actions">
+            <button type="button" class="btn btn--outline btn--sm" data-open-modal="bannerModal">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+              <span>Add Banner</span>
+            </button>
+            <button type="button" class="btn btn--primary btn--sm" data-open-modal="productModal">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+              <span>Add Product</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- ── Top KPI Stat Cards ── -->
+        <div class="admin-stats-grid">
+
+          <!-- Total Products -->
+          <div class="admin-stat-card">
+            <div class="admin-stat-card__top">
+              <span class="admin-stat-card__label">Total Products</span>
+              <div class="admin-stat-card__icon admin-stat-card__icon--primary">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                </svg>
+              </div>
+            </div>
+            <div>
+              <div class="admin-stat-card__value" id="statTotalProducts">128</div>
+              <div class="admin-stat-card__trend">
+                <span class="admin-stat-card__trend-badge admin-stat-card__trend-badge--positive">+8 New</span>
+                <span>across 6 categories</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Registered Users -->
+          <div class="admin-stat-card">
+            <div class="admin-stat-card__top">
+              <span class="admin-stat-card__label">Registered Users</span>
+              <div class="admin-stat-card__icon admin-stat-card__icon--accent">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="9" cy="7" r="4"></circle>
+                </svg>
+              </div>
+            </div>
+            <div>
+              <div class="admin-stat-card__value" id="statRegisteredUsers">542</div>
+              <div class="admin-stat-card__trend">
+                <span class="admin-stat-card__trend-badge admin-stat-card__trend-badge--positive">+8.3%</span>
+                <span>this month</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Total Orders -->
+          <div class="admin-stat-card">
+            <div class="admin-stat-card__top">
+              <span class="admin-stat-card__label">Total Orders</span>
+              <div class="admin-stat-card__icon admin-stat-card__icon--success">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="9" y1="9" x2="15" y2="9"></line>
+                  <line x1="9" y1="13" x2="15" y2="13"></line>
+                </svg>
+              </div>
+            </div>
+            <div>
+              <div class="admin-stat-card__value" id="statTotalOrders">36</div>
+              <div class="admin-stat-card__trend">
+                <span class="admin-stat-card__trend-badge admin-stat-card__trend-badge--positive">+22.5%</span>
+                <span>from last week</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Total Revenue -->
+          <div class="admin-stat-card">
+            <div class="admin-stat-card__top">
+              <span class="admin-stat-card__label">Total Sales Volume</span>
+              <div class="admin-stat-card__icon admin-stat-card__icon--warning">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="12" y1="1" x2="12" y2="23"></line>
+                  <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                </svg>
+              </div>
+            </div>
+            <div>
+              <div class="admin-stat-card__value" id="statTotalRevenue">₹18,45,900</div>
+              <div class="admin-stat-card__trend">
+                <span class="admin-stat-card__trend-badge admin-stat-card__trend-badge--positive">+14.8%</span>
+                <span>revenue growth</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ── Secondary Metrics Strip ── -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-4); margin-bottom: var(--space-8);">
+          <div style="background: var(--color-bg-card); padding: var(--space-4) var(--space-5); border-radius: var(--radius-lg); border: 1px solid var(--color-border-light); display: flex; align-items: center; justify-content: space-between;">
+            <div>
+              <span style="font-size: var(--text-xs); color: var(--color-text-muted); font-weight: var(--font-bold); text-transform: uppercase;">Active Banners</span>
+              <div style="font-size: var(--text-xl); font-weight: var(--font-extrabold); color: var(--color-primary-700);">5 Running</div>
+            </div>
+            <a href="/admin/banners" class="btn btn--ghost btn--sm" style="font-size: var(--text-xs);">Manage &rarr;</a>
+          </div>
+
+          <div style="background: var(--color-bg-card); padding: var(--space-4) var(--space-5); border-radius: var(--radius-lg); border: 1px solid var(--color-border-light); display: flex; align-items: center; justify-content: space-between;">
+            <div>
+              <span style="font-size: var(--text-xs); color: var(--color-text-muted); font-weight: var(--font-bold); text-transform: uppercase;">Low Stock Alert</span>
+              <div style="font-size: var(--text-xl); font-weight: var(--font-extrabold); color: #d97706;">7 Items</div>
+            </div>
+            <a href="/admin/products" class="btn btn--ghost btn--sm" style="font-size: var(--text-xs);">Restock &rarr;</a>
+          </div>
+
+          <div style="background: var(--color-bg-card); padding: var(--space-4) var(--space-5); border-radius: var(--radius-lg); border: 1px solid var(--color-border-light); display: flex; align-items: center; justify-content: space-between;">
+            <div>
+              <span style="font-size: var(--text-xs); color: var(--color-text-muted); font-weight: var(--font-bold); text-transform: uppercase;">Pending Shipments</span>
+              <div style="font-size: var(--text-xl); font-weight: var(--font-extrabold); color: var(--color-accent-600);">5 Orders</div>
+            </div>
+            <a href="/admin/orders" class="btn btn--ghost btn--sm" style="font-size: var(--text-xs);">Fulfill &rarr;</a>
+          </div>
+        </div>
+
+        <!-- ── Main Data Section: Recent Orders & Low Stock ── -->
+        <div style="display: grid; grid-template-columns: 1.6fr 1fr; gap: var(--space-6); align-items: start;">
+
+          <!-- Recent Orders Card -->
+          <div class="admin-card" style="margin-bottom: 0;">
+            <div class="admin-card__header">
+              <div>
+                <h2 class="admin-card__title">Recent Orders</h2>
+                <p class="admin-card__subtitle">Latest transactions placed across all customer categories.</p>
+              </div>
+              <a href="/admin/orders" class="btn btn--outline btn--sm">View All Orders</a>
+            </div>
+            <div class="admin-card__body">
+              <div class="admin-table-wrap">
+                <table class="admin-table">
+                  <thead>
+                    <tr>
+                      <th>Order ID</th>
+                      <th>Customer</th>
+                      <th>Amount</th>
+                      <th>Status</th>
+                      <th>Date</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="dashboardOrdersTableBody">
+                    <!-- Populated by admin.js -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Low Stock Products Card -->
+          <div class="admin-card" style="margin-bottom: 0;">
+            <div class="admin-card__header">
+              <div>
+                <h2 class="admin-card__title">Low Stock Alert</h2>
+                <p class="admin-card__subtitle">Inventory requiring immediate supplier replenishment.</p>
+              </div>
+              <a href="/admin/products" class="btn btn--outline btn--sm">Inventory</a>
+            </div>
+            <div class="admin-card__body">
+              <div class="admin-table-wrap">
+                <table class="admin-table">
+                  <thead>
+                    <tr>
+                      <th>Product</th>
+                      <th>Stock</th>
+                      <th>Status</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="dashboardLowStockTableBody">
+                    <!-- Populated by admin.js -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </main>
+
+  </div>
+
+  <%- include('../../partials/admin/admin-footer') %>
+  <%- include('../../partials/admin/admin-modals') %>
+
+  <!-- Data & Scripts -->
+  <script src="/assets/data/admin-mock-data.js"></script>
+  <script src="/assets/js/admin.js" defer></script>
+
+</body>
+</html>
