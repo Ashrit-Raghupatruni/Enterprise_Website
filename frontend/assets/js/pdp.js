@@ -462,6 +462,33 @@
     relViewport && relViewport.addEventListener('mouseleave', stopDrag);
   }
 
+  // ─── Interaction Tracking ────────────────────────────────────────────────
+  // Records a PRODUCT_VIEW when the page loads.
+  // Uses sessionStorage to generate a stable pseudo-anon ID for guest dedup.
+  // The server silently skips a duplicate view from the same identity within 1 hour.
+
+  function getSessionId() {
+    let sid = sessionStorage.getItem('_ks_sid');
+    if (!sid) {
+      sid = 'sid_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+      sessionStorage.setItem('_ks_sid', sid);
+    }
+    return sid;
+  }
+
+  function recordView(productId) {
+    if (!productId) return;
+    fetch(`/api/products/${encodeURIComponent(productId)}/interaction`, {
+      method:    'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-session-id': getSessionId(),
+      },
+      body:      JSON.stringify({ type: 'PRODUCT_VIEW' }),
+      keepalive: true,
+    }).catch(() => { /* best-effort — never block the UI */ });
+  }
+
   // ─── Fetch Product from Database or Load Static ───────────────────────────
   async function initProduct() {
     // 1. Check if it's an existing static non-mobile product (TV 301, AC 401, etc.)
@@ -469,6 +496,7 @@
       const staticProd = window.productCatalogue[numericId];
       if (staticProd.category !== 'mobiles') {
         renderProduct(staticProd);
+        // Static products don't have a real DB id — skip interaction tracking
         return;
       }
     }
@@ -553,6 +581,9 @@
         };
 
         renderProduct(backendProduct);
+
+        // Record PRODUCT_VIEW interaction — uses the DB id for accurate tracking
+        recordView(p.slug || p.id);
       } else {
         throw new Error(json.message || 'Product not found');
       }

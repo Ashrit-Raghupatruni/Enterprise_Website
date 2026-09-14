@@ -108,21 +108,23 @@ export class TrendingRepository {
   async hasRecentView(productId, userId, sessionId) {
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
 
-    const conditions = [{ createdAt: { gte: oneHourAgo }, type: "PRODUCT_VIEW" }];
-
+    // Build the identity condition — must have at least one identifier
+    let identityWhere = null;
     if (userId) {
-      conditions.push({ userId });
+      identityWhere = { userId };
     } else if (sessionId) {
-      conditions.push({ sessionId });
+      identityWhere = { sessionId };
     } else {
-      // No identity available — cannot deduplicate
+      // No identity available — cannot deduplicate, allow the record
       return false;
     }
 
     const existing = await prisma.productInteraction.findFirst({
       where: {
         productId,
-        AND: conditions,
+        type:      "PRODUCT_VIEW",
+        createdAt: { gte: oneHourAgo },
+        ...identityWhere,
       },
     });
 

@@ -126,8 +126,8 @@ export class ProductController {
       if (error.message?.startsWith("Invalid interaction type")) {
         return res.status(400).json({ success: false, message: error.message });
       }
-      console.error("Record interaction error:", error);
-      return res.status(500).json({ success: false, message: "Internal server error" });
+      console.error("Record interaction error:", error.message, error.stack);
+      return res.status(500).json({ success: false, message: "Internal server error", detail: error.message });
     }
   }
 }
