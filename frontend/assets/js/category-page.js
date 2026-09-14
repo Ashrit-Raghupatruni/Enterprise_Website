@@ -2,8 +2,8 @@
  * category-page.js — Category PLP interactions.
  * Handles: filter groups collapse, mobile bottom sheet, sort, pagination, product rendering.
  * Hybrid Architecture:
- * - Mobiles: Fetched live from backend API (PostgreSQL + Cloudinary)
- * - Other categories (TV, AC, Home Theatre, Kitchen, Refrigerator): Read from window.categoryPlpData
+ * - Mobiles, TVs: Fetched live from backend API (PostgreSQL + Cloudinary)
+ * - Other categories (AC, Home Theatre, Kitchen, Refrigerator): Read from window.categoryPlpData
  */
 
 (function () {
@@ -298,20 +298,26 @@
     renderPagination(total);
   }
 
-  // ─── Mobile Category API Fetch ────────────────────────────────────────────
-  async function loadMobileCategoryFromApi() {
+  // ─── Category brand colours ───────────────────────────────────────────────
+  const CATEGORY_COLORS = {
+    mobiles: '#1e3d8f',
+    tvs:     '#b85e00',
+  };
+
+  // ─── Generic API loader (used for Mobiles & TVs) ──────────────────────────
+  async function loadCategoryFromApi(slug) {
     isApiLoading = true;
     apiError = null;
     renderProducts();
 
     try {
-      const res = await fetch('/api/products/category/mobiles');
+      const res = await fetch(`/api/products/category/${slug}`);
       if (!res.ok) throw new Error(`HTTP error ${res.status}`);
       const json = await res.json();
 
       if (json.success && Array.isArray(json.data)) {
         window.categoryPlpData = window.categoryPlpData || {};
-        window.categoryPlpData.mobiles = json.data.map(p => {
+        window.categoryPlpData[slug] = json.data.map(p => {
           const primaryImg = p.productImages?.find(img => img.isPrimary)?.imageUrl
             || p.productImages?.[0]?.imageUrl
             || '';
@@ -325,34 +331,44 @@
             brand: p.brand,
             name: p.name,
             description: p.description,
-            rating: 4.8,
-            reviews: 1240,
+            rating: 4.5,
+            reviews: 0,
             originalPrice: price,
             salePrice: price,
             discount: 0,
             availability: p.availability,
             badge: isAvailable ? 'In Stock' : 'Out of Stock',
             badgeType: isAvailable ? 'success' : 'primary',
-            color: '#1e3d8f',
+            color: CATEGORY_COLORS[slug] || '#1e3d8f',
             imageUrl: primaryImg,
           };
         });
       } else {
-        throw new Error(json.message || 'Failed to load mobile products');
+        throw new Error(json.message || `Failed to load ${slug} products`);
       }
     } catch (err) {
-      console.error('Error fetching mobile products from backend:', err);
-      apiError = 'Could not load mobile products from database. Please try again.';
+      console.error(`Error fetching ${slug} products from backend:`, err);
+      apiError = `Could not load products from database. Please try again.`;
     } finally {
       isApiLoading = false;
       renderProducts();
     }
   }
 
+  // ─── Mobile Category API Fetch (kept for backwards compat) ───────────────
+  async function loadMobileCategoryFromApi() {
+    return loadCategoryFromApi('mobiles');
+  }
+
   // ─── Init render ──────────────────────────────────────────────────────────
+  // Slugs that are served live from the backend API
+  const API_SLUGS = ['mobiles', 'mobile', 'tvs', 'tv'];
+
   function init() {
-    if (SLUG === 'mobiles' || SLUG === 'mobile') {
-      loadMobileCategoryFromApi();
+    if (API_SLUGS.includes(SLUG)) {
+      // Normalise both 'mobile'→'mobiles' and 'tv'→'tvs' for the API call
+      const apiSlug = (SLUG === 'mobile') ? 'mobiles' : (SLUG === 'tv') ? 'tvs' : SLUG;
+      loadCategoryFromApi(apiSlug);
     } else {
       renderProducts();
     }

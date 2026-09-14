@@ -157,15 +157,15 @@
     });
   });
 
-  // ─── Fetch live Mobiles from Database API ─────────────────────────────────
-  async function syncMobilesFromDb() {
+  // ─── Generic DB sync: fetches a category from the API and re-renders its track ──
+  async function syncCategoryFromDb(apiSlug, sectionId, color) {
     try {
-      const res = await fetch('/api/products/category/mobiles');
+      const res = await fetch(`/api/products/category/${apiSlug}`);
       if (!res.ok) return;
       const json = await res.json();
 
       if (json.success && Array.isArray(json.data) && json.data.length > 0) {
-        const dbMobiles = json.data.map(p => {
+        const dbProducts = json.data.map(p => {
           const primaryImg = p.productImages?.find(img => img.isPrimary)?.imageUrl
             || p.productImages?.[0]?.imageUrl
             || '';
@@ -179,36 +179,45 @@
             brand: p.brand,
             name: p.name,
             description: p.description,
-            rating: 4.8,
-            reviews: 1240,
+            rating: 4.5,
+            reviews: 0,
             originalPrice: price,
             salePrice: price,
             discount: 0,
             availability: p.availability,
             badge: isAvailable ? 'In Stock' : 'Out of Stock',
             badgeType: isAvailable ? 'success' : 'primary',
-            color: '#1e3d8f',
+            color,
             imageUrl: primaryImg,
           };
         });
 
         // Update in-memory data
-        window.homeProductsData.mobiles = dbMobiles;
+        window.homeProductsData[sectionId] = dbProducts;
 
-        // Re-render mobile track
-        const mobileSection = document.querySelector('[data-section="mobiles"]');
-        if (mobileSection) {
-          const track = mobileSection.querySelector('[data-track="mobiles"]');
-          if (track) {
-            track.innerHTML = dbMobiles.map(buildCard).join('');
-          }
+        // Re-render the section track
+        const section = document.querySelector(`[data-section="${sectionId}"]`);
+        if (section) {
+          const track = section.querySelector(`[data-track="${sectionId}"]`);
+          if (track) track.innerHTML = dbProducts.map(buildCard).join('');
         }
       }
     } catch (err) {
-      console.warn('Could not sync mobiles from database:', err);
+      console.warn(`Could not sync ${sectionId} from database:`, err);
     }
   }
 
+  // ─── Fetch live Mobiles from Database API ─────────────────────────────────
+  async function syncMobilesFromDb() {
+    return syncCategoryFromDb('mobiles', 'mobiles', '#1e3d8f');
+  }
+
+  // ─── Fetch live TVs from Database API ────────────────────────────────────
+  async function syncTvsFromDb() {
+    return syncCategoryFromDb('tvs', 'tvs', '#b85e00');
+  }
+
   syncMobilesFromDb();
+  syncTvsFromDb();
 
 })();

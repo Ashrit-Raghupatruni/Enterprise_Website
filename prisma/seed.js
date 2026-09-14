@@ -131,138 +131,122 @@ const categories = [
             }
         ]
     },
-    // {
-    //   name: "TV",
-    //   products: [
-    //     {
-    //         name: "Cellecor 24 Inch HD LED TV",
-    //         slug: "cellecor-24-inch-hd-led-tv",
-    //         description:
-    //             "Cellecor 24-inch HD LED TV designed for compact spaces, featuring an HD display, built-in speakers and multiple connectivity options.",
-    //         brand: "Cellecor",
-    //         price: "8999.00",
-    //         availability: "AVAILABLE",
+    {
+      name: "TV",
+      products: [
+        {
+            name: "Cellecor 24 Inch HD LED TV",
+            slug: "cellecor-24-inch-hd-led-tv",
+            description:
+                "Cellecor 24-inch HD LED TV designed for compact spaces, featuring an HD display, built-in speakers and multiple connectivity options.",
+            brand: "Cellecor",
+            price: "8999.00",
+            availability: "AVAILABLE",
 
-    //         images: [
-    //             "YOUR_CLOUDINARY_URL_CELLECOR_24_1",
-    //             "YOUR_CLOUDINARY_URL_CELLECOR_24_2",
-    //             "YOUR_CLOUDINARY_URL_CELLECOR_24_3"
-    //         ]
-    //     },
+            images: [
+                "https://res.cloudinary.com/hqlyxojm/image/upload/v1789358783/cellecor-24-inch-hd-led-tv_jyqemk.jpg",
+            ]
+        },
 
-    //     {
-    //         name: "Cellecor 55 Inch 4K Smart LED TV",
-    //         slug: "cellecor-55-inch-4k-smart-led-tv",
-    //         description:
-    //             "Cellecor 55-inch 4K Smart LED TV with a large ultra-high-definition display, smart entertainment features and immersive audio.",
-    //         brand: "Cellecor",
-    //         price: "29999.00",
-    //         availability: "AVAILABLE",
+        {
+            name: "Cellecor 55 Inch 4K Smart LED TV",
+            slug: "cellecor-55-inch-4k-smart-led-tv",
+            description:
+                "Cellecor 55-inch 4K Smart LED TV with a large ultra-high-definition display, smart entertainment features and immersive audio.",
+            brand: "Cellecor",
+            price: "29999.00",
+            availability: "AVAILABLE",
 
-    //         images: [
-    //             "YOUR_CLOUDINARY_URL_CELLECOR_55_1",
-    //             "YOUR_CLOUDINARY_URL_CELLECOR_55_2",
-    //             "YOUR_CLOUDINARY_URL_CELLECOR_55_3"
-    //         ]
-    //     },
+            images: [
+                "https://res.cloudinary.com/hqlyxojm/image/upload/v1789358910/cellecor-55-inch-4k-smart-led-tv_nyhjtv.jpg",
+            ]
+        },
 
-    //     {
-    //         name: "Mi 32 Inch HD Ready Smart TV",
-    //         slug: "mi-32-inch-hd-ready-smart-tv",
-    //         description:
-    //             "Mi 32-inch HD Ready Smart TV designed for everyday entertainment with smart streaming capabilities, vivid picture quality and built-in speakers.",
-    //         brand: "Mi",
-    //         price: "12999.00",
-    //         availability: "AVAILABLE",
+        {
+            name: "Mi 32 Inch HD Ready Smart TV",
+            slug: "mi-32-inch-hd-ready-smart-tv",
+            description:
+                "Mi 32-inch HD Ready Smart TV designed for everyday entertainment with smart streaming capabilities, vivid picture quality and built-in speakers.",
+            brand: "Mi",
+            price: "12999.00",
+            availability: "AVAILABLE",
 
-    //         images: [
-    //             "YOUR_CLOUDINARY_URL_MI_32_1",
-    //             "YOUR_CLOUDINARY_URL_MI_32_2",
-    //             "YOUR_CLOUDINARY_URL_MI_32_3"
-    //         ]
-    //     },
+            images: [
+                "https://res.cloudinary.com/hqlyxojm/image/upload/v1789359018/mi-32-inch-hd-ready-smart-tv_e1an5w.jpg",
+            ]
+        },
 
-    //     {
-    //         name: "Mi 43 Inch 4K Ultra HD Smart TV",
-    //         slug: "mi-43-inch-4k-ultra-hd-smart-tv",
-    //         description:
-    //             "Mi 43-inch 4K Ultra HD Smart TV offering sharp 4K visuals, smart streaming features, immersive audio and multiple connectivity options.",
-    //         brand: "Mi",
-    //         price: "24999.00",
-    //         availability: "AVAILABLE",
+        {
+            name: "Mi 43 Inch 4K Ultra HD Smart TV",
+            slug: "mi-43-inch-4k-ultra-hd-smart-tv",
+            description:
+                "Mi 43-inch 4K Ultra HD Smart TV offering sharp 4K visuals, smart streaming features, immersive audio and multiple connectivity options.",
+            brand: "Mi",
+            price: "24999.00",
+            availability: "AVAILABLE",
 
-    //         images: [
-    //             "YOUR_CLOUDINARY_URL_MI_43_1",
-    //             "YOUR_CLOUDINARY_URL_MI_43_2",
-    //             "YOUR_CLOUDINARY_URL_MI_43_3"
-    //         ]
-    //     },
+            images: [
+                "https://res.cloudinary.com/hqlyxojm/image/upload/v1789359081/mi-43-inch-4k-ultra-hd-smart-tv_xju7av.jpg",
+            ]
+        },
 
-    //     {
-    //         name: "Samsung 43 Inch Crystal 4K Smart TV",
-    //         slug: "samsung-43-inch-crystal-4k-smart-tv",
-    //         description:
-    //             "Samsung 43-inch Crystal 4K Smart TV featuring a 4K UHD display, Crystal Processor, smart TV platform and modern slim design.",
-    //         brand: "Samsung",
-    //         price: "35999.00",
-    //         availability: "AVAILABLE",
+        {
+            name: "Samsung 43 Inch Crystal 4K Smart TV",
+            slug: "samsung-43-inch-crystal-4k-smart-tv",
+            description:
+                "Samsung 43-inch Crystal 4K Smart TV featuring a 4K UHD display, Crystal Processor, smart TV platform and modern slim design.",
+            brand: "Samsung",
+            price: "35999.00",
+            availability: "AVAILABLE",
 
-    //         images: [
-    //             "YOUR_CLOUDINARY_URL_SAMSUNG_43_1",
-    //             "YOUR_CLOUDINARY_URL_SAMSUNG_43_2",
-    //             "YOUR_CLOUDINARY_URL_SAMSUNG_43_3"
-    //         ]
-    //     },
+            images: [
+                "https://res.cloudinary.com/hqlyxojm/image/upload/v1789359212/samsung-43-inch-crystal-4k-smart-tv_btzvus.jpg",
+            ]
+        },
 
-    //     {
-    //         name: "Samsung 65 Inch Neo QLED 4K Smart TV",
-    //         slug: "samsung-65-inch-neo-qled-4k-smart-tv",
-    //         description:
-    //             "Samsung 65-inch Neo QLED 4K Smart TV offering a premium large-screen viewing experience with Quantum Matrix technology, 4K resolution and advanced smart features.",
-    //         brand: "Samsung",
-    //         price: "109999.00",
-    //         availability: "AVAILABLE",
+        {
+            name: "Samsung 65 Inch Neo QLED 4K Smart TV",
+            slug: "samsung-65-inch-neo-qled-4k-smart-tv",
+            description:
+                "Samsung 65-inch Neo QLED 4K Smart TV offering a premium large-screen viewing experience with Quantum Matrix technology, 4K resolution and advanced smart features.",
+            brand: "Samsung",
+            price: "109999.00",
+            availability: "AVAILABLE",
 
-    //         images: [
-    //             "YOUR_CLOUDINARY_URL_SAMSUNG_65_1",
-    //             "YOUR_CLOUDINARY_URL_SAMSUNG_65_2",
-    //             "YOUR_CLOUDINARY_URL_SAMSUNG_65_3"
-    //         ]
-    //     },
+            images: [
+                "https://res.cloudinary.com/hqlyxojm/image/upload/v1789359309/samsung-65-inch-neo-qled-4k-smart-tv_jgc0ux.jpg",
+            ]
+        },
 
-    //     {
-    //         name: "BPL 24 Inch HD Ready LED TV",
-    //         slug: "bpl-24-inch-hd-ready-led-tv",
-    //         description:
-    //             "BPL 24-inch HD Ready LED TV suitable for compact rooms, bedrooms and smaller entertainment spaces with essential connectivity features.",
-    //         brand: "BPL",
-    //         price: "7999.00",
-    //         availability: "AVAILABLE",
+        {
+            name: "BPL 24 Inch HD Ready LED TV",
+            slug: "bpl-24-inch-hd-ready-led-tv",
+            description:
+                "BPL 24-inch HD Ready LED TV suitable for compact rooms, bedrooms and smaller entertainment spaces with essential connectivity features.",
+            brand: "BPL",
+            price: "7999.00",
+            availability: "AVAILABLE",
 
-    //         images: [
-    //             "YOUR_CLOUDINARY_URL_BPL_24_1",
-    //             "YOUR_CLOUDINARY_URL_BPL_24_2",
-    //             "YOUR_CLOUDINARY_URL_BPL_24_3"
-    //         ]
-    //     },
+            images: [
+                "https://res.cloudinary.com/hqlyxojm/image/upload/v1789359373/bpl-24-inch-hd-ready-led-tv_o3ijct.jpg",
+            ]
+        },
 
-    //     {
-    //         name: "BPL 55 Inch 4K Smart TV",
-    //         slug: "bpl-55-inch-4k-smart-tv",
-    //         description:
-    //             "BPL 55-inch 4K Smart TV featuring a large ultra-high-definition display, smart entertainment functionality and immersive audio for home viewing.",
-    //         brand: "BPL",
-    //         price: "27999.00",
-    //         availability: "AVAILABLE",
+        {
+            name: "BPL 55 Inch 4K Smart TV",
+            slug: "bpl-55-inch-4k-smart-tv",
+            description:
+                "BPL 55-inch 4K Smart TV featuring a large ultra-high-definition display, smart entertainment functionality and immersive audio for home viewing.",
+            brand: "BPL",
+            price: "27999.00",
+            availability: "AVAILABLE",
 
-    //         images: [
-    //             "YOUR_CLOUDINARY_URL_BPL_55_1",
-    //             "YOUR_CLOUDINARY_URL_BPL_55_2",
-    //             "YOUR_CLOUDINARY_URL_BPL_55_3"
-    //         ]
-    //     }
-    //   ]
-    // },
+            images: [
+                "https://res.cloudinary.com/hqlyxojm/image/upload/v1789359432/BPL_55_Inch_4K_Smart_TV_n4hutq.jpg",
+            ]
+        }
+      ]
+    },
 
     // {
     //   name: "AC",
@@ -476,32 +460,26 @@ const categories = [
     // }
 ];
 
-async function main() {
-    const mobileCategory = categories.find(
-        (category) => category.name === "Mobile"
-    );
+async function seedCategory(categoryName) {
+    const categoryData = categories.find((c) => c.name === categoryName);
 
-    if (!mobileCategory) {
-        throw new Error("Mobile category not found");
+    if (!categoryData) {
+        throw new Error(`Category "${categoryName}" not found in seed data`);
     }
 
-    // Create Mobile category if it doesn't exist
+    // Create or find the category
     const category = await prisma.category.upsert({
-        where: {
-            name: mobileCategory.name
-        },
+        where: { name: categoryData.name },
         update: {},
-        create: {
-            name: mobileCategory.name
-        }
+        create: { name: categoryData.name }
     });
 
-    // Create/update Mobile products
-    for (const productData of mobileCategory.products) {
+    console.log(`Seeding "${categoryName}" category (id: ${category.id})...`);
+
+    // Create/update each product
+    for (const productData of categoryData.products) {
         const product = await prisma.product.upsert({
-            where: {
-                slug: productData.slug
-            },
+            where: { slug: productData.slug },
             update: {
                 name: productData.name,
                 description: productData.description,
@@ -521,18 +499,14 @@ async function main() {
             }
         });
 
-        // Create/update product image
+        // Create/update the primary product image
         const existingImage = await prisma.productImage.findFirst({
-            where: {
-                productId: product.id
-            }
+            where: { productId: product.id }
         });
 
         if (existingImage) {
             await prisma.productImage.update({
-                where: {
-                    id: existingImage.id
-                },
+                where: { id: existingImage.id },
                 data: {
                     imageUrl: productData.images[0],
                     isPrimary: true
@@ -547,7 +521,14 @@ async function main() {
                 }
             });
         }
+
+        console.log(`  ✓ ${productData.name}`);
     }
+}
+
+async function main() {
+    await seedCategory("Mobile");
+    await seedCategory("TV");
 }
 
 main()

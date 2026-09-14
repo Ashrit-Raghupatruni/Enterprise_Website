@@ -27,16 +27,8 @@ const homeProductsData = {
     { id: 208, brand: 'Google',   name: 'Pixel 8 Pro',         rating: 4.7, reviews: 1230, originalPrice:  89999, salePrice:  79999, discount: 11, badge: 'AI Camera', badgeType: 'success', color: '#16a34a' },
   ],
 
-  tvs: [
-    { id: 301, brand: 'Samsung',  name: 'Neo QLED 8K 75"',          rating: 4.8, reviews:  320, originalPrice: 349999, salePrice: 299999, discount: 14, badge: 'Premium',   badgeType: 'primary', color: '#1e3d8f' },
-    { id: 302, brand: 'LG',       name: 'OLED C3 55"',              rating: 4.7, reviews:  890, originalPrice: 139990, salePrice: 119990, discount: 14, badge: 'Hot Deal',  badgeType: 'accent',  color: '#b85e00' },
-    { id: 303, brand: 'Sony',     name: 'Bravia XR A80L 65"',       rating: 4.6, reviews:  470, originalPrice: 189990, salePrice: 159990, discount: 16, badge: null,        badgeType: 'primary', color: '#374151' },
-    { id: 304, brand: 'TCL',      name: 'QLED C745 55"',            rating: 4.4, reviews:  650, originalPrice:  69999, salePrice:  54999, discount: 21, badge: 'Value',     badgeType: 'success', color: '#dc2626' },
-    { id: 305, brand: 'Hisense',  name: 'ULED U7K 55"',             rating: 4.3, reviews:  410, originalPrice:  74999, salePrice:  59999, discount: 20, badge: null,        badgeType: 'accent',  color: '#0369a1' },
-    { id: 306, brand: 'Mi',       name: 'Xiaomi TV X Pro 43"',      rating: 4.2, reviews: 1200, originalPrice:  34999, salePrice:  27999, discount: 20, badge: 'Budget',    badgeType: 'primary', color: '#f97316' },
-    { id: 307, brand: 'OnePlus',  name: 'OnePlus TV Q2 Pro 65"',    rating: 4.5, reviews:  380, originalPrice:  84999, salePrice:  69999, discount: 18, badge: null,        badgeType: 'accent',  color: '#dc2626' },
-    { id: 308, brand: 'Vu',       name: 'Vu GloLED 55"',            rating: 4.1, reviews:  290, originalPrice:  42999, salePrice:  34999, discount: 19, badge: null,        badgeType: 'primary', color: '#047857' },
-  ],
+  // TVs data is fetched live from the backend API (PostgreSQL + Cloudinary)
+  tvs: [],
 
   acs: [
     { id: 401, brand: 'Daikin',   name: '1.5T 5★ Inverter Split AC',  rating: 4.7, reviews: 1450, originalPrice:  52990, salePrice:  44990, discount: 15, badge: '5 Star',    badgeType: 'success', color: '#0369a1' },
