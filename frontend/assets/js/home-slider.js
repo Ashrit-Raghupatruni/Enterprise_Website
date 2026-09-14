@@ -217,6 +217,11 @@
     return syncCategoryFromDb('tvs', 'tvs', '#b85e00');
   }
 
+  // ─── Fetch live ACs from Database API ────────────────────────────────────
+  async function syncAcsFromDb() {
+    return syncCategoryFromDb('acs', 'acs', '#0369a1');
+  }
+
   // ─── Interaction tracking helpers ────────────────────────────────────────────
   //
   // getSessionId() returns a stable pseudo-anonymous session identifier stored
@@ -326,6 +331,7 @@
 
   syncMobilesFromDb();
   syncTvsFromDb();
+  syncAcsFromDb();
   syncTrendingFromApi();
 
 })();

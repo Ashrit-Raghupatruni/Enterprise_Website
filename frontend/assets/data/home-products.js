@@ -16,30 +16,13 @@ const homeProductsData = {
     { id: 108, brand: 'Sony',     name: 'WH-1000XM5 Headphones',         category: 'Acc',      rating: 4.8, reviews: 3100, originalPrice:  29990, salePrice:  24990, discount: 17, badge: 'Award Win',  badgeType: 'accent',  color: '#374151' },
   ],
 
-  mobiles: [
-    { id: 201, brand: 'Samsung',  name: 'Galaxy S24+',         rating: 4.7, reviews: 1820, originalPrice:  99999, salePrice:  89999, discount: 10, badge: 'New',       badgeType: 'primary', color: '#1e3d8f' },
-    { id: 202, brand: 'Apple',    name: 'iPhone 15',           rating: 4.8, reviews: 3200, originalPrice: 109900, salePrice:  99900, discount:  9, badge: 'Popular',   badgeType: 'accent',  color: '#374151' },
-    { id: 203, brand: 'OnePlus',  name: 'OnePlus Nord 3',      rating: 4.5, reviews:  980, originalPrice:  33999, salePrice:  29999, discount: 12, badge: 'Value',     badgeType: 'success', color: '#dc2626' },
-    { id: 204, brand: 'Xiaomi',   name: 'Redmi Note 13 Pro+',  rating: 4.4, reviews: 2100, originalPrice:  31999, salePrice:  26999, discount: 16, badge: 'Trending',  badgeType: 'accent',  color: '#f97316' },
-    { id: 205, brand: 'Realme',   name: 'Realme GT 5 Pro',     rating: 4.3, reviews:  760, originalPrice:  35999, salePrice:  29999, discount: 17, badge: null,        badgeType: 'primary', color: '#facc15' },
-    { id: 206, brand: 'Vivo',     name: 'Vivo V29 Pro',        rating: 4.4, reviews:  890, originalPrice:  39999, salePrice:  34999, discount: 13, badge: null,        badgeType: 'accent',  color: '#6366f1' },
-    { id: 207, brand: 'OPPO',     name: 'OPPO Reno 11 Pro',    rating: 4.3, reviews:  540, originalPrice:  35999, salePrice:  30999, discount: 14, badge: null,        badgeType: 'primary', color: '#0ea5e9' },
-    { id: 208, brand: 'Google',   name: 'Pixel 8 Pro',         rating: 4.7, reviews: 1230, originalPrice:  89999, salePrice:  79999, discount: 11, badge: 'AI Camera', badgeType: 'success', color: '#16a34a' },
-  ],
+  mobiles: [],
 
-  // TVs data is fetched live from the backend API (PostgreSQL + Cloudinary)
+  // TVs data is fetched live from the backend api(postgreSQL+cloudinary)
   tvs: [],
 
-  acs: [
-    { id: 401, brand: 'Daikin',   name: '1.5T 5★ Inverter Split AC',  rating: 4.7, reviews: 1450, originalPrice:  52990, salePrice:  44990, discount: 15, badge: '5 Star',    badgeType: 'success', color: '#0369a1' },
-    { id: 402, brand: 'Voltas',   name: '1.5T 3★ Window AC',          rating: 4.3, reviews:  780, originalPrice:  34990, salePrice:  27990, discount: 20, badge: 'Budget',    badgeType: 'primary', color: '#0ea5e9' },
-    { id: 403, brand: 'Hitachi',  name: '1T 5★ Inverter AC',          rating: 4.5, reviews:  620, originalPrice:  44990, salePrice:  37990, discount: 16, badge: null,        badgeType: 'accent',  color: '#374151' },
-    { id: 404, brand: 'Blue Star', name: '2T 3★ Split AC',            rating: 4.4, reviews:  510, originalPrice:  48990, salePrice:  41990, discount: 14, badge: null,        badgeType: 'primary', color: '#1e3d8f' },
-    { id: 405, brand: 'LG',       name: '1.5T DUAL Inverter AC',      rating: 4.6, reviews:  930, originalPrice:  49990, salePrice:  42490, discount: 15, badge: 'Popular',   badgeType: 'accent',  color: '#b85e00' },
-    { id: 406, brand: 'Samsung',  name: '1.5T 5★ Wind-Free AC',       rating: 4.5, reviews:  840, originalPrice:  55990, salePrice:  47490, discount: 15, badge: null,        badgeType: 'primary', color: '#1e3d8f' },
-    { id: 407, brand: 'Carrier',  name: '1.5T 3★ Split AC',           rating: 4.2, reviews:  370, originalPrice:  38990, salePrice:  32990, discount: 15, badge: null,        badgeType: 'accent',  color: '#0ea5e9' },
-    { id: 408, brand: 'Panasonic',name: '1T 5★ Inverter AC',          rating: 4.4, reviews:  410, originalPrice:  42990, salePrice:  35990, discount: 16, badge: null,        badgeType: 'success', color: '#047857' },
-  ],
+  // ACs data is fetched live from the backend api(postgreSQL+ cloudinary)
+  acs: [],
 
   homeTheatres: [
     { id: 501, brand: 'Sony',     name: 'HT-A9 4.0ch Dolby Atmos',   rating: 4.8, reviews:  240, originalPrice:  99990, salePrice:  84990, discount: 15, badge: 'Premium',   badgeType: 'primary', color: '#374151' },

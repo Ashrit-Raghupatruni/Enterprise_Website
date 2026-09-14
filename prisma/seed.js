@@ -248,74 +248,66 @@ const categories = [
       ]
     },
 
-    // {
-    //   name: "AC",
-    //   products: [
-    //     {
-    //         name: "BPL 1.5 Ton 3 Star Inverter Split AC",
-    //         slug: "bpl-1-5-ton-3-star-inverter-split-ac",
-    //         description:
-    //             "BPL 1.5 Ton inverter split air conditioner designed for efficient cooling and comfortable everyday home use.",
-    //         brand: "BPL",
-    //         price: "32999.00",
-    //         availability: "AVAILABLE",
+    {
+      name: "AC",
+      products: [
+        {
+            name: "BPL 1.5 Ton 3 Star Inverter Split AC",
+            slug: "bpl-1-5-ton-3-star-inverter-split-ac",
+            description:
+                "BPL 1.5 Ton inverter split air conditioner designed for efficient cooling and comfortable everyday home use.",
+            brand: "BPL",
+            price: "32999.00",
+            availability: "AVAILABLE",
 
-    //         images: [
-    //             "YOUR_CLOUDINARY_URL_BPL_AC_1_1",
-    //             "YOUR_CLOUDINARY_URL_BPL_AC_1_2",
-    //             "YOUR_CLOUDINARY_URL_BPL_AC_1_3"
-    //         ]
-    //     },
+            images: [
+                "https://res.cloudinary.com/hqlyxojm/image/upload/v1789388360/bpl-1-5-ton-3-star-inverter-split-ac_qc9i2p.jpg",
+            ]
+        },
 
-    //     {
-    //         name: "BPL 1 Ton 3 Star Inverter Split AC",
-    //         slug: "bpl-1-ton-3-star-inverter-split-ac",
-    //         description:
-    //             "BPL 1 Ton inverter split air conditioner suitable for bedrooms and smaller rooms, offering efficient cooling and convenient operation.",
-    //         brand: "BPL",
-    //         price: "28999.00",
-    //         availability: "AVAILABLE",
+        {
+            name: "BPL 1 Ton 3 Star Inverter Split AC",
+            slug: "bpl-1-ton-3-star-inverter-split-ac",
+            description:
+                "BPL 1 Ton inverter split air conditioner suitable for bedrooms and smaller rooms, offering efficient cooling and convenient operation.",
+            brand: "BPL",
+            price: "28999.00",
+            availability: "AVAILABLE",
 
-    //         images: [
-    //             "YOUR_CLOUDINARY_URL_BPL_AC_2_1",
-    //             "YOUR_CLOUDINARY_URL_BPL_AC_2_2",
-    //             "YOUR_CLOUDINARY_URL_BPL_AC_2_3"
-    //         ]
-    //     },
+            images: [
+                "https://res.cloudinary.com/hqlyxojm/image/upload/v1789388434/bpl-1-ton-3-star-inverter-split-ac_wdk0as.jpg",
+            ]
+        },
 
-    //     {
-    //         name: "Cellecor 1.5 Ton 5 Star Inverter Split AC",
-    //         slug: "cellecor-1-5-ton-5-star-inverter-split-ac",
-    //         description:
-    //             "Cellecor 1.5 Ton inverter split air conditioner designed for powerful cooling with energy-efficient operation.",
-    //         brand: "Cellecor",
-    //         price: "35999.00",
-    //         availability: "AVAILABLE",
+        {
+            name: "Cellecor 1.5 Ton 5 Star Inverter Split AC",
+            slug: "cellecor-1-5-ton-5-star-inverter-split-ac",
+            description:
+                "Cellecor 1.5 Ton inverter split air conditioner designed for powerful cooling with energy-efficient operation.",
+            brand: "Cellecor",
+            price: "35999.00",
+            availability: "AVAILABLE",
 
-    //         images: [
-    //             "YOUR_CLOUDINARY_URL_CELLECOR_AC_1_1",
-    //             "YOUR_CLOUDINARY_URL_CELLECOR_AC_1_2",
-    //             "YOUR_CLOUDINARY_URL_CELLECOR_AC_1_3"
-    //         ]
-    //     },
+            images: [
+                "https://res.cloudinary.com/hqlyxojm/image/upload/v1789388512/cellecor-1-5-ton-5-star-inverter-split-ac_k32ubc.jpg"
+            ]
+        },
 
-    //     {
-    //         name: "Cellecor 2 Ton 3 Star Inverter Split AC",
-    //         slug: "cellecor-2-ton-3-star-inverter-split-ac",
-    //         description:
-    //             "Cellecor 2 Ton inverter split air conditioner designed for larger rooms, providing powerful cooling and efficient temperature control.",
-    //         brand: "Cellecor",
-    //         price: "42999.00",
-    //         availability: "AVAILABLE",
+        {
+            name: "Cellecor 2 Ton 3 Star Inverter Split AC",
+            slug: "cellecor-2-ton-3-star-inverter-split-ac",
+            description:
+                "Cellecor 2 Ton inverter split air conditioner designed for larger rooms, providing powerful cooling and efficient temperature control.",
+            brand: "Cellecor",
+            price: "42999.00",
+            availability: "AVAILABLE",
 
-    //         images: [
-    //             "YOUR_CLOUDINARY_URL_CELLECOR_AC_2_1",
-    //             "YOUR_CLOUDINARY_URL_CELLECOR_AC_2_2",
-    //             "YOUR_CLOUDINARY_URL_CELLECOR_AC_2_3"
-    //         ]
-    //     }
-    //   ]
-    // },
+            images: [
+                "https://res.cloudinary.com/hqlyxojm/image/upload/v1789388578/cellecor-2-ton-3-star-inverter-split-ac_jbgaky.jpg"
+            ]
+        }
+      ]
+    },
 
     // {
     //   name: "Home Theatre",
@@ -529,6 +521,7 @@ async function seedCategory(categoryName) {
 async function main() {
     await seedCategory("Mobile");
     await seedCategory("TV");
+    await seedCategory("AC");
 }
 
 main()
