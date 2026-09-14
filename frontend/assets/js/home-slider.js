@@ -217,7 +217,115 @@
     return syncCategoryFromDb('tvs', 'tvs', '#b85e00');
   }
 
+  // ─── Interaction tracking helpers ────────────────────────────────────────────
+  //
+  // getSessionId() returns a stable pseudo-anonymous session identifier stored
+  // in sessionStorage.  Used only for guest view-deduplication — no PII stored.
+  function getSessionId() {
+    let sid = sessionStorage.getItem('_ks_sid');
+    if (!sid) {
+      sid = 'sid_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+      sessionStorage.setItem('_ks_sid', sid);
+    }
+    return sid;
+  }
+
+  /**
+   * Fire a product interaction event to the backend.
+   * Uses navigator.sendBeacon when available (fire-and-forget, survives navigation).
+   * Falls back to fetch with keepalive.
+   *
+   * @param {string} productId  — product id (DB id preferred, slug also accepted)
+   * @param {string} type       — PRODUCT_VIEW | WISHLIST_ADD | CART_ADD | PURCHASE
+   */
+  function recordInteraction(productId, type) {
+    if (!productId) return;
+    const url  = `/api/products/${encodeURIComponent(productId)}/interaction`;
+    const body = JSON.stringify({ type });
+    const sid  = getSessionId();
+
+    if (navigator.sendBeacon) {
+      const blob = new Blob([body], { type: 'application/json' });
+      // sendBeacon does not support custom headers, so we use fetch for this
+    }
+
+    // fetch with keepalive — non-blocking, survives page unload
+    fetch(url, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json', 'x-session-id': sid },
+      body,
+      keepalive: true,
+    }).catch(() => { /* silently ignore — interaction tracking is best-effort */ });
+  }
+
+  // ─── Trending Deals: fetch from /api/products/trending ───────────────────────
+  async function syncTrendingFromApi() {
+    try {
+      const res = await fetch('/api/products/trending?limit=10');
+      if (!res.ok) return;
+      const json = await res.json();
+
+      if (!json.success || !Array.isArray(json.data) || json.data.length === 0) return;
+
+      const trendingProducts = json.data.map(p => {
+        const primaryImg = p.productImages?.find(img => img.isPrimary)?.imageUrl
+          || p.productImages?.[0]?.imageUrl
+          || p.imageUrl
+          || '';
+        const price = parseFloat(p.price) || 0;
+        const isAvailable = p.availability === 'AVAILABLE';
+
+        return {
+          id:           p.slug || p.id,
+          slug:         p.slug,
+          dbId:         p.id,
+          brand:        p.brand,
+          name:         p.name,
+          description:  p.description,
+          rating:       4.5,
+          reviews:      0,
+          originalPrice: price,
+          salePrice:    price,
+          discount:     0,
+          availability: p.availability,
+          badge:        isAvailable ? 'Trending' : 'Out of Stock',
+          badgeType:    isAvailable ? 'accent'   : 'primary',
+          color:        '#1e3d8f',
+          imageUrl:     primaryImg,
+        };
+      });
+
+      // Replace static mock data with live ranked data
+      window.homeProductsData['trending'] = trendingProducts;
+
+      // Re-render the trending track
+      const section = document.querySelector('[data-section="trending"]');
+      if (section) {
+        const track = section.querySelector('[data-track="trending"]');
+        if (track) {
+          track.innerHTML = trendingProducts.map(buildCard).join('');
+
+          // Wire PRODUCT_VIEW tracking on every card's CTA click
+          // Uses event delegation on the track to avoid per-card listeners.
+          track.addEventListener('click', e => {
+            const cta = e.target.closest('.product-card__cta');
+            if (!cta) return;
+            const card = cta.closest('.product-card');
+            // Extract product id from the href: /product/<id-or-slug>
+            const href = cta.getAttribute('href') || '';
+            const productId = href.split('/product/')[1];
+            if (productId) recordInteraction(productId, 'PRODUCT_VIEW');
+          }, { passive: true });
+        }
+      }
+    } catch (err) {
+      console.warn('Could not sync trending products from API:', err);
+      // Static fallback in home-products.js is already rendered — nothing more needed
+    }
+  }
+
   syncMobilesFromDb();
   syncTvsFromDb();
+  syncTrendingFromApi();
 
 })();

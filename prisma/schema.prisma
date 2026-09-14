@@ -75,6 +75,7 @@ model Product {
   slug            String @unique
   category        Category @relation(fields:[categoryId],references:[id],onDelete:Cascade)
   productImages   ProductImage[]
+  interactions    ProductInteraction[]
 
   @@index([categoryId])
 }
@@ -94,4 +95,48 @@ model ProductImage {
 enum Status {
   AVAILABLE
   NOT_AVAILABLE
+}
+
+// ─── Trending Deals — Interaction Tracking ───────────────────────────────────
+
+enum InteractionType {
+  PRODUCT_VIEW
+  WISHLIST_ADD
+  CART_ADD
+  PURCHASE
+}
+
+/**
+ * ProductInteraction records a single user behaviour event on a product.
+ *
+ * Used by the Trending Deals scoring engine:
+ *   FinalScore = Σ [ Weight(type) × e^(-λ × AgeInDays) ]
+ *   λ = 0.1  (configurable in trendingService.js)
+ *
+ * Weights:
+ *   PRODUCT_VIEW  = 1   (interest signal)
+ *   WISHLIST_ADD  = 3   (purchase intent)
+ *   CART_ADD      = 5   (strong purchase intent)
+ *   PURCHASE      = 10  (confirmed intent)
+ *
+ * userId is nullable so guest interactions (views) can be recorded.
+ * For authenticated users it is set so duplicate-view throttling works.
+ *
+ * sessionId is set for guests to provide coarse duplicate suppression
+ * when userId is not available.
+ */
+model ProductInteraction {
+  id          String          @id @default(cuid())
+  productId   String
+  userId      String?
+  sessionId   String?
+  type        InteractionType
+  createdAt   DateTime        @default(now())
+
+  product     Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+  @@index([type])
+  @@index([createdAt])
+  @@index([userId])
 }
