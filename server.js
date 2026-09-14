@@ -7,6 +7,7 @@ import profileRoutes from './src/features/profile/routes/profileRoutes.js'
 import productRoutes from './src/features/products/routes/productRoutes.js'
 import adminRoutes from './src/features/admin/routes/adminRoutes.js'
 import jwtAuthenticate from './src/middleware/jwtmiddleware.js'
+import { isCategoryInactive } from './src/config/categoryConfig.js'
 
 const app=express();
 const PORT = process.env.PORT || 3001;
@@ -132,6 +133,12 @@ const categoryRoutes = [
 
 categoryRoutes.forEach(({ path: routePath, label, slug }) => {
   app.get(routePath, (req, res) => {
+    // Inactive categories: redirect to home rather than showing an empty page.
+    // To re-enable a category remove its slug from src/config/categoryConfig.js.
+    if (isCategoryInactive(slug)) {
+      return res.redirect(302, '/home');
+    }
+
     res.render('pages/products/category', {
       title:          `${label} — ${site.name}`,
       pageLabel:      label,

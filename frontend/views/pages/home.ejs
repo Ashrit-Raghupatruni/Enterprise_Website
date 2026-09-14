@@ -105,19 +105,12 @@
       viewAllHref:  '/products/home-theatres',
     }) %>
 
-    <%- include('../partials/home-product-section', {
-      sectionId:    'kitchen',
-      sectionTitle: 'Kitchen Appliances',
-      eyebrow:      'Microwaves, Washers & More',
-      viewAllHref:  '/products/kitchen',
-    }) %>
-
-    <%- include('../partials/home-product-section', {
-      sectionId:    'refrigerators',
-      sectionTitle: 'Refrigerators',
-      eyebrow:      'Double Door & Side-by-Side',
-      viewAllHref:  '/products/refrigerators',
-    }) %>
+    <%#
+      Kitchen Appliances and Refrigerators sections are temporarily hidden
+      because these categories are not yet available in the showroom.
+      To re-enable: add back the home-product-section includes here and
+      remove their slugs from src/config/categoryConfig.js.
+    %>
 
     <%# ── Brands grid ── %>
     <%- include('../partials/home-brands') %>

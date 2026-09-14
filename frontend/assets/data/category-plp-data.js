@@ -34,27 +34,13 @@ const categoryPlpData = {
     { id: 508, brand: 'Philips', name: 'TAB8905 3.1ch Soundbar',   rating: 4.2, reviews:  190, originalPrice:  29990, salePrice:  24990, discount: 17, badge: null,      badgeType: 'accent',  color: '#374151' },
   ],
 
-  kitchen: [
-    { id: 601, brand: 'IFB',      name: '25L Convection Microwave', rating: 4.5, reviews:  820, originalPrice:  14990, salePrice:  12490, discount: 17, badge: 'Popular',   badgeType: 'primary', color: '#9333ea' },
-    { id: 602, brand: 'Bosch',    name: 'Series 6 Washing Machine', rating: 4.7, reviews:  630, originalPrice:  49990, salePrice:  42990, discount: 14, badge: 'Top Brand', badgeType: 'accent',  color: '#374151' },
-    { id: 603, brand: 'Philips',  name: 'HL7756 750W Mixer',        rating: 4.4, reviews: 1200, originalPrice:   4999, salePrice:   3499, discount: 30, badge: '30% Off',   badgeType: 'accent',  color: '#0369a1' },
-    { id: 604, brand: 'LG',       name: '6.5 Kg Top Load Washer',   rating: 4.3, reviews:  740, originalPrice:  28990, salePrice:  23990, discount: 17, badge: null,        badgeType: 'primary', color: '#b85e00' },
-    { id: 605, brand: 'Havells',  name: 'Ebony OTG 28L',            rating: 4.3, reviews:  540, originalPrice:   7990, salePrice:   5990, discount: 25, badge: 'Deal',      badgeType: 'accent',  color: '#dc2626' },
-    { id: 606, brand: 'Samsung',  name: '32L Convection Microwave', rating: 4.5, reviews:  670, originalPrice:  18990, salePrice:  15990, discount: 16, badge: null,        badgeType: 'primary', color: '#1e3d8f' },
-    { id: 607, brand: 'Prestige', name: 'Deluxe Plus Induction',    rating: 4.2, reviews:  890, originalPrice:   3499, salePrice:   2699, discount: 23, badge: null,        badgeType: 'primary', color: '#9333ea' },
-    { id: 608, brand: 'Bajaj',    name: 'Magnum 1000W Juicer',      rating: 4.1, reviews:  460, originalPrice:   2999, salePrice:   2299, discount: 23, badge: null,        badgeType: 'accent',  color: '#f97316' },
-  ],
+  // Kitchen Appliances — temporarily unavailable (not in showroom inventory).
+  // To re-enable: restore product data here and in src/config/categoryConfig.js.
+  kitchen: [],
 
-  refrigerators: [
-    { id: 701, brand: 'Samsung',   name: '524L French Door Fridge',  rating: 4.7, reviews:  420, originalPrice:  84999, salePrice:  69999, discount: 18, badge: 'Premium', badgeType: 'primary', color: '#1e3d8f' },
-    { id: 702, brand: 'LG',        name: '655L Side-By-Side Fridge', rating: 4.6, reviews:  310, originalPrice:  89990, salePrice:  74990, discount: 17, badge: null,      badgeType: 'accent',  color: '#b85e00' },
-    { id: 703, brand: 'Whirlpool', name: '340L Double Door',         rating: 4.4, reviews:  540, originalPrice:  38990, salePrice:  32990, discount: 15, badge: 'Popular', badgeType: 'primary', color: '#047857' },
-    { id: 704, brand: 'Haier',     name: '256L 3★ Double Door',      rating: 4.3, reviews:  480, originalPrice:  28990, salePrice:  23990, discount: 17, badge: 'Value',   badgeType: 'success', color: '#0369a1' },
-    { id: 705, brand: 'Bosch',     name: '559L Multi Door Fridge',   rating: 4.7, reviews:  220, originalPrice:  94990, salePrice:  79990, discount: 16, badge: 'Premium', badgeType: 'accent',  color: '#374151' },
-    { id: 706, brand: 'Godrej',    name: '236L Direct Cool Fridge',  rating: 4.2, reviews:  670, originalPrice:  22990, salePrice:  18990, discount: 17, badge: null,      badgeType: 'primary', color: '#047857' },
-    { id: 707, brand: 'Panasonic', name: '296L 3★ Double Door',      rating: 4.3, reviews:  360, originalPrice:  31990, salePrice:  26990, discount: 16, badge: null,      badgeType: 'accent',  color: '#9333ea' },
-    { id: 708, brand: 'Hitachi',   name: '318L Double Door',         rating: 4.5, reviews:  290, originalPrice:  39990, salePrice:  33990, discount: 15, badge: null,      badgeType: 'primary', color: '#374151' },
-  ],
+  // Refrigerators — temporarily unavailable (not in showroom inventory).
+  // To re-enable: restore product data here and in src/config/categoryConfig.js.
+  refrigerators: [],
 
 };
 

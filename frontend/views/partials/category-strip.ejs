@@ -12,14 +12,14 @@
 <%
   const active = locals.activeCategory || '';
 
+  // Active categories only — Kitchen and Refrigerators are temporarily unavailable.
+  // To re-enable a category: add it back here and remove it from src/config/categoryConfig.js.
   const categories = [
     { slug: 'all',            href: '/home',                  label: 'All'           },
     { slug: 'mobiles',        href: '/products/mobiles',      label: 'Mobiles'       },
     { slug: 'tvs',            href: '/products/tvs',          label: 'TVs'           },
     { slug: 'acs',            href: '/products/acs',          label: 'ACs'           },
     { slug: 'home-theatres',  href: '/products/home-theatres',label: 'Home Theatres' },
-    { slug: 'kitchen',        href: '/products/kitchen',      label: 'Kitchen'       },
-    { slug: 'refrigerators',  href: '/products/refrigerators',label: 'Refrigerators' },
   ];
 
   const illustrations = {
