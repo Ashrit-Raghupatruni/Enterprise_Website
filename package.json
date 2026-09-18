@@ -16,7 +16,10 @@
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "seed:admin": "node scripts/seedAdminData.js",
+    "seed:attributes": "node scripts/seedAttributes.js",
+    "create:admin": "node scripts/createAdminUser.js"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",
