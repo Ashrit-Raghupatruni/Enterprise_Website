@@ -6,7 +6,9 @@ import authRoutes from './src/features/auth/routes/authRoutes.js'
 import profileRoutes from './src/features/profile/routes/profileRoutes.js'
 import productRoutes from './src/features/products/routes/productRoutes.js'
 import adminRoutes from './src/features/admin/routes/adminRoutes.js'
+import adminApiRoutes from './src/features/admin/routes/adminApiRoutes.js'
 import jwtAuthenticate from './src/middleware/jwtmiddleware.js'
+import adminGuard from './src/middleware/adminguard.js'
 import { isCategoryInactive } from './src/config/categoryConfig.js'
 
 const app=express();
@@ -48,7 +50,11 @@ app.use("/api", profileRoutes);
 // Product API Routes
 app.use("/api", productRoutes);
 
-// Admin Routes
+
+// Admin API Routes (protected by JWT + admin guard)
+app.use("/api/admin", jwtAuthenticate, adminGuard, adminApiRoutes);
+
+// Admin Page Routes (protected by JWT + admin guard)
 app.use("/admin", adminRoutes);
 
 // ─── Site-wide constants ─────────────────────────────────────────────────────
