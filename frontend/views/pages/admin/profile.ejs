@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <%- include('../../partials/admin/admin-head') %>
+</head>
+<body class="admin-body">
+
+  <%- include('../../partials/admin/admin-header') %>
+
+  <div class="admin-layout">
+
+    <%- include('../../partials/admin/admin-sidebar') %>
+
+    <main class="admin-main" id="main-content">
+      <div class="admin-container">
+
+        <!-- Breadcrumb navigation -->
+        <nav class="admin-breadcrumb" aria-label="Breadcrumb">
+          <ol class="admin-breadcrumb__list">
+            <li class="admin-breadcrumb__item"><a href="/admin/dashboard" class="admin-breadcrumb__link">Dashboard</a></li>
+            <li class="admin-breadcrumb__separator" aria-hidden="true">/</li>
+            <li class="admin-breadcrumb__item admin-breadcrumb__item--active" aria-current="page">Admin Profile</li>
+          </ol>
+        </nav>
+
+        <!-- Page Header -->
+        <div class="admin-page-header">
+          <div class="admin-page-header__title-group">
+            <span class="admin-page-header__eyebrow">Account & Security</span>
+            <h1 class="admin-page-header__title">Administrator Profile</h1>
+            <p class="admin-page-header__subtitle">Manage your administrator credentials, personal settings, and system security privileges.</p>
+          </div>
+          <div class="admin-page-header__actions">
+            <a href="/home" class="btn btn--outline btn--sm" target="_blank" rel="noopener">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+              <span>View Storefront</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- ── 2-Column Profile Layout ── -->
+        <div class="admin-profile-grid">
+
+          <!-- Left Column: Identity Overview & Privileges Matrix -->
+          <div class="admin-profile-sidebar-col">
+
+            <!-- Identity Card -->
+            <div class="admin-card admin-identity-card">
+              <div class="admin-identity-card__header">
+                <div class="admin-identity-card__avatar-wrap">
+                  <div class="admin-identity-card__avatar" id="adminProfileLargeAvatar">
+                    <%= (typeof adminUser !== 'undefined' && adminUser?.avatar) ? adminUser.avatar : 'AU' %>
+                  </div>
+                  <span class="admin-identity-card__status-dot" title="Active Administrator"></span>
+                </div>
+                <h2 class="admin-identity-card__name" id="adminProfileDisplayName">
+                  <%= (typeof adminUser !== 'undefined' && adminUser?.username) ? adminUser.username : 'Admin User' %>
+                </h2>
+                <span class="admin-identity-card__email" id="adminProfileDisplayEmail">
+                  <%= (typeof adminUser !== 'undefined' && adminUser?.email) ? adminUser.email : 'admin@enterprisestore.com' %>
+                </span>
+                <div class="admin-identity-card__role-pill">
+                  <span class="badge badge--accent">SUPER ADMIN</span>
+                </div>
+              </div>
+
+              <div class="admin-identity-card__body">
+                <div class="admin-identity-stat">
+                  <span class="admin-identity-stat__label">Access Level</span>
+                  <span class="admin-identity-stat__value">Full Store Control</span>
+                </div>
+                <div class="admin-identity-stat">
+                  <span class="admin-identity-stat__label">Session Status</span>
+                  <span class="admin-identity-stat__value" style="color:var(--color-success-600); font-weight:var(--font-bold);">
+                    ● Active Session
+                  </span>
+                </div>
+                <div class="admin-identity-stat">
+                  <span class="admin-identity-stat__label">Security 2FA</span>
+                  <span class="admin-identity-stat__value" style="color:var(--color-text-muted);">Standard Auth</span>
+                </div>
+              </div>
+
+              <div class="admin-identity-card__footer">
+                <button type="button" class="btn btn--outline btn--sm w-full" id="adminProfileSignOutBtn" style="color:var(--color-error-600); border-color:#fca5a5;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                  <span>Sign Out of Admin</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Privileges Checklist Card -->
+            <div class="admin-card">
+              <div class="admin-card__header">
+                <div>
+                  <h3 class="admin-card__title">Administrative Privileges</h3>
+                  <p class="admin-card__subtitle">Authorized capabilities assigned to your administrator role.</p>
+                </div>
+              </div>
+              <div class="admin-card__body" style="padding: var(--space-4) var(--space-6);">
+                <ul class="admin-privilege-list">
+                  <li class="admin-privilege-item">
+                    <span class="admin-privilege-icon">✓</span>
+                    <span>Product Catalog & Price Management</span>
+                  </li>
+                  <li class="admin-privilege-item">
+                    <span class="admin-privilege-icon">✓</span>
+                    <span>Stock & Inventory Adjustments</span>
+                  </li>
+                  <li class="admin-privilege-item">
+                    <span class="admin-privilege-icon">✓</span>
+                    <span>Customer Accounts Oversight</span>
+                  </li>
+                  <li class="admin-privilege-item">
+                    <span class="admin-privilege-icon">✓</span>
+                    <span>Order Processing & Shipping Pipeline</span>
+                  </li>
+                  <li class="admin-privilege-item">
+                    <span class="admin-privilege-icon">✓</span>
+                    <span>Homepage Hero Banners & CMS</span>
+                  </li>
+                  <li class="admin-privilege-item">
+                    <span class="admin-privilege-icon">✓</span>
+                    <span>Revenue Analytics & Export Reports</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Right Column: Personal Information Form & Security Settings -->
+          <div class="admin-profile-main-col">
+
+            <!-- Personal Information Form Card -->
+            <div class="admin-card">
+              <div class="admin-card__header">
+                <div>
+                  <h3 class="admin-card__title">Personal Information</h3>
+                  <p class="admin-card__subtitle">Update your administrator display name, contact phone, and public profile.</p>
+                </div>
+              </div>
+              <div class="admin-card__body" style="padding: var(--space-6);">
+                <form id="adminPersonalForm" novalidate>
+                  <div class="admin-form-row">
+                    <div class="admin-form-group">
+                      <label class="admin-label" for="adminFullNameInput">Full Name / Username</label>
+                      <input
+                        type="text"
+                        id="adminFullNameInput"
+                        name="username"
+                        class="admin-input"
+                        value="<%= (typeof adminUser !== 'undefined' && adminUser?.username) ? adminUser.username : '' %>"
+                        placeholder="e.g. Kishor Gunithi"
+                        required
+                      />
+                    </div>
+                    <div class="admin-form-group">
+                      <label class="admin-label" for="adminEmailInput">Email Address</label>
+                      <input
+                        type="email"
+                        id="adminEmailInput"
+                        name="email"
+                        class="admin-input"
+                        value="<%= (typeof adminUser !== 'undefined' && adminUser?.email) ? adminUser.email : '' %>"
+                        placeholder="admin@enterprisestore.com"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div class="admin-form-row">
+                    <div class="admin-form-group">
+                      <label class="admin-label" for="adminPhoneInput">Phone Number</label>
+                      <input
+                        type="tel"
+                        id="adminPhoneInput"
+                        name="phone"
+                        class="admin-input"
+                        value="+91 99636 57799"
+                        placeholder="+91 98765 43210"
+                      />
+                    </div>
+                    <div class="admin-form-group">
+                      <label class="admin-label" for="adminRoleInput">Role / Access Tier</label>
+                      <input
+                        type="text"
+                        id="adminRoleInput"
+                        class="admin-input"
+                        value="ADMIN (Full Super Administrator)"
+                        disabled
+                        style="background:var(--color-bg-secondary); cursor:not-allowed;"
+                      />
+                    </div>
+                  </div>
+
+                  <div style="display:flex; justify-content:flex-end; gap:var(--space-3); margin-top:var(--space-2);">
+                    <button type="submit" class="btn btn--primary btn--sm" id="saveAdminProfileBtn">
+                      Save Profile Changes
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+
+            <!-- Security & Password Change Card -->
+            <div class="admin-card">
+              <div class="admin-card__header">
+                <div>
+                  <h3 class="admin-card__title">Security & Password</h3>
+                  <p class="admin-card__subtitle">Ensure your administrator account is guarded with a strong password.</p>
+                </div>
+              </div>
+              <div class="admin-card__body" style="padding: var(--space-6);">
+                <form id="adminPasswordForm" novalidate>
+                  <div class="admin-form-group">
+                    <label class="admin-label" for="adminCurrentPass">Current Password</label>
+                    <div class="admin-password-wrap">
+                      <input
+                        type="password"
+                        id="adminCurrentPass"
+                        class="admin-input"
+                        placeholder="Enter your current password"
+                        required
+                      />
+                      <button type="button" class="admin-password-toggle" data-toggle-pass="adminCurrentPass" aria-label="Toggle password visibility">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div class="admin-form-row">
+                    <div class="admin-form-group">
+                      <label class="admin-label" for="adminNewPass">New Password</label>
+                      <div class="admin-password-wrap">
+                        <input
+                          type="password"
+                          id="adminNewPass"
+                          class="admin-input"
+                          placeholder="Min. 8 characters"
+                          required
+                        />
+                        <button type="button" class="admin-password-toggle" data-toggle-pass="adminNewPass" aria-label="Toggle password visibility">
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                        </button>
+                      </div>
+                    </div>
+
+                    <div class="admin-form-group">
+                      <label class="admin-label" for="adminConfirmPass">Confirm New Password</label>
+                      <div class="admin-password-wrap">
+                        <input
+                          type="password"
+                          id="adminConfirmPass"
+                          class="admin-input"
+                          placeholder="Repeat new password"
+                          required
+                        />
+                        <button type="button" class="admin-password-toggle" data-toggle-pass="adminConfirmPass" aria-label="Toggle password visibility">
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Requirements Checklist -->
+                  <div class="admin-password-checklist">
+                    <span class="admin-checklist-item" id="chkLength">● At least 8 characters</span>
+                    <span class="admin-checklist-item" id="chkNumber">● Contains a number</span>
+                    <span class="admin-checklist-item" id="chkMatch">● Passwords match</span>
+                  </div>
+
+                  <div style="display:flex; justify-content:flex-end; gap:var(--space-3); margin-top:var(--space-4);">
+                    <button type="submit" class="btn btn--outline btn--sm" id="updateAdminPasswordBtn">
+                      Update Password
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+
+            <!-- Active Sessions & Security Environment Card -->
+            <div class="admin-card">
+              <div class="admin-card__header">
+                <div>
+                  <h3 class="admin-card__title">Active Session & Security Environment</h3>
+                  <p class="admin-card__subtitle">Device and network environments currently authenticated.</p>
+                </div>
+              </div>
+              <div class="admin-card__body" style="padding: var(--space-4) var(--space-6);">
+                <div class="admin-session-item">
+                  <div class="admin-session-item__left">
+                    <div class="admin-session-icon">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+                    </div>
+                    <div>
+                      <strong style="font-size:var(--text-sm);">Desktop Browser &bull; Windows / Chrome</strong>
+                      <div style="font-size:var(--text-xs); color:var(--color-text-muted);">Current Active Session &bull; IP: Localhost (127.0.0.1)</div>
+                    </div>
+                  </div>
+                  <span class="badge badge--success">Current</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+    </main>
+
+  </div>
+
+  <%- include('../../partials/admin/admin-footer') %>
+  <%- include('../../partials/admin/admin-modals') %>
+
+  <!-- Data & Scripts -->
+  <script src="/assets/data/admin-mock-data.js"></script>
+  <script src="/assets/js/admin.js" defer></script>
+
+</body>
+</html>

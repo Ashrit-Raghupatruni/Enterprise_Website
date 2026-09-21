@@ -80,6 +80,19 @@
     <!-- Action icons — right-anchored -->
     <nav class="hdr__actions" aria-label="Account and shopping">
 
+      <!-- Admin Panel Link (Shown only for ADMIN users) -->
+      <a href="/admin/dashboard" class="hdr__action-btn hdr__action-btn--admin" id="catHdrAdminBtn" aria-label="Admin Dashboard" style="display: none;">
+        <div class="hdr__action-icon-wrap" style="color: var(--color-accent-500);">
+          <svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="3" width="7" height="7" rx="1.5"/>
+            <rect x="12" y="3" width="7" height="7" rx="1.5"/>
+            <rect x="12" y="12" width="7" height="7" rx="1.5"/>
+            <rect x="3" y="12" width="7" height="7" rx="1.5"/>
+          </svg>
+        </div>
+        <span class="hdr__action-label">Admin</span>
+      </a>
+
       <a href="/profile" class="hdr__action-btn" aria-label="My Profile">
         <div class="hdr__action-icon-wrap">
           <svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -112,7 +125,7 @@
         <span class="hdr__action-label">Orders</span>
       </a>
 
-      <button class="hdr__action-btn hdr__action-btn--logout" id="hdrLogoutBtn" aria-label="Logout">
+      <button class="hdr__action-btn hdr__action-btn--logout" id="catHdrLogoutBtn" aria-label="Logout">
         <div class="hdr__action-icon-wrap">
           <svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M9 3H5a2 2 0 00-2 2v12a2 2 0 002 2h4"/>
@@ -130,13 +143,35 @@
 
 <script>
 (function () {
-  document.getElementById('hdrLogoutBtn').addEventListener('click', function () {
-    fetch('/logout', { method: 'POST', credentials: 'same-origin' })
-      .finally(function () {
-        localStorage.removeItem('authUser');
-        localStorage.removeItem('pendingRoute');
-        window.location.href = '/';
-      });
-  });
+  // Check if logged-in user is ADMIN to reveal Admin Panel button
+  function checkAdmin() {
+    try {
+      var raw = localStorage.getItem('authUser');
+      if (raw) {
+        var u = JSON.parse(raw);
+        if (u && (u.role === 'ADMIN' || u.role === 'admin')) {
+          var adminBtn = document.getElementById('catHdrAdminBtn');
+          if (adminBtn) adminBtn.style.display = 'inline-flex';
+        }
+      }
+    } catch (e) {}
+  }
+
+  checkAdmin();
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', checkAdmin);
+  }
+
+  var logoutBtn = document.getElementById('catHdrLogoutBtn') || document.getElementById('hdrLogoutBtn');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', function () {
+      fetch('/logout', { method: 'POST', credentials: 'same-origin' })
+        .finally(function () {
+          localStorage.removeItem('authUser');
+          localStorage.removeItem('pendingRoute');
+          window.location.href = '/';
+        });
+    });
+  }
 }());
 </script>

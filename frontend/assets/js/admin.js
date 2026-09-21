@@ -77,16 +77,67 @@
     sidebarBackdrop.addEventListener('click', () => toggleSidebar(false));
   }
 
-  // Admin Logout button handler
-  const logoutBtn = document.getElementById('adminLogoutBtn');
-  if (logoutBtn) {
-    logoutBtn.addEventListener('click', () => {
-      showAdminToast('Logging out from admin session...', 'warning');
-      setTimeout(() => {
-        window.location.href = '/home';
-      }, 800);
+  /* =========================================================================
+     2.1 USER PROFILE DROPDOWN & LOGOUT
+     ========================================================================= */
+
+  const userDropdownBtn = document.getElementById('adminUserDropdownBtn');
+  const userDropdownMenu = document.getElementById('adminUserDropdownMenu');
+
+  function toggleUserDropdown(open) {
+    if (!userDropdownMenu) return;
+    const shouldOpen = open !== undefined ? open : !userDropdownMenu.classList.contains('open');
+    if (shouldOpen) {
+      userDropdownMenu.classList.add('open');
+      userDropdownBtn?.setAttribute('aria-expanded', 'true');
+    } else {
+      userDropdownMenu.classList.remove('open');
+      userDropdownBtn?.setAttribute('aria-expanded', 'false');
+    }
+  }
+
+  if (userDropdownBtn) {
+    userDropdownBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleUserDropdown();
     });
   }
+
+  // Close dropdown on outside click
+  document.addEventListener('click', (e) => {
+    if (userDropdownMenu && userDropdownMenu.classList.contains('open')) {
+      if (!userDropdownMenu.contains(e.target) && !userDropdownBtn?.contains(e.target)) {
+        toggleUserDropdown(false);
+      }
+    }
+  });
+
+  // Admin Logout unified handler
+  function performAdminLogout() {
+    showAdminToast('Logging out from admin session...', 'warning');
+    try {
+      fetch('/logout', { method: 'POST', credentials: 'same-origin' })
+        .finally(() => {
+          localStorage.removeItem('authUser');
+          setTimeout(() => {
+            window.location.href = '/login';
+          }, 600);
+        });
+    } catch (e) {
+      localStorage.removeItem('authUser');
+      window.location.href = '/login';
+    }
+  }
+
+  ['adminLogoutBtn', 'adminSidebarLogoutBtn', 'headerLogoutBtn', 'adminProfileSignOutBtn'].forEach(id => {
+    const btn = document.getElementById(id);
+    if (btn) {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        performAdminLogout();
+      });
+    }
+  });
 
   /* =========================================================================
      3. MODAL & DRAWER CONTROLS
@@ -1127,15 +1178,186 @@
   }
 
   /* =========================================================================
-     10. INITIALIZATION
+     10. ADMIN USER HYDRATION & PROFILE MANAGEMENT
+     ========================================================================= */
+
+  function hydrateAdminUser() {
+    let authUser = null;
+    try {
+      const stored = localStorage.getItem('authUser');
+      if (stored) authUser = JSON.parse(stored);
+    } catch (e) { }
+
+    if (!authUser) return;
+
+    const username = authUser.username || authUser.name || 'Admin User';
+    const email = authUser.email || 'admin@enterprisestore.com';
+    const phone = authUser.phone_number || authUser.phone || '';
+    const role = authUser.role || 'ADMIN';
+    const initials = username.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || 'AU';
+
+    // Update Header
+    const hdrName = document.getElementById('headerUserName');
+    if (hdrName) hdrName.textContent = username;
+    const hdrRole = document.getElementById('headerUserRole');
+    if (hdrRole) hdrRole.textContent = role;
+    const hdrAvatar = document.getElementById('headerUserAvatar');
+    if (hdrAvatar) hdrAvatar.textContent = initials;
+
+    // Update Dropdown
+    const dropName = document.getElementById('dropdownUserName');
+    if (dropName) dropName.textContent = username;
+    const dropEmail = document.getElementById('dropdownUserEmail');
+    if (dropEmail) dropEmail.textContent = email;
+    const dropAvatar = document.getElementById('dropdownUserAvatar');
+    if (dropAvatar) dropAvatar.textContent = initials;
+
+    // Update Sidebar
+    const sideName = document.getElementById('sidebarUserName');
+    if (sideName) sideName.textContent = username;
+    const sideAvatar = document.getElementById('sidebarUserAvatar');
+    if (sideAvatar) sideAvatar.textContent = initials;
+
+    // Update Profile Page if present
+    const profName = document.getElementById('adminProfileDisplayName');
+    if (profName) profName.textContent = username;
+    const profEmail = document.getElementById('adminProfileDisplayEmail');
+    if (profEmail) profEmail.textContent = email;
+    const profAvatar = document.getElementById('adminProfileLargeAvatar');
+    if (profAvatar) profAvatar.textContent = initials;
+
+    const inputName = document.getElementById('adminFullNameInput');
+    if (inputName && !inputName.value) inputName.value = username;
+    const inputEmail = document.getElementById('adminEmailInput');
+    if (inputEmail && !inputEmail.value) inputEmail.value = email;
+    const inputPhone = document.getElementById('adminPhoneInput');
+    if (inputPhone && phone && (!inputPhone.value || inputPhone.value === '+91 99636 57799')) inputPhone.value = phone;
+  }
+
+  function initAdminProfilePage() {
+    // 1. Password Visibility Toggles
+    document.querySelectorAll('[data-toggle-pass]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const targetId = btn.getAttribute('data-toggle-pass');
+        const input = document.getElementById(targetId);
+        if (!input) return;
+        const isPass = input.type === 'password';
+        input.type = isPass ? 'text' : 'password';
+        btn.style.color = isPass ? 'var(--color-primary-600)' : 'var(--color-text-muted)';
+      });
+    });
+
+    // 2. Personal Info Form
+    const personalForm = document.getElementById('adminPersonalForm');
+    if (personalForm) {
+      personalForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const username = document.getElementById('adminFullNameInput')?.value.trim();
+        const email = document.getElementById('adminEmailInput')?.value.trim();
+        const phone = document.getElementById('adminPhoneInput')?.value.trim();
+
+        if (!username || !email) {
+          showAdminToast('Username and email cannot be blank.', 'warning');
+          return;
+        }
+
+        try {
+          let authUser = {};
+          const stored = localStorage.getItem('authUser');
+          if (stored) authUser = JSON.parse(stored);
+          authUser.username = username;
+          authUser.email = email;
+          authUser.phone_number = phone;
+          localStorage.setItem('authUser', JSON.stringify(authUser));
+          hydrateAdminUser();
+          showAdminToast('Admin profile details updated successfully!');
+        } catch (err) {
+          showAdminToast('Failed to save profile changes.', 'warning');
+        }
+      });
+    }
+
+    // 3. Password Live Validation & Form Submit
+    const newPassInput = document.getElementById('adminNewPass');
+    const confirmPassInput = document.getElementById('adminConfirmPass');
+    const chkLength = document.getElementById('chkLength');
+    const chkNumber = document.getElementById('chkNumber');
+    const chkMatch = document.getElementById('chkMatch');
+
+    function validatePasswordInputs() {
+      const val = newPassInput?.value || '';
+      const conf = confirmPassInput?.value || '';
+
+      const hasLen = val.length >= 8;
+      const hasNum = /\d/.test(val);
+      const matches = val.length > 0 && val === conf;
+
+      if (chkLength) {
+        chkLength.classList.toggle('admin-checklist-item--valid', hasLen);
+        chkLength.textContent = (hasLen ? '✓ ' : '● ') + 'At least 8 characters';
+      }
+      if (chkNumber) {
+        chkNumber.classList.toggle('admin-checklist-item--valid', hasNum);
+        chkNumber.textContent = (hasNum ? '✓ ' : '● ') + 'Contains a number';
+      }
+      if (chkMatch) {
+        chkMatch.classList.toggle('admin-checklist-item--valid', matches);
+        chkMatch.textContent = (matches ? '✓ ' : '● ') + 'Passwords match';
+      }
+
+      return hasLen && hasNum && matches;
+    }
+
+    if (newPassInput) newPassInput.addEventListener('input', validatePasswordInputs);
+    if (confirmPassInput) confirmPassInput.addEventListener('input', validatePasswordInputs);
+
+    const passForm = document.getElementById('adminPasswordForm');
+    if (passForm) {
+      passForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const curPass = document.getElementById('adminCurrentPass')?.value || '';
+        if (!curPass) {
+          showAdminToast('Please enter your current password.', 'warning');
+          return;
+        }
+
+        const valid = validatePasswordInputs();
+        if (!valid) {
+          showAdminToast('Please fulfill all password requirements.', 'warning');
+          return;
+        }
+
+        passForm.reset();
+        validatePasswordInputs();
+        showAdminToast('Password updated securely!');
+      });
+    }
+  }
+
+  // Keyboard shortcut Ctrl+K to focus search
+  document.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) {
+      e.preventDefault();
+      const search = document.getElementById('adminGlobalSearch');
+      if (search) {
+        search.focus();
+        search.select();
+      }
+    }
+  });
+
+  /* =========================================================================
+     11. INITIALIZATION
      ========================================================================= */
 
   document.addEventListener('DOMContentLoaded', () => {
+    hydrateAdminUser();
     initDashboard();
     renderBanners();
     renderProducts();
     renderUsers();
     renderOrders();
+    initAdminProfilePage();
   });
 
 }());

@@ -208,6 +208,7 @@
           email: result.data.email || '',
           phone_number: result.data.phone_number || '',
           gender: result.data.gender || null,
+          role: result.data.role || null,
         };
 
         // Cache user info in localStorage for other client components
@@ -232,6 +233,7 @@
             email: parsed.email || '',
             phone_number: parsed.phone_number || '',
             gender: parsed.gender || null,
+            role: parsed.role || null,
           };
           populateProfileUI(currentUserData);
           return;
@@ -266,6 +268,16 @@
         radio.checked = (radio.value === targetGender);
       });
     }
+
+    // Check if role is ADMIN to reveal Administration link in sidebar
+    try {
+      const cached = JSON.parse(localStorage.getItem('authUser') || '{}');
+      const role = data.role || cached.role;
+      const adminNav = document.getElementById('profileAdminNavGroup');
+      if (adminNav) {
+        adminNav.style.display = (role === 'ADMIN' || role === 'admin') ? 'block' : 'none';
+      }
+    } catch (e) {}
   }
 
 

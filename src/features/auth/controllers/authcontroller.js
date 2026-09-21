@@ -26,15 +26,36 @@ export class AuthController {
         data:    safeResult,
       });
     } catch (error) {
-      const isDbError = error.message?.includes("Can't reach database") ||
-                        error.code === 'P1001' ||
-                        error.constructor?.name?.startsWith('Prisma');
-      if (isDbError) {
+      console.error('[AuthController.register Error]:', error);
+
+      // Handle Unique Constraint Violations (e.g. email or phone_number already taken)
+      if (error.code === 'P2002') {
+        const target = error.meta?.target || [];
+        const field = Array.isArray(target) ? target.join(', ') : String(target);
+        const msg = field.includes('phone')
+          ? 'Phone number already registered'
+          : field.includes('email')
+          ? 'Email already exists'
+          : 'An account with these credentials already exists';
+        return res.status(409).json({
+          success: false,
+          message: msg,
+        });
+      }
+
+      const isDbConnError = error.message?.includes("Can't reach database") ||
+                            error.code === 'P1001' ||
+                            error.code === 'P1017' ||
+                            error.code === 'ECONNRESET' ||
+                            error.name === 'PrismaClientInitializationError';
+
+      if (isDbConnError) {
         return res.status(503).json({
           success: false,
           message: 'Service temporarily unavailable. Please try again later.',
         });
       }
+
       return res.status(error.message === "Email already exists" ? 409 : 400).json({
         success: false,
         message: error.message,
@@ -52,12 +73,17 @@ export class AuthController {
         data:    safeResult,
       });
     } catch (error) {
-      const isDbError = error.message?.includes("Can't reach database") ||
-                        error.code === 'P1001' ||
-                        error.constructor?.name?.startsWith('Prisma');
-      return res.status(isDbError ? 503 : 401).json({
+      console.error('[AuthController.login Error]:', error);
+
+      const isDbConnError = error.message?.includes("Can't reach database") ||
+                            error.code === 'P1001' ||
+                            error.code === 'P1017' ||
+                            error.code === 'ECONNRESET' ||
+                            error.name === 'PrismaClientInitializationError';
+
+      return res.status(isDbConnError ? 503 : 401).json({
         success: false,
-        message: isDbError
+        message: isDbConnError
           ? 'Service temporarily unavailable. Please try again later.'
           : error.message,
       });

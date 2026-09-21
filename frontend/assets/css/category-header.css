@@ -104,3 +104,23 @@
   .cat-hdr__wrapper .hdr__action-label { display: none; }
   .cat-hdr__wrapper .hdr__action-icon-wrap svg { width: 18px; height: 18px; }
 }
+
+/* ─── Admin button — highlighted accent ─── */
+.hdr__action-btn--admin {
+  background: rgba(245, 133, 0, 0.12);
+  border: 1px solid rgba(245, 133, 0, 0.35);
+  border-radius: var(--radius-md);
+  padding: 4px 8px !important;
+}
+
+.hdr__action-btn--admin:hover,
+.hdr__action-btn--admin:focus-visible {
+  background: rgba(245, 133, 0, 0.22);
+  border-color: var(--color-accent-500);
+}
+
+.hdr__action-btn--admin .hdr__action-label {
+  color: var(--color-accent-400);
+  font-weight: var(--font-bold);
+}
+
