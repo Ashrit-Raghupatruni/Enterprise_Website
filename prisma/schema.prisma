@@ -19,6 +19,7 @@ model User {
   phone_number  String   @unique
 
   addresses     Address[]
+  orders        Order[]
 }
 
 enum Gender{
@@ -69,13 +70,15 @@ model Product {
   description     String
   brand           String
   price           Decimal
-  availability    Status
+  availability    Status @default(AVAILABLE)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   slug            String @unique
   category        Category @relation(fields:[categoryId],references:[id],onDelete:Cascade)
   productImages   ProductImage[]
   interactions    ProductInteraction[]
+  variants        ProductVariant[]
+  orderItems      OrderItem[]
 
   @@index([categoryId])
 }
@@ -86,10 +89,13 @@ model ProductImage {
   imageUrl        String
   isPrimary       Boolean @default(false)
   createdAt       DateTime @default(now())
+  variantId       String?
 
   product         Product @relation(fields:[productId],references:[id],onDelete:Cascade)
+  variant         ProductVariant? @relation(fields:[variantId],references:[id],onDelete:Cascade)
 
   @@index([productId])
+  @@index([variantId])
 }
 
 enum Status {
@@ -139,4 +145,122 @@ model ProductInteraction {
   @@index([type])
   @@index([createdAt])
   @@index([userId])
+}
+
+model Order {
+  id              String      @id @default(cuid())
+  shortId         String      @unique
+  userId          String
+  status          OrderStatus @default(PROCESSING)
+  subtotal        Decimal     @db.Decimal(12, 2)
+  discountAmount  Decimal     @default(0)
+  deliveryFee     Decimal     @default(0)
+  totalAmount     Decimal     @db.Decimal(12, 2)
+  paymentMethod   String
+  paymentStatus   String      @default("Pending")
+  shippingAddress String
+  deliveryDate    String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items           OrderItem[]
+
+  @@index([userId])
+  @@index([status])
+}
+
+model OrderItem {
+  id                 String   @id @default(cuid())
+  orderId            String
+  productId          String
+  variantId          String?
+  productName        String
+  variantDescription String   @default("")
+  unitPrice          Decimal  @db.Decimal(10, 2)
+  quantity           Int
+  lineTotal          Decimal  @db.Decimal(12, 2)
+  createdAt          DateTime @default(now())
+
+  order              Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product            Product  @relation(fields: [productId], references: [id])
+  variant            ProductVariant? @relation(fields: [variantId], references: [id])
+
+  @@index([orderId])
+  @@index([productId])
+  @@index([variantId])
+}
+
+model Banner {
+  id           String        @id @default(cuid())
+  title        String
+  eyebrow      String
+  subtitle     String        @default("")
+  ctaText      String
+  slug         String
+  badge        String?
+  status       BannerStatus  @default(ACTIVE)
+  bgGradient   String        @default("linear-gradient(135deg, #0d1e4d 0%, #1e3d8f 100%)")
+  accentColor  String        @default("#f58500")
+  displayOrder Int           @default(0)
+  clicks       Int           @default(0)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+model ProductVariant {
+  id              String @id @default(cuid())
+  productId       String
+  product         Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  availability    Status @default(AVAILABLE)
+  priceOverride   Decimal? @db.Decimal(10, 2)
+
+  attributeValues VariantAttributeValue[]
+  images          ProductImage[]
+  orderItems      OrderItem[]
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([productId])
+}
+
+model VariantAttribute {
+  id          String @id @default(cuid())
+  name        String @unique
+  displayName String
+
+  values      VariantAttributeValue[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model VariantAttributeValue {
+  id          String @id @default(cuid())
+  attributeId String
+  attribute   VariantAttribute @relation(fields: [attributeId], references: [id], onDelete: Cascade)
+
+  value           String
+  displayValue    String
+
+  variants        ProductVariant[]
+
+  @@unique([attributeId, value])
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+enum BannerStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum OrderStatus {
+  PROCESSING
+  CONFIRMED
+  OUT_FOR_DELIVERY
+  DELIVERED
+  CANCELLED
 }

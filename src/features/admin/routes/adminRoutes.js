@@ -5,6 +5,7 @@ import adminAuthenticate from '../../../middleware/adminAuthMiddleware.js';
 
 const router = express.Router();
 
+// Site config
 const site = {
   name: 'Kishor Enterprises',
   tagline: 'Official Electronics Store',

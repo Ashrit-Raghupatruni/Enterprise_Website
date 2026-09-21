@@ -6,6 +6,9 @@
 (function () {
   'use strict';
 
+  // Check if using real API or mock data
+  const useApi = window.ADMIN_USE_API || false;
+
   // Ensure mock data is loaded
   const data = window.adminMockData || {
     stats: {},
@@ -14,6 +17,206 @@
     categories: [],
     users: [],
     orders: []
+  };
+
+  // API Helper Functions
+  const API = {
+    async fetch(endpoint, options = {}) {
+      try {
+        const response = await fetch(`/api/admin${endpoint}`, {
+          headers: {
+            'Content-Type': 'application/json',
+            ...options.headers
+          },
+          ...options
+        });
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.message || `API error: ${response.status}`);
+        }
+        return await response.json();
+      } catch (err) {
+        showAdminToast(`Error: ${err.message}`, 'error');
+        console.error('API Error:', err);
+        throw err;
+      }
+    },
+
+    // Read operations
+    async getStats() {
+      return this.fetch('/stats');
+    },
+    async getBanners(filters = {}) {
+      const params = new URLSearchParams();
+      if (filters.status) params.append('status', filters.status);
+      if (filters.search) params.append('search', filters.search);
+      return this.fetch(`/banners?${params}`);
+    },
+    async getProducts(filters = {}) {
+      const params = new URLSearchParams();
+      if (filters.search) params.append('search', filters.search);
+      if (filters.category) params.append('category', filters.category);
+      if (filters.page) params.append('page', filters.page);
+      if (filters.limit) params.append('limit', filters.limit);
+      return this.fetch(`/products?${params}`);
+    },
+    async getUsers(filters = {}) {
+      const params = new URLSearchParams();
+      if (filters.search) params.append('search', filters.search);
+      if (filters.role) params.append('role', filters.role);
+      if (filters.page) params.append('page', filters.page);
+      if (filters.limit) params.append('limit', filters.limit);
+      return this.fetch(`/users?${params}`);
+    },
+    async getUserDetail(userId) {
+      return this.fetch(`/users/${userId}`);
+    },
+    async getOrders(filters = {}) {
+      const params = new URLSearchParams();
+      if (filters.status) params.append('status', filters.status);
+      if (filters.search) params.append('search', filters.search);
+      if (filters.page) params.append('page', filters.page);
+      if (filters.limit) params.append('limit', filters.limit);
+      return this.fetch(`/orders?${params}`);
+    },
+    async getOrderDetail(orderId) {
+      return this.fetch(`/orders/${orderId}`);
+    },
+
+    // Write operations
+    async createBanner(bannerData) {
+      return this.fetch('/banners', {
+        method: 'POST',
+        body: JSON.stringify(bannerData)
+      });
+    },
+    async updateBanner(bannerId, bannerData) {
+      return this.fetch(`/banners/${bannerId}`, {
+        method: 'PUT',
+        body: JSON.stringify(bannerData)
+      });
+    },
+    async toggleBanner(bannerId) {
+      return this.fetch(`/banners/${bannerId}/toggle`, {
+        method: 'PATCH'
+      });
+    },
+    async deleteBanner(bannerId) {
+      return this.fetch(`/banners/${bannerId}`, {
+        method: 'DELETE'
+      });
+    },
+
+    async createProduct(productData) {
+      return this.fetch('/products', {
+        method: 'POST',
+        body: JSON.stringify(productData)
+      });
+    },
+    async updateProduct(productId, productData) {
+      return this.fetch(`/products/${productId}`, {
+        method: 'PUT',
+        body: JSON.stringify(productData)
+      });
+    },
+    async toggleProductVisibility(productId) {
+      return this.fetch(`/products/${productId}/visibility`, {
+        method: 'PATCH'
+      });
+    },
+    async deleteProduct(productId) {
+      return this.fetch(`/products/${productId}`, {
+        method: 'DELETE'
+      });
+    },
+
+    async updateOrderStatus(orderId, status) {
+      return this.fetch(`/orders/${orderId}/status`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status })
+      });
+    }
+  };
+
+  // CRUD Wrapper Functions (auto-switch between API and mock)
+  const CRUD = {
+    async saveBanner(bannerData, bannerId = null) {
+      if (!useApi) {
+        if (bannerId) {
+          const idx = data.banners.findIndex(b => b.id === bannerId);
+          if (idx !== -1) data.banners[idx] = { ...data.banners[idx], ...bannerData };
+        } else {
+          data.banners.push({ id: Date.now().toString(), ...bannerData });
+        }
+        showAdminToast(`Banner ${bannerId ? 'updated' : 'created'} successfully`);
+        return { success: true };
+      }
+      try {
+        const res = bannerId 
+          ? await API.updateBanner(bannerId, bannerData)
+          : await API.createBanner(bannerData);
+        if (res.success) showAdminToast(`Banner ${bannerId ? 'updated' : 'created'} successfully`);
+        return res;
+      } catch (err) {
+        showAdminToast('Failed to save banner', 'error');
+        throw err;
+      }
+    },
+
+    async deleteBanner(bannerId) {
+      if (!useApi) {
+        data.banners = data.banners.filter(b => b.id !== bannerId);
+        showAdminToast('Banner deleted');
+        return { success: true };
+      }
+      try {
+        const res = await API.deleteBanner(bannerId);
+        if (res.success) showAdminToast('Banner deleted');
+        return res;
+      } catch (err) {
+        showAdminToast('Failed to delete banner', 'error');
+        throw err;
+      }
+    },
+
+    async saveProduct(productData, productId = null) {
+      if (!useApi) {
+        if (productId) {
+          const idx = data.products.findIndex(p => p.id === productId);
+          if (idx !== -1) data.products[idx] = { ...data.products[idx], ...productData };
+        } else {
+          data.products.push({ id: Date.now().toString(), ...productData });
+        }
+        showAdminToast(`Product ${productId ? 'updated' : 'created'} successfully`);
+        return { success: true };
+      }
+      try {
+        const res = productId 
+          ? await API.updateProduct(productId, productData)
+          : await API.createProduct(productData);
+        if (res.success) showAdminToast(`Product ${productId ? 'updated' : 'created'} successfully`);
+        return res;
+      } catch (err) {
+        showAdminToast('Failed to save product', 'error');
+        throw err;
+      }
+    },
+
+    async deleteProduct(productId) {
+      if (!useApi) {
+        data.products = data.products.filter(p => p.id !== productId);
+        showAdminToast('Product deleted');
+        return { success: true };
+      }
+      try {
+        const res = await API.deleteProduct(productId);
+        if (res.success) showAdminToast('Product deleted');
+        return res;
+      } catch (err) {
+        showAdminToast('Failed to delete product', 'error');
+        throw err;
+      }
+    }
   };
 
   /* =========================================================================
@@ -197,6 +400,135 @@
     const ordersTbody = document.getElementById('dashboardOrdersTableBody');
     const lowStockTbody = document.getElementById('dashboardLowStockTableBody');
 
+    if (!useApi) {
+      // Use mock data
+      if (ordersTbody) {
+        const recent = data.orders.slice(0, 5);
+        ordersTbody.innerHTML = recent.map(o => `
+          <tr>
+            <td><strong style="font-family:var(--font-mono); color:var(--color-primary-700);">${o.shortId}</strong></td>
+            <td>
+              <div style="font-weight:var(--font-semibold);">${o.customer.name}</div>
+              <div style="font-size:var(--text-xs); color:var(--color-text-muted);">${o.customer.phone}</div>
+            </td>
+            <td><strong>${formatRupees(o.totalAmount)}</strong></td>
+            <td>
+              <span class="order-status order-status--${o.status}">
+                <span class="order-status__dot"></span>
+                ${capitalize(o.status.replace(/_/g, ' '))}
+              </span>
+            </td>
+            <td style="font-size:var(--text-xs); color:var(--color-text-muted);">${o.date}</td>
+            <td>
+              <button type="button" class="admin-btn-action" data-view-order="${o.id}">
+                <span>View</span>
+              </button>
+            </td>
+          </tr>
+        `).join('');
+
+        ordersTbody.querySelectorAll('[data-view-order]').forEach(btn => {
+          btn.addEventListener('click', () => openOrderDrawer(btn.dataset.viewOrder));
+        });
+      }
+
+      if (lowStockTbody) {
+        const lowStock = data.products.filter(p => p.stock <= p.minStockThreshold);
+        lowStockTbody.innerHTML = lowStock.map(p => `
+          <tr>
+            <td>
+              <div style="font-weight:var(--font-semibold); line-height:1.2;">${p.name}</div>
+              <div style="font-size:var(--text-xs); color:var(--color-text-muted);">${p.category}</div>
+            </td>
+            <td>
+              <span style="font-weight:var(--font-bold); color:${p.stock === 0 ? 'var(--color-error-600)' : '#d97706'};">
+                ${p.stock} units
+              </span>
+            </td>
+            <td>
+              <span class="badge ${p.stock === 0 ? 'badge--accent' : 'badge--primary'}" style="${p.stock === 0 ? 'background:#fee2e2; color:#991b1b;' : 'background:#fef3c7; color:#b45309;'}">
+                ${p.status}
+              </span>
+            </td>
+            <td>
+              <button type="button" class="admin-btn-action" data-stock-product="${p.id}">
+                <span>Restock</span>
+              </button>
+            </td>
+          </tr>
+        `).join('');
+
+        lowStockTbody.querySelectorAll('[data-stock-product]').forEach(btn => {
+          btn.addEventListener('click', () => openStockModal(btn.dataset.stockProduct));
+        });
+      }
+      return;
+    }
+
+    // Use API data
+    Promise.all([API.getOrders({ limit: 5 }), API.getStats()])
+      .then(([ordersRes, statsRes]) => {
+        if (ordersTbody && ordersRes.data) {
+          ordersTbody.innerHTML = ordersRes.data.map(o => `
+            <tr>
+              <td><strong style="font-family:var(--font-mono); color:var(--color-primary-700);">${o.shortId}</strong></td>
+              <td>
+                <div style="font-weight:var(--font-semibold);">${o.user.username}</div>
+                <div style="font-size:var(--text-xs); color:var(--color-text-muted);">${o.user.phone_number}</div>
+              </td>
+              <td><strong>${formatRupees(o.totalAmount)}</strong></td>
+              <td>
+                <span class="order-status order-status--${o.status.toLowerCase()}">
+                  <span class="order-status__dot"></span>
+                  ${capitalize(o.status.replace(/_/g, ' '))}
+                </span>
+              </td>
+              <td style="font-size:var(--text-xs); color:var(--color-text-muted);">${new Date(o.createdAt).toLocaleDateString()}</td>
+              <td>
+                <button type="button" class="admin-btn-action" data-view-order="${o.id}">
+                  <span>View</span>
+                </button>
+              </td>
+            </tr>
+          `).join('');
+
+          ordersTbody.querySelectorAll('[data-view-order]').forEach(btn => {
+            btn.addEventListener('click', () => openOrderDrawer(btn.dataset.viewOrder));
+          });
+        }
+
+        // Update stat cards
+        if (statsRes.data) {
+          const stats = statsRes.data;
+          const els = {
+            totalProducts: document.getElementById('statTotalProducts'),
+            totalUsers: document.getElementById('statTotalUsers'),
+            totalOrders: document.getElementById('statTotalOrders'),
+            revenue: document.getElementById('statTotalRevenue'),
+            lowStock: document.getElementById('statLowStockCount'),
+            pending: document.getElementById('statPendingCount'),
+            banners: document.getElementById('statActiveBanners')
+          };
+          if (els.totalProducts) els.totalProducts.textContent = stats.totalProducts;
+          if (els.totalUsers) els.totalUsers.textContent = stats.totalUsers;
+          if (els.totalOrders) els.totalOrders.textContent = stats.totalOrders;
+          if (els.revenue) els.revenue.textContent = formatRupees(stats.totalRevenue);
+          if (els.lowStock) els.lowStock.textContent = stats.lowStockProducts;
+          if (els.pending) els.pending.textContent = stats.pendingOrders;
+          if (els.banners) els.banners.textContent = stats.activeBanners;
+        }
+      })
+      .catch(() => {
+        // Fall back to mock data
+        initDashboard_Mock();
+      });
+  }
+
+  function initDashboard_Mock() {
+    // Fallback mock implementation - same as original
+    const ordersTbody = document.getElementById('dashboardOrdersTableBody');
+    const lowStockTbody = document.getElementById('dashboardLowStockTableBody');
+    
     if (ordersTbody) {
       const recent = data.orders.slice(0, 5);
       ordersTbody.innerHTML = recent.map(o => `
@@ -222,40 +554,8 @@
         </tr>
       `).join('');
 
-      // Wire up view order buttons
       ordersTbody.querySelectorAll('[data-view-order]').forEach(btn => {
         btn.addEventListener('click', () => openOrderDrawer(btn.dataset.viewOrder));
-      });
-    }
-
-    if (lowStockTbody) {
-      const lowStock = data.products.filter(p => p.stock <= p.minStockThreshold);
-      lowStockTbody.innerHTML = lowStock.map(p => `
-        <tr>
-          <td>
-            <div style="font-weight:var(--font-semibold); line-height:1.2;">${p.name}</div>
-            <div style="font-size:var(--text-xs); color:var(--color-text-muted);">${p.category}</div>
-          </td>
-          <td>
-            <span style="font-weight:var(--font-bold); color:${p.stock === 0 ? 'var(--color-error-600)' : '#d97706'};">
-              ${p.stock} units
-            </span>
-          </td>
-          <td>
-            <span class="badge ${p.stock === 0 ? 'badge--accent' : 'badge--primary'}" style="${p.stock === 0 ? 'background:#fee2e2; color:#991b1b;' : 'background:#fef3c7; color:#b45309;'}">
-              ${p.status}
-            </span>
-          </td>
-          <td>
-            <button type="button" class="admin-btn-action" data-stock-product="${p.id}">
-              <span>Restock</span>
-            </button>
-          </td>
-        </tr>
-      `).join('');
-
-      lowStockTbody.querySelectorAll('[data-stock-product]').forEach(btn => {
-        btn.addEventListener('click', () => openStockModal(btn.dataset.stockProduct));
       });
     }
   }
@@ -1050,18 +1350,33 @@
       </div>
     `;
 
-    // Hook up update status button
-    const updateStatusBtn = document.getElementById('updateOrderStatusBtn');
-    if (updateStatusBtn) {
-      updateStatusBtn.addEventListener('click', () => {
-        const newStatus = document.getElementById('drawerStatusSelect').value;
+  function updateOrderStatus(orderId, newStatus) {
+    if (!useApi) {
+      // Mock implementation
+      const order = data.orders.find(o => o.id === orderId);
+      if (order) {
         order.status = newStatus;
         showAdminToast(`Order ${order.shortId} status updated to "${capitalize(newStatus.replace(/_/g, ' '))}".`);
         renderOrders();
         initDashboard();
-        openOrderDrawer(order.id); // re-render drawer
-      });
+      }
+      return;
     }
+
+    // Use API
+    API.updateOrderStatus(orderId, newStatus)
+      .then((res) => {
+        if (res.success) {
+          showAdminToast(`Order status updated to ${newStatus.replace(/_/g, ' ')}`, 'success');
+          renderOrders();
+          initDashboard();
+          openOrderDrawer(orderId);
+        }
+      })
+      .catch(() => {
+        showAdminToast('Failed to update order status', 'error');
+      });
+  }
 
     drawer.classList.add('open');
     overlay.classList.add('open');
