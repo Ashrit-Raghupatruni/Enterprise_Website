@@ -7,7 +7,7 @@
      1. BANNER MODAL (Add / Edit)
 ════════════════════════════════════════ -->
 <div class="admin-modal-backdrop" id="bannerModal" role="dialog" aria-modal="true" aria-labelledby="bannerModalTitle" aria-hidden="true">
-  <div class="admin-modal">
+  <div class="admin-modal admin-modal--lg">
     <div class="admin-modal__header">
       <h3 class="admin-modal__title" id="bannerModalTitle">Add New Banner</h3>
       <button class="admin-modal__close" data-close-modal="bannerModal" aria-label="Close modal">&times;</button>
@@ -28,6 +28,53 @@
       <div class="admin-form-group">
         <label class="admin-label" for="bannerSubtitle">Description / Subtitle</label>
         <textarea id="bannerSubtitle" name="subtitle" class="admin-textarea" rows="2" placeholder="Short marketing description..."></textarea>
+      </div>
+
+      <!-- Banner Image (Upload Local or Online URL) -->
+      <div class="admin-form-group">
+        <label class="admin-label">Banner Image / Graphic</label>
+        <div class="admin-img-source-tabs" role="tablist">
+          <button type="button" class="admin-img-tab active" data-img-tab="banner-file" role="tab" aria-selected="true">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+            Upload Local File
+          </button>
+          <button type="button" class="admin-img-tab" data-img-tab="banner-url" role="tab" aria-selected="false">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+            Online Image URL
+          </button>
+        </div>
+
+        <!-- Local Upload Dropzone -->
+        <div class="admin-img-panel active" id="bannerFilePanel">
+          <div class="admin-dropzone" id="bannerDropzone">
+            <input type="file" id="bannerFileInput" accept="image/*" class="admin-dropzone__input"/>
+            <div class="admin-dropzone__content">
+              <div class="admin-dropzone__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+              </div>
+              <p class="admin-dropzone__text"><strong>Click to browse</strong> or drag & drop banner image</p>
+              <p class="admin-dropzone__hint">Supports JPG, PNG, WEBP, or SVG (Recommended 16:9 or 21:9)</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Online URL Input -->
+        <div class="admin-img-panel" id="bannerUrlPanel" style="display: none;">
+          <div class="admin-url-input-group">
+            <input type="url" id="bannerImageUrlInput" class="admin-input" placeholder="https://example.com/banner-graphic.jpg"/>
+            <button type="button" class="btn btn--outline btn--sm" id="bannerApplyUrlBtn">Apply URL</button>
+          </div>
+          <p class="admin-form-hint">Paste direct image URL from Unsplash, CDN, or cloud storage.</p>
+        </div>
+
+        <!-- Live Preview -->
+        <div class="admin-banner-preview-box" id="bannerImgPreviewBox" style="display: none;">
+          <img id="bannerImgPreviewElement" src="" alt="Banner Preview"/>
+          <button type="button" class="admin-img-clear-btn" id="bannerImgClearBtn" title="Remove image">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            <span>Remove Image</span>
+          </button>
+        </div>
       </div>
 
       <div class="admin-form-row">
@@ -66,7 +113,7 @@
      2. PRODUCT MODAL (Add / Edit)
 ════════════════════════════════════════ -->
 <div class="admin-modal-backdrop" id="productModal" role="dialog" aria-modal="true" aria-labelledby="productModalTitle" aria-hidden="true">
-  <div class="admin-modal">
+  <div class="admin-modal admin-modal--lg">
     <div class="admin-modal__header">
       <h3 class="admin-modal__title" id="productModalTitle">Add New Product</h3>
       <button class="admin-modal__close" data-close-modal="productModal" aria-label="Close modal">&times;</button>
@@ -119,6 +166,58 @@
             <option value="AVAILABLE">Available</option>
             <option value="NOT_AVAILABLE">Not Available / Out of Stock</option>
           </select>
+        </div>
+      </div>
+
+      <!-- Product Images & Gallery Section -->
+      <div class="admin-form-group">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-2);">
+          <label class="admin-label" style="margin-bottom: 0;">Product Images & Gallery (Multiple)</label>
+          <span class="admin-badge-count" id="productImagesCount">0 images</span>
+        </div>
+
+        <div class="admin-img-source-tabs" role="tablist">
+          <button type="button" class="admin-img-tab active" data-img-tab="product-file" role="tab" aria-selected="true">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+            Upload Local Files
+          </button>
+          <button type="button" class="admin-img-tab" data-img-tab="product-url" role="tab" aria-selected="false">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+            Add Online Image URL
+          </button>
+        </div>
+
+        <!-- Product File Dropzone -->
+        <div class="admin-img-panel active" id="productFilePanel">
+          <div class="admin-dropzone" id="productDropzone">
+            <input type="file" id="productFileInput" accept="image/*" multiple class="admin-dropzone__input"/>
+            <div class="admin-dropzone__content">
+              <div class="admin-dropzone__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+              </div>
+              <p class="admin-dropzone__text"><strong>Click to browse files</strong> or drag & drop multiple images</p>
+              <p class="admin-dropzone__hint">Select one or multiple JPG, PNG, or WEBP photos (First image is Cover by default)</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Product Online URL input -->
+        <div class="admin-img-panel" id="productUrlPanel" style="display: none;">
+          <div class="admin-url-input-group">
+            <input type="url" id="productImageUrlInput" class="admin-input" placeholder="https://images.unsplash.com/... or direct image URL"/>
+            <button type="button" class="btn btn--outline btn--sm" id="productAddUrlBtn">Add Image</button>
+          </div>
+          <p class="admin-form-hint">Paste direct image URL and click "Add Image" to include in the product gallery.</p>
+        </div>
+
+        <!-- Staged Product Images Gallery Grid -->
+        <div class="admin-gallery-wrap" id="productGalleryWrap">
+          <div class="admin-gallery-empty" id="productGalleryEmpty">
+            <p>No images added yet. Upload local images or add image links above.</p>
+          </div>
+          <div class="admin-gallery-grid" id="productGalleryGrid">
+            <!-- Populated dynamically by admin.js -->
+          </div>
         </div>
       </div>
 

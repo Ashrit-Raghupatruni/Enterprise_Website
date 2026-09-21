@@ -67,6 +67,7 @@ export const adminAuthenticate = async (req, res, next) => {
       // Render the Access Denied pop-up modal page with HTTP 403
       return res.status(403).render('pages/admin/access-denied', {
         title: 'Access Denied — Kishor Enterprises',
+        useApi: false,
         site: {
           name: 'Kishor Enterprises',
           tagline: 'Official Electronics Store',
