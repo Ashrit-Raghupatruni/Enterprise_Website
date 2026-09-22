@@ -42,8 +42,8 @@ export const adminAuthenticate = async (req, res, next) => {
     let username = decoded.username;
     let email = decoded.email;
 
-    // Fallback: check database if role not present in token
-    if (!role && decoded.userId) {
+    // Check database if role is not ADMIN to ensure database role promotions apply immediately
+    if (decoded.userId && role !== 'ADMIN') {
       const dbUser = await prisma.user.findUnique({
         where: { id: decoded.userId },
         select: { id: true, username: true, email: true, role: true }
