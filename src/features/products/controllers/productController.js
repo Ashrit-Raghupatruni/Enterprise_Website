@@ -16,7 +16,7 @@ const CATEGORY_MAP = {
 
 export class ProductController {
   constructor() {
-    this.productService  = new ProductService();
+    this.productService = new ProductService();
     this.trendingService = new TrendingService();
   }
 
@@ -109,10 +109,10 @@ export class ProductController {
    */
   async recordInteraction(req, res) {
     try {
-      const { id }       = req.params;
-      const { type }     = req.body;
-      const userId       = req.user?.userId || null;
-      const sessionId    = req.headers["x-session-id"] || null;
+      const { id } = req.params;
+      const { type } = req.body;
+      const userId = req.user?.userId || null;
+      const sessionId = req.headers["x-session-id"] || null;
 
       if (!type) {
         return res.status(400).json({ success: false, message: "Interaction type is required" });
@@ -133,15 +133,17 @@ export class ProductController {
   async rateProduct(req, res) {
     try {
       const { id } = req.params;
-      const { rating, comment } = req.body;
+      let { rating, comment } = req.body;
       const userId = req.user?.userId || req.user?.id; // user ID from JWT payload
 
       if (!userId) {
         return res.status(401).json({ success: false, message: "Unauthorized: User ID not found" });
       }
 
-      if (!rating || rating < 1 || rating > 5) {
-        return res.status(400).json({ success: false, message: "Rating must be between 1 and 5" });
+      rating = parseInt(rating, 10);
+      console.log(rating);
+      if (isNaN(rating) || rating < 1 || rating > 5) {
+        return res.status(400).json({ success: false, message: "Rating must be an integer between 1 and 5" });
       }
 
       const updatedProduct = await this.productService.rateProduct(id, userId, rating, comment);

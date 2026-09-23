@@ -86,9 +86,18 @@
   }
 
   function stars(rating) {
+    const rId = Math.random().toString(36).slice(2, 8);
+    const percent = Math.round((rating % 1) * 100);
     return Array.from({ length: 5 }, (_, i) => {
-      const cls = i < Math.floor(rating) ? '' : ' plp-card__star--empty';
-      return `<svg class="plp-card__star${cls}" viewBox="0 0 16 16"><path d="M8 1.5l1.8 5.5H16l-4.6 3.3 1.8 5.5L8 11.5l-5.2 3.3 1.8-5.5L0 7h6.2z"/></svg>`;
+      let fill = 'var(--gray-300)';
+      let defs = '';
+      if (rating >= i + 1) {
+        fill = 'var(--color-warning-500)';
+      } else if (rating > i) {
+        fill = `url(#grad-${rId}-${i})`;
+        defs = `<defs><linearGradient id="grad-${rId}-${i}" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="${percent}%" stop-color="var(--color-warning-500)" /><stop offset="${percent}%" stop-color="var(--gray-300)" /></linearGradient></defs>`;
+      }
+      return `<svg class="plp-card__star" style="fill:${fill};" viewBox="0 0 16 16"><path d="M8 1.5l1.8 5.5H16l-4.6 3.3 1.8 5.5L8 11.5l-5.2 3.3 1.8-5.5L0 7h6.2z"/>${defs}</svg>`;
     }).join('');
   }
 

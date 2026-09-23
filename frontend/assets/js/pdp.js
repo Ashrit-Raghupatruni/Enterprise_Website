@@ -21,13 +21,22 @@
   }
 
   function starsSVG(rating) {
-    return Array.from({ length: 5 }, (_, i) => {
-      // For .25 margin rounding, if rating is e.g. 4.5, Math.floor is 4.
-      // So index 0,1,2,3 are full. If we want half stars we'd need a half star SVG, but for simplicity we'll just show full stars for Math.round or Math.floor.
-      // Let's use Math.round(rating) for displaying full stars visually.
-      const full = i < Math.round(rating);
-      return `<svg data-star="${i+1}" class="pdp-star-icon" width="18" height="18" viewBox="0 0 16 16" style="fill:${full ? 'var(--color-warning-500)' : 'var(--gray-300)'}; cursor: pointer; transition: transform 0.1s; margin-right: 2px;"><path d="M8 1.5l1.8 5.5H16l-4.6 3.3 1.8 5.5L8 11.5l-5.2 3.3 1.8-5.5L0 7h6.2z"/></svg>`;
+    const rId = Math.random().toString(36).slice(2, 8);
+    const percent = Math.round((rating % 1) * 100);
+    
+    const stars = Array.from({ length: 5 }, (_, i) => {
+      let fill = 'var(--gray-300)';
+      let defs = '';
+      if (rating >= i + 1) {
+        fill = 'var(--color-warning-500)';
+      } else if (rating > i) {
+        fill = `url(#grad-${rId}-${i})`;
+        defs = `<defs><linearGradient id="grad-${rId}-${i}" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="${percent}%" stop-color="var(--color-warning-500)" /><stop offset="${percent}%" stop-color="var(--gray-300)" /></linearGradient></defs>`;
+      }
+      return `<svg data-star="${i+1}" class="pdp-star-icon" width="18" height="18" viewBox="0 0 16 16" style="fill:${fill}; cursor: pointer; transition: transform 0.1s; margin-right: 2px;">${defs}<path d="M8 1.5l1.8 5.5H16l-4.6 3.3 1.8 5.5L8 11.5l-5.2 3.3 1.8-5.5L0 7h6.2z"/></svg>`;
     }).join('');
+    
+    return stars;
   }
 
   function placeholder(color, size = 320) {
@@ -643,12 +652,16 @@
 
   if (submitStars.length > 0) {
     submitStars.forEach(star => {
-      star.addEventListener('click', () => {
-        currentRating = parseInt(star.dataset.star, 10);
+      const getHoverRating = (e, star) => {
+        return parseInt(star.dataset.star, 10);
+      };
+
+      star.addEventListener('click', (e) => {
+        currentRating = getHoverRating(e, star);
         updateInteractiveStars(currentRating);
       });
-      star.addEventListener('mouseenter', () => {
-        updateInteractiveStars(parseInt(star.dataset.star, 10), true);
+      star.addEventListener('mousemove', (e) => {
+        updateInteractiveStars(getHoverRating(e, star), true);
       });
       star.addEventListener('mouseleave', () => {
         updateInteractiveStars(currentRating);
@@ -657,13 +670,26 @@
   }
 
   function updateInteractiveStars(rating, hover = false) {
+    const textVal = document.getElementById('pdpHoverRatingVal');
+    if (textVal) textVal.textContent = rating || '0';
+    
     submitStars.forEach((star, index) => {
-      if (index < rating) {
+      const starNumber = index + 1;
+      if (rating >= starNumber) {
         star.style.fill = 'var(--color-warning-500)';
+      } else if (rating > index) {
+        const percent = Math.round((rating - index) * 100);
+        const stop1 = document.getElementById('dynamicStarStop1');
+        const stop2 = document.getElementById('dynamicStarStop2');
+        if (stop1 && stop2) {
+          stop1.setAttribute('offset', `${percent}%`);
+          stop2.setAttribute('offset', `${percent}%`);
+        }
+        star.style.fill = 'url(#dynamicStarGradient)';
       } else {
         star.style.fill = 'var(--gray-300)';
       }
-      star.style.transform = hover && index < rating ? 'scale(1.1)' : 'scale(1)';
+      star.style.transform = hover && (rating > index && rating <= starNumber) ? 'scale(1.1)' : 'scale(1)';
     });
   }
 

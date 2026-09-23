@@ -49,6 +49,7 @@ export class ProductRepository {
   }
 
   async rateProduct(productId, userId, ratingValue, comment) {
+    console.log(ratingValue)
     // 1. Upsert the review
     await prisma.review.upsert({
       where: {
@@ -78,9 +79,11 @@ export class ProductRepository {
 
     const exactAverage = aggregations._avg.rating || 0;
     const reviewCount = aggregations._count.rating || 0;
+    console.log(exactAverage)
 
     // 3. Custom .25 margin rounding logic
-    const roundedRating = Math.round(exactAverage * 2) / 2;
+    const roundedRating = Math.round(Number(exactAverage) * 2) / 2;
+    console.log(roundedRating)
 
     // 4. Update the Product model
     return await prisma.product.update({
