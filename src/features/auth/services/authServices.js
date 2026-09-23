@@ -32,7 +32,7 @@ export class RegisterService{
             password_hash:hashedPassword
         });
         //generating token
-        const token=this.generateToken(user.id);
+        const token=this.generateToken(user);
         const {password_hash,...safeuser}=user
         return {
             safeuser,
@@ -50,8 +50,16 @@ export class RegisterService{
             throw new Error("Password must alteast 8 character long");
         }
     }
-    generateToken(userId){
-        return jwt.sign({userId},process.env.JWT_SECRET,{expiresIn:'7d'});
+    generateToken(user){
+        return jwt.sign(
+            {
+                userId: user.id,
+                email: user.email,
+                role: user.role
+            },
+            process.env.JWT_SECRET,
+            { expiresIn: '7d' }
+        );
     }
 };
 
@@ -79,7 +87,7 @@ export class LoginService{
                 role:user.role
             },
             process.env.JWT_SECRET,{
-            expiresIn:'1h'
+            expiresIn:'7d'
         });
         //hiding password_hash using object destructuring
         const {password_hash,...safeuser}=user;

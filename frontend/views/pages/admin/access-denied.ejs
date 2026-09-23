@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <%- include('../../partials/admin/admin-head') %>
+  <style>
+    .admin-denied-page {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at 50% 20%, #1e293b 0%, #0f172a 100%);
+      padding: var(--space-4);
+      font-family: var(--font-sans);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .admin-denied-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(8px);
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-4);
+      animation: fadeIn 0.25s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes popIn {
+      from { opacity: 0; transform: scale(0.92) translateY(12px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .admin-denied-popup {
+      background: #ffffff;
+      border-radius: var(--radius-2xl);
+      max-width: 520px;
+      width: 100%;
+      padding: var(--space-8);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(226, 232, 240, 0.8);
+      text-align: center;
+      position: relative;
+      animation: popIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 20;
+    }
+
+    .admin-denied-icon-wrap {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: #fee2e2;
+      color: #dc2626;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto var(--space-5);
+      border: 6px solid #fef2f2;
+      box-shadow: 0 4px 14px rgba(220, 38, 38, 0.2);
+    }
+
+    .admin-denied-eyebrow {
+      display: inline-block;
+      font-size: var(--text-xs);
+      font-weight: var(--font-bold);
+      text-transform: uppercase;
+      letter-spacing: var(--tracking-wider);
+      color: #dc2626;
+      background: #fee2e2;
+      padding: 4px 12px;
+      border-radius: var(--radius-full);
+      margin-bottom: var(--space-3);
+    }
+
+    .admin-denied-title {
+      font-size: var(--text-2xl);
+      font-weight: var(--font-extrabold);
+      color: var(--color-text-primary);
+      margin: 0 0 var(--space-2);
+      line-height: var(--leading-tight);
+    }
+
+    .admin-denied-msg {
+      font-size: var(--text-base);
+      font-weight: var(--font-semibold);
+      color: #b91c1c;
+      margin: 0 0 var(--space-4);
+      padding: var(--space-3) var(--space-4);
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      border-radius: var(--radius-lg);
+    }
+
+    .admin-denied-desc {
+      font-size: var(--text-sm);
+      color: var(--color-text-secondary);
+      line-height: var(--leading-relaxed);
+      margin: 0 0 var(--space-6);
+    }
+
+    .admin-denied-user-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--space-3) var(--space-4);
+      background: var(--color-bg-secondary);
+      border: 1px solid var(--color-border-light);
+      border-radius: var(--radius-lg);
+      margin-bottom: var(--space-6);
+      text-align: left;
+    }
+
+    .admin-denied-actions {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3);
+    }
+
+    @media (min-width: 480px) {
+      .admin-denied-actions-row {
+        display: flex;
+        gap: var(--space-3);
+      }
+      .admin-denied-actions-row .btn {
+        flex: 1;
+      }
+    }
+  </style>
+</head>
+<body class="admin-denied-page">
+
+  <!-- Interactive Access Denied Modal Pop-up -->
+  <div class="admin-denied-backdrop" id="adminDeniedModal" role="dialog" aria-modal="true" aria-labelledby="deniedTitle">
+    <div class="admin-denied-popup">
+
+      <!-- Lock Shield Icon -->
+      <div class="admin-denied-icon-wrap" aria-hidden="true">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+          <line x1="12" y1="15" x2="12" y2="18"></line>
+        </svg>
+      </div>
+
+      <span class="admin-denied-eyebrow">Restricted Area</span>
+      <h1 class="admin-denied-title" id="deniedTitle">Access Denied</h1>
+
+      <!-- The exact requested pop-up notification -->
+      <div class="admin-denied-msg">
+        ⚠️ No admin access since you are a user.
+      </div>
+
+      <p class="admin-denied-desc">
+        Your account is registered as a regular store customer. Administrator credentials are required to view and manage store settings, catalog, banners, and orders.
+      </p>
+
+      <!-- Current Identity Info -->
+      <div class="admin-denied-user-card">
+        <div>
+          <strong style="display:block; font-size:var(--text-sm);"><%= user.username %></strong>
+          <span style="font-size:var(--text-xs); color:var(--color-text-muted);"><%= user.email || 'Customer Account' %></span>
+        </div>
+        <span class="badge badge--primary" style="font-size:11px; padding:2px 8px;">Role: <%= user.role %></span>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="admin-denied-actions">
+        <div class="admin-denied-actions-row">
+          <a href="/home" class="btn btn--primary">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+            <span>Return to Store</span>
+          </a>
+          <a href="/login" class="btn btn--outline">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg>
+            <span>Login as Admin</span>
+          </a>
+        </div>
+        <button type="button" class="btn btn--ghost btn--sm" id="deniedSignOutBtn" style="color:var(--color-text-muted); margin-top:var(--space-2);">
+          Sign out of this session
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('deniedSignOutBtn')?.addEventListener('click', function () {
+      fetch('/logout', { method: 'POST', credentials: 'same-origin' })
+        .finally(function () {
+          try {
+            localStorage.removeItem('authUser');
+            localStorage.removeItem('pendingRoute');
+          } catch (e) {}
+          window.location.href = '/login';
+        });
+    });
+  </script>
+
+</body>
+</html>

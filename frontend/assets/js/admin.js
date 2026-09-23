@@ -280,16 +280,67 @@
     sidebarBackdrop.addEventListener('click', () => toggleSidebar(false));
   }
 
-  // Admin Logout button handler
-  const logoutBtn = document.getElementById('adminLogoutBtn');
-  if (logoutBtn) {
-    logoutBtn.addEventListener('click', () => {
-      showAdminToast('Logging out from admin session...', 'warning');
-      setTimeout(() => {
-        window.location.href = '/home';
-      }, 800);
+  /* =========================================================================
+     2.1 USER PROFILE DROPDOWN & LOGOUT
+     ========================================================================= */
+
+  const userDropdownBtn = document.getElementById('adminUserDropdownBtn');
+  const userDropdownMenu = document.getElementById('adminUserDropdownMenu');
+
+  function toggleUserDropdown(open) {
+    if (!userDropdownMenu) return;
+    const shouldOpen = open !== undefined ? open : !userDropdownMenu.classList.contains('open');
+    if (shouldOpen) {
+      userDropdownMenu.classList.add('open');
+      userDropdownBtn?.setAttribute('aria-expanded', 'true');
+    } else {
+      userDropdownMenu.classList.remove('open');
+      userDropdownBtn?.setAttribute('aria-expanded', 'false');
+    }
+  }
+
+  if (userDropdownBtn) {
+    userDropdownBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleUserDropdown();
     });
   }
+
+  // Close dropdown on outside click
+  document.addEventListener('click', (e) => {
+    if (userDropdownMenu && userDropdownMenu.classList.contains('open')) {
+      if (!userDropdownMenu.contains(e.target) && !userDropdownBtn?.contains(e.target)) {
+        toggleUserDropdown(false);
+      }
+    }
+  });
+
+  // Admin Logout unified handler
+  function performAdminLogout() {
+    showAdminToast('Logging out from admin session...', 'warning');
+    try {
+      fetch('/logout', { method: 'POST', credentials: 'same-origin' })
+        .finally(() => {
+          localStorage.removeItem('authUser');
+          setTimeout(() => {
+            window.location.href = '/login';
+          }, 600);
+        });
+    } catch (e) {
+      localStorage.removeItem('authUser');
+      window.location.href = '/login';
+    }
+  }
+
+  ['adminLogoutBtn', 'adminSidebarLogoutBtn', 'headerLogoutBtn', 'adminProfileSignOutBtn'].forEach(id => {
+    const btn = document.getElementById(id);
+    if (btn) {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        performAdminLogout();
+      });
+    }
+  });
 
   /* =========================================================================
      3. MODAL & DRAWER CONTROLS
@@ -513,6 +564,122 @@
      5. BANNER MANAGEMENT VIEW CONTROLLER
      ========================================================================= */
 
+  let currentBannerImage = '';
+
+  function setBannerImage(url) {
+    currentBannerImage = url || '';
+    const previewBox = document.getElementById('bannerImgPreviewBox');
+    const previewImg = document.getElementById('bannerImgPreviewElement');
+    const urlInput = document.getElementById('bannerImageUrlInput');
+
+    if (currentBannerImage) {
+      if (previewImg) previewImg.src = currentBannerImage;
+      if (previewBox) previewBox.style.display = 'block';
+      if (urlInput && !urlInput.value) urlInput.value = currentBannerImage;
+    } else {
+      if (previewImg) previewImg.src = '';
+      if (previewBox) previewBox.style.display = 'none';
+      if (urlInput) urlInput.value = '';
+      const fileInput = document.getElementById('bannerFileInput');
+      if (fileInput) fileInput.value = '';
+    }
+  }
+
+  function setupBannerImageControls() {
+    // Tab switcher
+    const tabs = document.querySelectorAll('[data-img-tab^="banner-"]');
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabs.forEach(t => {
+          t.classList.remove('active');
+          t.setAttribute('aria-selected', 'false');
+        });
+        tab.classList.add('active');
+        tab.setAttribute('aria-selected', 'true');
+
+        const tabType = tab.getAttribute('data-img-tab');
+        const filePanel = document.getElementById('bannerFilePanel');
+        const urlPanel = document.getElementById('bannerUrlPanel');
+        if (tabType === 'banner-file') {
+          if (filePanel) filePanel.style.display = 'block';
+          if (urlPanel) urlPanel.style.display = 'none';
+        } else {
+          if (filePanel) filePanel.style.display = 'none';
+          if (urlPanel) urlPanel.style.display = 'block';
+        }
+      });
+    });
+
+    // File input change (local file)
+    const fileInput = document.getElementById('bannerFileInput');
+    if (fileInput) {
+      fileInput.addEventListener('change', (e) => {
+        const file = e.target.files?.[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (ev) => {
+            setBannerImage(ev.target.result);
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+    }
+
+    // Drag and drop for banner dropzone
+    const dropzone = document.getElementById('bannerDropzone');
+    if (dropzone) {
+      ['dragenter', 'dragover'].forEach(evtName => {
+        dropzone.addEventListener(evtName, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          dropzone.classList.add('dragover');
+        });
+      });
+      ['dragleave', 'drop'].forEach(evtName => {
+        dropzone.addEventListener(evtName, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          dropzone.classList.remove('dragover');
+        });
+      });
+      dropzone.addEventListener('drop', (e) => {
+        const file = e.dataTransfer?.files?.[0];
+        if (file && file.type.startsWith('image/')) {
+          const reader = new FileReader();
+          reader.onload = (ev) => {
+            setBannerImage(ev.target.result);
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+    }
+
+    // Online URL input & button
+    const applyUrlBtn = document.getElementById('bannerApplyUrlBtn');
+    const urlInput = document.getElementById('bannerImageUrlInput');
+    if (applyUrlBtn && urlInput) {
+      applyUrlBtn.addEventListener('click', () => {
+        const val = urlInput.value.trim();
+        if (val) setBannerImage(val);
+      });
+      urlInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          const val = urlInput.value.trim();
+          if (val) setBannerImage(val);
+        }
+      });
+    }
+
+    // Clear image
+    const clearBtn = document.getElementById('bannerImgClearBtn');
+    if (clearBtn) {
+      clearBtn.addEventListener('click', () => {
+        setBannerImage('');
+      });
+    }
+  }
+
   function renderBanners() {
     const grid = document.getElementById('bannersGrid');
     const emptyState = document.getElementById('bannersEmptyState');
@@ -543,7 +710,8 @@
     grid.innerHTML = filtered.map(b => `
       <div class="admin-banner-card" data-id="${b.id}">
         <!-- Visual Banner Header Preview -->
-        <div class="admin-banner-preview" style="background:${b.bgGradient};">
+        <div class="admin-banner-preview" style="background:${b.bgGradient || 'linear-gradient(135deg, #0d1e4d 0%, #1e3d8f 60%, #2f52a0 100%)'};">
+          ${b.image ? `<img src="${b.image}" alt="${b.title}" class="admin-banner-preview__bg-img" onerror="this.style.display='none'"/>` : ''}
           <div>
             <span class="admin-banner-preview__eyebrow">${b.eyebrow}</span>
             <h3 class="admin-banner-preview__title">${b.title}</h3>
@@ -623,6 +791,7 @@
     if (idInput) idInput.value = '';
     const title = document.getElementById('bannerModalTitle');
     if (title) title.textContent = 'Add New Banner';
+    setBannerImage('');
   }
 
   function editBanner(id) {
@@ -637,6 +806,8 @@
     document.getElementById('bannerSlug').value = banner.slug;
     document.getElementById('bannerBadge').value = banner.badge || '';
     document.getElementById('bannerStatus').value = banner.status;
+
+    setBannerImage(banner.image || '');
 
     document.getElementById('bannerModalTitle').textContent = 'Edit Banner';
     openModal('bannerModal');
@@ -663,7 +834,16 @@
         // Edit existing
         const banner = data.banners.find(b => b.id === id);
         if (banner) {
-          Object.assign(banner, { title, eyebrow, subtitle, ctaText, slug, badge, status });
+          Object.assign(banner, { 
+            title, 
+            eyebrow, 
+            subtitle, 
+            ctaText, 
+            slug, 
+            badge, 
+            status,
+            image: currentBannerImage 
+          });
           showAdminToast('Banner updated successfully.');
         }
       } else {
@@ -677,6 +857,7 @@
           slug,
           badge,
           status,
+          image: currentBannerImage,
           bgGradient: 'linear-gradient(135deg, #0d1e4d 0%, #1e3d8f 60%, #2f52a0 100%)',
           accentColor: '#f58500',
           clicks: 0
@@ -693,6 +874,180 @@
   /* =========================================================================
      6. PRODUCT & STOCK MANAGEMENT CONTROLLER
      ========================================================================= */
+
+  let currentProductImages = [];
+
+  function renderProductGallery() {
+    const grid = document.getElementById('productGalleryGrid');
+    const empty = document.getElementById('productGalleryEmpty');
+    const count = document.getElementById('productImagesCount');
+
+    if (count) {
+      count.textContent = `${currentProductImages.length} image${currentProductImages.length === 1 ? '' : 's'}`;
+    }
+
+    if (!grid || !empty) return;
+
+    if (currentProductImages.length === 0) {
+      grid.innerHTML = '';
+      empty.style.display = 'flex';
+      return;
+    }
+
+    empty.style.display = 'none';
+
+    // Ensure at least one primary image exists
+    const hasPrimary = currentProductImages.some(x => x.isPrimary);
+    if (!hasPrimary && currentProductImages.length > 0) {
+      currentProductImages[0].isPrimary = true;
+    }
+
+    grid.innerHTML = currentProductImages.map((img, idx) => `
+      <div class="admin-gallery-thumb ${img.isPrimary ? 'admin-gallery-thumb--primary' : ''}">
+        ${img.isPrimary ? `<span class="admin-thumb-primary-tag">★ Cover</span>` : ''}
+        <img src="${img.url}" alt="Product Preview ${idx + 1}" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'100\\' height=\\'100\\' viewBox=\\'0 0 24 24\\' fill=\\'none\\' stroke=\\'%2394a3b8\\' stroke-width=\\'2\\'><rect x=\\'3\\' y=\\'3\\' width=\\'18\\' height=\\'18\\' rx=\\'2\\'/><circle cx=\\'8.5\\' cy=\\'8.5\\' r=\\'1.5\\'/><polyline points=\\'21 15 16 10 5 21\\'/></svg>'"/>
+        <div class="admin-gallery-thumb__actions">
+          ${!img.isPrimary ? `<button type="button" class="admin-thumb-btn-cover" data-make-cover="${idx}">Set Cover</button>` : '<div></div>'}
+          <button type="button" class="admin-thumb-btn-delete" data-remove-img="${idx}" title="Delete image">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
+        </div>
+      </div>
+    `).join('');
+
+    // Attach cover and delete handlers
+    grid.querySelectorAll('[data-make-cover]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const index = Number(btn.dataset.makeCover);
+        currentProductImages.forEach((item, i) => {
+          item.isPrimary = (i === index);
+        });
+        renderProductGallery();
+      });
+    });
+
+    grid.querySelectorAll('[data-remove-img]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const index = Number(btn.dataset.removeImg);
+        const wasPrimary = currentProductImages[index]?.isPrimary;
+        currentProductImages.splice(index, 1);
+        if (wasPrimary && currentProductImages.length > 0) {
+          currentProductImages[0].isPrimary = true;
+        }
+        renderProductGallery();
+      });
+    });
+  }
+
+  function addProductImage(url) {
+    if (!url) return;
+    const isFirst = currentProductImages.length === 0;
+    currentProductImages.push({
+      url,
+      isPrimary: isFirst
+    });
+    renderProductGallery();
+  }
+
+  function setupProductImageControls() {
+    // Tab switcher
+    const tabs = document.querySelectorAll('[data-img-tab^="product-"]');
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabs.forEach(t => {
+          t.classList.remove('active');
+          t.setAttribute('aria-selected', 'false');
+        });
+        tab.classList.add('active');
+        tab.setAttribute('aria-selected', 'true');
+
+        const tabType = tab.getAttribute('data-img-tab');
+        const filePanel = document.getElementById('productFilePanel');
+        const urlPanel = document.getElementById('productUrlPanel');
+        if (tabType === 'product-file') {
+          if (filePanel) filePanel.style.display = 'block';
+          if (urlPanel) urlPanel.style.display = 'none';
+        } else {
+          if (filePanel) filePanel.style.display = 'none';
+          if (urlPanel) urlPanel.style.display = 'block';
+        }
+      });
+    });
+
+    // File input (multiple local files)
+    const fileInput = document.getElementById('productFileInput');
+    if (fileInput) {
+      fileInput.addEventListener('change', (e) => {
+        const files = Array.from(e.target.files || []);
+        if (files.length === 0) return;
+
+        files.forEach(file => {
+          if (file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+              addProductImage(ev.target.result);
+            };
+            reader.readAsDataURL(file);
+          }
+        });
+        fileInput.value = '';
+      });
+    }
+
+    // Drag and drop for product dropzone
+    const dropzone = document.getElementById('productDropzone');
+    if (dropzone) {
+      ['dragenter', 'dragover'].forEach(evtName => {
+        dropzone.addEventListener(evtName, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          dropzone.classList.add('dragover');
+        });
+      });
+      ['dragleave', 'drop'].forEach(evtName => {
+        dropzone.addEventListener(evtName, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          dropzone.classList.remove('dragover');
+        });
+      });
+      dropzone.addEventListener('drop', (e) => {
+        const files = Array.from(e.dataTransfer?.files || []);
+        files.forEach(file => {
+          if (file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+              addProductImage(ev.target.result);
+            };
+            reader.readAsDataURL(file);
+          }
+        });
+      });
+    }
+
+    // Online URL input & button
+    const addUrlBtn = document.getElementById('productAddUrlBtn');
+    const urlInput = document.getElementById('productImageUrlInput');
+    if (addUrlBtn && urlInput) {
+      const handleAddUrl = () => {
+        const val = urlInput.value.trim();
+        if (val) {
+          addProductImage(val);
+          urlInput.value = '';
+        }
+      };
+
+      addUrlBtn.addEventListener('click', handleAddUrl);
+      urlInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          handleAddUrl();
+        }
+      });
+    }
+  }
 
   function renderProducts() {
     const tbody = document.getElementById('productsTableBody');
@@ -739,15 +1094,23 @@
         stockColor = '#dc2626';
       }
 
+      const primaryImg = p.primaryImage || 
+                         (Array.isArray(p.images) && (p.images.find(x => x.isPrimary)?.url || p.images[0]?.url || (typeof p.images[0] === 'string' ? p.images[0] : null))) || 
+                         p.image || null;
+
+      const imgHtml = primaryImg 
+        ? `<img src="${primaryImg}" alt="${p.name}" class="admin-cell-product__thumb-img" onerror="this.parentElement.innerHTML='<svg viewBox=\\'0 0 24 24\\' fill=\\'none\\' stroke=\\'currentColor\\' stroke-width=\\'1.75\\'><rect x=\\'5\\' y=\\'2\\' width=\\'14\\' height=\\'20\\' rx=\\'2\\' ry=\\'2\\'></rect><line x1=\\'12\\' y1=\\'18\\' x2=\\'12.01\\' y2=\\'18\\'></line></svg>'"/>`
+        : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+             <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+             <line x1="12" y1="18" x2="12.01" y2="18"></line>
+           </svg>`;
+
       return `
         <tr data-product-id="${p.id}">
           <td>
             <div class="admin-cell-product">
               <div class="admin-cell-product__img">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
-                  <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
-                  <line x1="12" y1="18" x2="12.01" y2="18"></line>
-                </svg>
+                ${imgHtml}
               </div>
               <div class="admin-cell-product__info">
                 <div class="admin-cell-product__name">${p.name}</div>
@@ -827,6 +1190,12 @@
     if (idInput) idInput.value = '';
     const title = document.getElementById('productModalTitle');
     if (title) title.textContent = 'Add New Product';
+    currentProductImages = [];
+    renderProductGallery();
+    const urlInput = document.getElementById('productImageUrlInput');
+    if (urlInput) urlInput.value = '';
+    const fileInput = document.getElementById('productFileInput');
+    if (fileInput) fileInput.value = '';
   }
 
   function editProduct(id) {
@@ -842,6 +1211,22 @@
     document.getElementById('productSlug').value = prod.slug;
     document.getElementById('productAvailability').value = prod.availability;
     document.getElementById('productDescription').value = prod.description || '';
+
+    // Populate images
+    if (Array.isArray(prod.images) && prod.images.length > 0) {
+      currentProductImages = prod.images.map(img => {
+        if (typeof img === 'string') {
+          return { url: img, isPrimary: img === prod.primaryImage };
+        }
+        return { url: img.url, isPrimary: !!img.isPrimary };
+      });
+    } else if (prod.primaryImage || prod.image) {
+      currentProductImages = [{ url: prod.primaryImage || prod.image, isPrimary: true }];
+    } else {
+      currentProductImages = [];
+    }
+
+    renderProductGallery();
 
     document.getElementById('productModalTitle').textContent = 'Edit Product Details';
     openModal('productModal');
@@ -869,10 +1254,25 @@
       if (stock === 0) status = 'Out of Stock';
       else if (stock < 5) status = 'Low Stock';
 
+      const primaryImgUrl = currentProductImages.find(x => x.isPrimary)?.url || currentProductImages[0]?.url || '';
+      const productImages = currentProductImages.map(x => ({ url: x.url, isPrimary: !!x.isPrimary }));
+
       if (id) {
         const prod = data.products.find(p => p.id === id);
         if (prod) {
-          Object.assign(prod, { name, brand, category, price, stock, slug, availability, description, status });
+          Object.assign(prod, { 
+            name, 
+            brand, 
+            category, 
+            price, 
+            stock, 
+            slug, 
+            availability, 
+            description, 
+            status,
+            images: productImages,
+            primaryImage: primaryImgUrl
+          });
           showAdminToast(`Product "${prod.name}" updated successfully.`);
         }
       } else {
@@ -889,7 +1289,9 @@
           availability,
           slug,
           rating: 5.0,
-          description
+          description,
+          images: productImages,
+          primaryImage: primaryImgUrl
         };
         data.products.unshift(newProduct);
         showAdminToast(`New product "${name}" added to catalogue.`);
@@ -1442,15 +1844,188 @@
   }
 
   /* =========================================================================
-     10. INITIALIZATION
+     10. ADMIN USER HYDRATION & PROFILE MANAGEMENT
+     ========================================================================= */
+
+  function hydrateAdminUser() {
+    let authUser = null;
+    try {
+      const stored = localStorage.getItem('authUser');
+      if (stored) authUser = JSON.parse(stored);
+    } catch (e) { }
+
+    if (!authUser) return;
+
+    const username = authUser.username || authUser.name || 'Admin User';
+    const email = authUser.email || 'admin@enterprisestore.com';
+    const phone = authUser.phone_number || authUser.phone || '';
+    const role = authUser.role || 'ADMIN';
+    const initials = username.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || 'AU';
+
+    // Update Header
+    const hdrName = document.getElementById('headerUserName');
+    if (hdrName) hdrName.textContent = username;
+    const hdrRole = document.getElementById('headerUserRole');
+    if (hdrRole) hdrRole.textContent = role;
+    const hdrAvatar = document.getElementById('headerUserAvatar');
+    if (hdrAvatar) hdrAvatar.textContent = initials;
+
+    // Update Dropdown
+    const dropName = document.getElementById('dropdownUserName');
+    if (dropName) dropName.textContent = username;
+    const dropEmail = document.getElementById('dropdownUserEmail');
+    if (dropEmail) dropEmail.textContent = email;
+    const dropAvatar = document.getElementById('dropdownUserAvatar');
+    if (dropAvatar) dropAvatar.textContent = initials;
+
+    // Update Sidebar
+    const sideName = document.getElementById('sidebarUserName');
+    if (sideName) sideName.textContent = username;
+    const sideAvatar = document.getElementById('sidebarUserAvatar');
+    if (sideAvatar) sideAvatar.textContent = initials;
+
+    // Update Profile Page if present
+    const profName = document.getElementById('adminProfileDisplayName');
+    if (profName) profName.textContent = username;
+    const profEmail = document.getElementById('adminProfileDisplayEmail');
+    if (profEmail) profEmail.textContent = email;
+    const profAvatar = document.getElementById('adminProfileLargeAvatar');
+    if (profAvatar) profAvatar.textContent = initials;
+
+    const inputName = document.getElementById('adminFullNameInput');
+    if (inputName && !inputName.value) inputName.value = username;
+    const inputEmail = document.getElementById('adminEmailInput');
+    if (inputEmail && !inputEmail.value) inputEmail.value = email;
+    const inputPhone = document.getElementById('adminPhoneInput');
+    if (inputPhone && phone && (!inputPhone.value || inputPhone.value === '+91 99636 57799')) inputPhone.value = phone;
+  }
+
+  function initAdminProfilePage() {
+    // 1. Password Visibility Toggles
+    document.querySelectorAll('[data-toggle-pass]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const targetId = btn.getAttribute('data-toggle-pass');
+        const input = document.getElementById(targetId);
+        if (!input) return;
+        const isPass = input.type === 'password';
+        input.type = isPass ? 'text' : 'password';
+        btn.style.color = isPass ? 'var(--color-primary-600)' : 'var(--color-text-muted)';
+      });
+    });
+
+    // 2. Personal Info Form
+    const personalForm = document.getElementById('adminPersonalForm');
+    if (personalForm) {
+      personalForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const username = document.getElementById('adminFullNameInput')?.value.trim();
+        const email = document.getElementById('adminEmailInput')?.value.trim();
+        const phone = document.getElementById('adminPhoneInput')?.value.trim();
+
+        if (!username || !email) {
+          showAdminToast('Username and email cannot be blank.', 'warning');
+          return;
+        }
+
+        try {
+          let authUser = {};
+          const stored = localStorage.getItem('authUser');
+          if (stored) authUser = JSON.parse(stored);
+          authUser.username = username;
+          authUser.email = email;
+          authUser.phone_number = phone;
+          localStorage.setItem('authUser', JSON.stringify(authUser));
+          hydrateAdminUser();
+          showAdminToast('Admin profile details updated successfully!');
+        } catch (err) {
+          showAdminToast('Failed to save profile changes.', 'warning');
+        }
+      });
+    }
+
+    // 3. Password Live Validation & Form Submit
+    const newPassInput = document.getElementById('adminNewPass');
+    const confirmPassInput = document.getElementById('adminConfirmPass');
+    const chkLength = document.getElementById('chkLength');
+    const chkNumber = document.getElementById('chkNumber');
+    const chkMatch = document.getElementById('chkMatch');
+
+    function validatePasswordInputs() {
+      const val = newPassInput?.value || '';
+      const conf = confirmPassInput?.value || '';
+
+      const hasLen = val.length >= 8;
+      const hasNum = /\d/.test(val);
+      const matches = val.length > 0 && val === conf;
+
+      if (chkLength) {
+        chkLength.classList.toggle('admin-checklist-item--valid', hasLen);
+        chkLength.textContent = (hasLen ? '✓ ' : '● ') + 'At least 8 characters';
+      }
+      if (chkNumber) {
+        chkNumber.classList.toggle('admin-checklist-item--valid', hasNum);
+        chkNumber.textContent = (hasNum ? '✓ ' : '● ') + 'Contains a number';
+      }
+      if (chkMatch) {
+        chkMatch.classList.toggle('admin-checklist-item--valid', matches);
+        chkMatch.textContent = (matches ? '✓ ' : '● ') + 'Passwords match';
+      }
+
+      return hasLen && hasNum && matches;
+    }
+
+    if (newPassInput) newPassInput.addEventListener('input', validatePasswordInputs);
+    if (confirmPassInput) confirmPassInput.addEventListener('input', validatePasswordInputs);
+
+    const passForm = document.getElementById('adminPasswordForm');
+    if (passForm) {
+      passForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const curPass = document.getElementById('adminCurrentPass')?.value || '';
+        if (!curPass) {
+          showAdminToast('Please enter your current password.', 'warning');
+          return;
+        }
+
+        const valid = validatePasswordInputs();
+        if (!valid) {
+          showAdminToast('Please fulfill all password requirements.', 'warning');
+          return;
+        }
+
+        passForm.reset();
+        validatePasswordInputs();
+        showAdminToast('Password updated securely!');
+      });
+    }
+  }
+
+  // Keyboard shortcut Ctrl+K to focus search
+  document.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) {
+      e.preventDefault();
+      const search = document.getElementById('adminGlobalSearch');
+      if (search) {
+        search.focus();
+        search.select();
+      }
+    }
+  });
+
+  /* =========================================================================
+     11. INITIALIZATION
      ========================================================================= */
 
   document.addEventListener('DOMContentLoaded', () => {
+    hydrateAdminUser();
     initDashboard();
+    setupBannerImageControls();
+    setupProductImageControls();
     renderBanners();
     renderProducts();
     renderUsers();
     renderOrders();
+    initAdminProfilePage();
   });
 
 }());

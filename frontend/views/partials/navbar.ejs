@@ -41,7 +41,16 @@
         </svg>
         <span>Call Us</span>
       </a>
-      <a href="/login" class="btn btn--primary btn--sm navbar__login-btn">
+      <a href="/admin/dashboard" class="btn btn--accent btn--sm" id="navAdminBtn" style="display: none;">
+        <svg class="icon icon--sm" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="2" y="2" width="6" height="6" rx="1.5"/>
+          <rect x="12" y="2" width="6" height="6" rx="1.5"/>
+          <rect x="12" y="12" width="6" height="6" rx="1.5"/>
+          <rect x="2" y="12" width="6" height="6" rx="1.5"/>
+        </svg>
+        Admin
+      </a>
+      <a href="/login" class="btn btn--primary btn--sm navbar__login-btn" id="navbarLoginBtn">
         <svg class="icon icon--sm" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
           <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
         </svg>
@@ -89,3 +98,18 @@
 
 <!-- Spacer to prevent content going under fixed navbar -->
 <div class="navbar__spacer" aria-hidden="true"></div>
+
+<script>
+(function() {
+  try {
+    var raw = localStorage.getItem('authUser');
+    if (raw) {
+      var u = JSON.parse(raw);
+      if (u && (u.role === 'ADMIN' || u.role === 'admin')) {
+        var adminBtn = document.getElementById('navAdminBtn');
+        if (adminBtn) adminBtn.style.display = 'inline-flex';
+      }
+    }
+  } catch (e) {}
+})();
+</script>

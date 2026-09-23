@@ -28,6 +28,7 @@ const adminMockData = {
       slug: 'mobiles',
       badge: 'Up to ₹5,000 Off',
       status: 'Active',
+      image: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=1200&auto=format&fit=crop&q=80',
       bgGradient: 'linear-gradient(135deg, #0d1e4d 0%, #1e3d8f 60%, #2f52a0 100%)',
       accentColor: '#f58500',
       icon: 'smartphone',
@@ -43,6 +44,7 @@ const adminMockData = {
       slug: 'tvs',
       badge: '20% Off Selected Items',
       status: 'Active',
+      image: 'https://images.unsplash.com/photo-1526738549149-8e07eca6c147?w=1200&auto=format&fit=crop&q=80',
       bgGradient: 'linear-gradient(135deg, #1a0a00 0%, #6b2d00 55%, #b85e00 100%)',
       accentColor: '#f58500',
       icon: 'festival',
@@ -58,6 +60,7 @@ const adminMockData = {
       slug: 'mobiles',
       badge: 'Zero Down Payment',
       status: 'Active',
+      image: 'https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=1200&auto=format&fit=crop&q=80',
       bgGradient: 'linear-gradient(135deg, #0a2218 0%, #0d4a2e 55%, #166534 100%)',
       accentColor: '#22c55e',
       icon: 'emi',
@@ -73,6 +76,7 @@ const adminMockData = {
       slug: 'mobiles',
       badge: 'Best Exchange Rates',
       status: 'Active',
+      image: 'https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=1200&auto=format&fit=crop&q=80',
       bgGradient: 'linear-gradient(135deg, #1a0d2e 0%, #3b1f6b 55%, #5a2ea0 100%)',
       accentColor: '#a78bfa',
       icon: 'exchange',
@@ -88,6 +92,7 @@ const adminMockData = {
       slug: 'all',
       badge: '100% Official Warranty',
       status: 'Active',
+      image: 'https://images.unsplash.com/photo-1550009158-9ebf69173e03?w=1200&auto=format&fit=crop&q=80',
       bgGradient: 'linear-gradient(135deg, #0f1a30 0%, #1e3560 55%, #2952a0 100%)',
       accentColor: '#60a5fa',
       icon: 'warranty',
@@ -103,6 +108,7 @@ const adminMockData = {
       slug: 'acs',
       badge: 'Flat 15% Cashback',
       status: 'Inactive',
+      image: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=1200&auto=format&fit=crop&q=80',
       bgGradient: 'linear-gradient(135deg, #1e293b 0%, #334155 60%, #475569 100%)',
       accentColor: '#38bdf8',
       icon: 'appliance',
@@ -127,6 +133,12 @@ const adminMockData = {
       slug: 'samsung-galaxy-s25-ultra',
       rating: 4.9,
       imageSvg: 'mobile-s25',
+      primaryImage: 'https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?w=500&auto=format&fit=crop&q=80',
+      images: [
+        { url: 'https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?w=500&auto=format&fit=crop&q=80', isPrimary: true },
+        { url: 'https://images.unsplash.com/photo-1598327105666-5b89351aff97?w=500&auto=format&fit=crop&q=80', isPrimary: false },
+        { url: 'https://images.unsplash.com/photo-1580910051074-3eb694886505?w=500&auto=format&fit=crop&q=80', isPrimary: false }
+      ],
       description: 'Dynamic AMOLED 2X 120Hz display with Snapdragon 8 Elite and Titanium frame build.'
     },
     {
@@ -144,6 +156,11 @@ const adminMockData = {
       slug: 'apple-iphone-16-pro-max',
       rating: 4.9,
       imageSvg: 'mobile-iphone',
+      primaryImage: 'https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=500&auto=format&fit=crop&q=80',
+      images: [
+        { url: 'https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=500&auto=format&fit=crop&q=80', isPrimary: true },
+        { url: 'https://images.unsplash.com/photo-1510557880182-3d4d3cba35a5?w=500&auto=format&fit=crop&q=80', isPrimary: false }
+      ],
       description: 'A18 Pro chip, Grade 5 Titanium chassis, 48MP Fusion camera system with 5x optical zoom.'
     },
     {
@@ -161,6 +178,11 @@ const adminMockData = {
       slug: 'samsung-neo-qled-8k-75',
       rating: 4.8,
       imageSvg: 'tv-samsung',
+      primaryImage: 'https://images.unsplash.com/photo-1593359677879-a4bb92f829d1?w=500&auto=format&fit=crop&q=80',
+      images: [
+        { url: 'https://images.unsplash.com/photo-1593359677879-a4bb92f829d1?w=500&auto=format&fit=crop&q=80', isPrimary: true },
+        { url: 'https://images.unsplash.com/photo-1509281373149-e957c6296406?w=500&auto=format&fit=crop&q=80', isPrimary: false }
+      ],
       description: 'Neo Quantum Processor 8K with AI upscaling, Mini LED backlights, and Dolby Atmos sound.'
     },
     {
@@ -178,6 +200,11 @@ const adminMockData = {
       slug: 'lg-oled-c3-65',
       rating: 4.8,
       imageSvg: 'tv-lg',
+      primaryImage: 'https://images.unsplash.com/photo-1461151304267-38535e780c79?w=500&auto=format&fit=crop&q=80',
+      images: [
+        { url: 'https://images.unsplash.com/photo-1461151304267-38535e780c79?w=500&auto=format&fit=crop&q=80', isPrimary: true },
+        { url: 'https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?w=500&auto=format&fit=crop&q=80', isPrimary: false }
+      ],
       description: 'Self-lit OLED pixels with α9 AI Gen6 processor, Dolby Vision & Atmos support.'
     },
     {
@@ -195,6 +222,10 @@ const adminMockData = {
       slug: 'daikin-1-5t-5-star-ac',
       rating: 4.7,
       imageSvg: 'ac-daikin',
+      primaryImage: 'https://images.unsplash.com/photo-1614633837798-25143a53e4c7?w=500&auto=format&fit=crop&q=80',
+      images: [
+        { url: 'https://images.unsplash.com/photo-1614633837798-25143a53e4c7?w=500&auto=format&fit=crop&q=80', isPrimary: true }
+      ],
       description: 'Streamer Technology PM2.5 filtration, 5-Star power rating, copper condenser.'
     },
     {
@@ -212,6 +243,10 @@ const adminMockData = {
       slug: 'bosch-559l-multi-door-fridge',
       rating: 4.6,
       imageSvg: 'fridge-bosch',
+      primaryImage: 'https://images.unsplash.com/photo-1571175443880-49e1d25b2bc5?w=500&auto=format&fit=crop&q=80',
+      images: [
+        { url: 'https://images.unsplash.com/photo-1571175443880-49e1d25b2bc5?w=500&auto=format&fit=crop&q=80', isPrimary: true }
+      ],
       description: 'VarioInverter technology with VitaFresh Plus dual climate drawers and stainless steel finish.'
     },
     {
@@ -229,6 +264,10 @@ const adminMockData = {
       slug: 'sony-ht-a7000-soundbar',
       rating: 4.7,
       imageSvg: 'soundbar-sony',
+      primaryImage: 'https://images.unsplash.com/photo-1545454675-3531b543be5d?w=500&auto=format&fit=crop&q=80',
+      images: [
+        { url: 'https://images.unsplash.com/photo-1545454675-3531b543be5d?w=500&auto=format&fit=crop&q=80', isPrimary: true }
+      ],
       description: '360 Spatial Sound Mapping with dual built-in subwoofers and Hi-Res audio playback.'
     },
     {
@@ -246,6 +285,11 @@ const adminMockData = {
       slug: 'oneplus-12-5g',
       rating: 4.8,
       imageSvg: 'mobile-oneplus',
+      primaryImage: 'https://images.unsplash.com/photo-1580910051074-3eb694886505?w=500&auto=format&fit=crop&q=80',
+      images: [
+        { url: 'https://images.unsplash.com/photo-1580910051074-3eb694886505?w=500&auto=format&fit=crop&q=80', isPrimary: true },
+        { url: 'https://images.unsplash.com/photo-1567581935884-3349723552ca?w=500&auto=format&fit=crop&q=80', isPrimary: false }
+      ],
       description: '4th Gen Hasselblad camera for mobile with 100W SUPERVOOC charging and 2K ProXDR display.'
     }
   ],

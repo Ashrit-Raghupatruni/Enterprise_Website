@@ -1,6 +1,7 @@
 import express from 'express';
-import jwtAuthenticate from '../../../middleware/jwtmiddleware.js';
-import adminGuard from '../../../middleware/adminguard.js';
+import jwt from 'jsonwebtoken';
+import 'dotenv/config';
+import adminAuthenticate from '../../../middleware/adminAuthMiddleware.js';
 
 const router = express.Router();
 
@@ -12,91 +13,97 @@ const site = {
   wa: 'https://wa.me/919963657799',
 };
 
-// ─── Admin Page Routes (Protected by JWT + Admin Guard) ─────────────────────
+// Protect all admin routes with JWT admin authentication
+router.use(adminAuthenticate);
+
+function getAdminUser(req) {
+  const user = req.user || {};
+  const name = user.username || (user.email ? user.email.split('@')[0] : 'Admin User');
+  const initials = name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || 'AU';
+  return {
+    id: user.userId || user.id || 'USR-ADMIN',
+    username: name,
+    email: user.email || 'admin@enterprisestore.com',
+    role: user.role || 'ADMIN',
+    avatar: initials
+  };
+}
+
+// Root admin redirects to dashboard
+router.get('/', (req, res) => {
+  res.redirect('/admin/dashboard');
+});
 
 // Dashboard
-router.get(
-  '/dashboard',
-  jwtAuthenticate,
-  adminGuard,
-  (req, res) => {
-    res.render('pages/admin/dashboard', {
-      title: `Admin Dashboard — ${site.name}`,
-      useApi: true,
-      site,
-      user: req.user,
-    });
-  }
-);
+router.get('/dashboard', (req, res) => {
+  const adminUser = getAdminUser(req);
+  res.render('pages/admin/dashboard', {
+    title: `Admin Dashboard — ${site.name}`,
+    pageLabel: 'Dashboard',
+    activeNav: 'dashboard',
+    site,
+    adminUser
+  });
+});
 
-// Banners Management
-router.get(
-  '/banners',
-  jwtAuthenticate,
-  adminGuard,
-  (req, res) => {
-    res.render('pages/admin/banners', {
-      title: `Manage Banners — ${site.name}`,
-      useApi: true,
-      site,
-      user: req.user,
-    });
-  }
-);
+// Banner Management
+router.get('/banners', (req, res) => {
+  const adminUser = getAdminUser(req);
+  res.render('pages/admin/banners', {
+    title: `Banner Management — ${site.name}`,
+    pageLabel: 'Banners',
+    activeNav: 'banners',
+    site,
+    adminUser
+  });
+});
 
-// Products Management
-router.get(
-  '/products',
-  jwtAuthenticate,
-  adminGuard,
-  (req, res) => {
-    res.render('pages/admin/products', {
-      title: `Manage Products — ${site.name}`,
-      useApi: true,
-      site,
-      user: req.user,
-    });
-  }
-);
+// Product & Stock Management
+router.get('/products', (req, res) => {
+  const adminUser = getAdminUser(req);
+  res.render('pages/admin/products', {
+    title: `Product & Stock Management — ${site.name}`,
+    pageLabel: 'Products',
+    activeNav: 'products',
+    site,
+    adminUser
+  });
+});
 
-// Users Management
-router.get(
-  '/users',
-  jwtAuthenticate,
-  adminGuard,
-  (req, res) => {
-    res.render('pages/admin/users', {
-      title: `Manage Users — ${site.name}`,
-      useApi: true,
-      site,
-      user: req.user,
-    });
-  }
-);
+// Registered Users
+router.get('/users', (req, res) => {
+  const adminUser = getAdminUser(req);
+  res.render('pages/admin/users', {
+    title: `Registered Users — ${site.name}`,
+    pageLabel: 'Users',
+    activeNav: 'users',
+    site,
+    adminUser
+  });
+});
 
-// Orders Management
-router.get(
-  '/orders',
-  jwtAuthenticate,
-  adminGuard,
-  (req, res) => {
-    res.render('pages/admin/orders', {
-      title: `Manage Orders — ${site.name}`,
-      useApi: true,
-      site,
-      user: req.user,
-    });
-  }
-);
+// Order Management
+router.get('/orders', (req, res) => {
+  const adminUser = getAdminUser(req);
+  res.render('pages/admin/orders', {
+    title: `Order Management — ${site.name}`,
+    pageLabel: 'Orders',
+    activeNav: 'orders',
+    site,
+    adminUser
+  });
+});
 
-// Redirect /admin to dashboard
-router.get(
-  '/',
-  jwtAuthenticate,
-  adminGuard,
-  (req, res) => {
-    res.redirect('/admin/dashboard');
-  }
-);
+// Admin Profile
+router.get('/profile', (req, res) => {
+  const adminUser = getAdminUser(req);
+  res.render('pages/admin/profile', {
+    title: `Admin Profile — ${site.name}`,
+    pageLabel: 'Admin Profile',
+    activeNav: 'profile',
+    site,
+    adminUser
+  });
+});
 
 export default router;

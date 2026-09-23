@@ -4,7 +4,7 @@ export class AdminUserRepository {
   /**
    * Find all users with optional filters
    */
-  async findAll(where = {}, skip = 0, take = 20, orderBy = { createdAt: 'desc' }) {
+  async findAll(where = {}, skip = 0, take = 20, orderBy = { created_at: 'desc' }) {
     const users = await prisma.user.findMany({
       where,
       skip,

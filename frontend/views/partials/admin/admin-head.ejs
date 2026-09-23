@@ -1,6 +1,6 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title><%= title %></title>
+<title><%= typeof title !== 'undefined' ? title : 'Admin Panel — Enterprise Store' %></title>
 <link rel="icon" type="image/svg+xml" href="/public/icons/favicon.svg"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
@@ -19,5 +19,5 @@
 
 <!-- Global Admin Configuration -->
 <script>
-  window.ADMIN_USE_API = <%= useApi %>;
+  window.ADMIN_USE_API = <%= typeof useApi !== 'undefined' ? useApi : false %>;
 </script>

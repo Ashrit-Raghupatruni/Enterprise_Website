@@ -406,13 +406,22 @@
         return payload;
       }
 
-      function redirectAfterAuth() {
+      function redirectAfterAuth(role) {
         const pendingRoute = localStorage.getItem('pendingRoute');
         localStorage.removeItem('pendingRoute');
-        const destination = pendingRoute && pendingRoute.startsWith('/') && !pendingRoute.startsWith('//')
-          ? pendingRoute
-          : '/home';
-        window.location.assign(destination);
+        if (role === 'ADMIN' || role === 'admin') {
+          if (pendingRoute && pendingRoute.startsWith('/admin')) {
+            window.location.assign(pendingRoute);
+          } else {
+            window.location.assign('/admin/dashboard');
+          }
+          return;
+        }
+        if (pendingRoute && pendingRoute.startsWith('/') && !pendingRoute.startsWith('//') && pendingRoute !== '/login' && pendingRoute !== '/auth') {
+          window.location.assign(pendingRoute);
+          return;
+        }
+        window.location.assign('/home');
       }
 
       // Validate a field only if it has been touched OR forceAll is true
@@ -452,8 +461,9 @@
               email: loginId.value.trim().toLowerCase(),
               password: loginPas.value,
             });
-            if (data?.data?.safeuser) localStorage.setItem('authUser', JSON.stringify(data.data.safeuser));
-            redirectAfterAuth();
+            const safeuser = data?.data?.safeuser;
+            if (safeuser) localStorage.setItem('authUser', JSON.stringify(safeuser));
+            redirectAfterAuth(safeuser?.role);
           } catch (error) {
             showServerMessage(error.message);
           } finally {
@@ -511,8 +521,9 @@
               password: regPass.value,
               confirmPassword: regConf.value,
             });
-            if (data?.data?.safeuser) localStorage.setItem('authUser', JSON.stringify(data.data.safeuser));
-            redirectAfterAuth();
+            const safeuser = data?.data?.safeuser;
+            if (safeuser) localStorage.setItem('authUser', JSON.stringify(safeuser));
+            redirectAfterAuth(safeuser?.role);
           } catch (error) {
             showServerMessage(error.message);
           } finally {
