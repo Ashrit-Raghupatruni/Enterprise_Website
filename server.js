@@ -7,6 +7,7 @@ import profileRoutes from './src/features/profile/routes/profileRoutes.js'
 import productRoutes from './src/features/products/routes/productRoutes.js'
 import adminRoutes from './src/features/admin/routes/adminRoutes.js'
 import adminApiRoutes from './src/features/admin/routes/adminApiRoutes.js'
+import ordersRoutes from './src/features/orders/routes/orders.routes.js'
 import jwtAuthenticate from './src/middleware/jwtmiddleware.js'
 import adminGuard from './src/middleware/adminguard.js'
 import { isCategoryInactive } from './src/config/categoryConfig.js'
@@ -49,6 +50,9 @@ app.use("/api", profileRoutes);
 
 // Product API Routes
 app.use("/api", productRoutes);
+
+// Orders API Routes
+app.use("/api", ordersRoutes);
 
 
 // Admin API Routes (protected by JWT + admin guard)

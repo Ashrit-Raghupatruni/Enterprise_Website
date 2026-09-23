@@ -130,4 +130,31 @@ export class ProductController {
       return res.status(500).json({ success: false, message: "Internal server error", detail: error.message });
     }
   }
+  async rateProduct(req, res) {
+    try {
+      const { id } = req.params;
+      const { rating, comment } = req.body;
+      const userId = req.user?.userId || req.user?.id; // user ID from JWT payload
+
+      if (!userId) {
+        return res.status(401).json({ success: false, message: "Unauthorized: User ID not found" });
+      }
+
+      if (!rating || rating < 1 || rating > 5) {
+        return res.status(400).json({ success: false, message: "Rating must be between 1 and 5" });
+      }
+
+      const updatedProduct = await this.productService.rateProduct(id, userId, rating, comment);
+      return res.status(200).json({
+        success: true,
+        data: updatedProduct,
+      });
+    } catch (error) {
+      if (error.message === 'Product not found') {
+        return res.status(404).json({ success: false, message: error.message });
+      }
+      console.error("Rate product error:", error.message, error.stack);
+      return res.status(500).json({ success: false, message: "Internal server error" });
+    }
+  }
 }

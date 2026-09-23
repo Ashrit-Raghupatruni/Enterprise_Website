@@ -61,8 +61,8 @@
           <p class="product-card__brand">${p.brand}</p>
           <h3 class="product-card__name">${p.name}</h3>
           <div class="product-card__rating">
-            <div class="product-card__stars" aria-label="Rating: ${p.rating || 4.8} out of 5">${stars(p.rating || 4.8)}</div>
-            <span class="product-card__review-count">(${(p.reviews || p.reviewCount || 1240).toLocaleString()})</span>
+            <div class="product-card__stars" aria-label="Rating: ${p.rating || 0} out of 5">${stars(p.rating || 0)}</div>
+            <span class="product-card__review-count">(${(p.reviews || p.reviewCount || 0).toLocaleString()})</span>
           </div>
           <div class="product-card__price">
             <span class="product-card__price-sale">${fmt(p.salePrice)}</span>
@@ -179,8 +179,8 @@
             brand: p.brand,
             name: p.name,
             description: p.description,
-            rating: 4.5,
-            reviews: 0,
+            rating: parseFloat(p.rating) || 0,
+            reviews: p.reviews || 0,
             originalPrice: price,
             salePrice: price,
             discount: 0,
@@ -287,8 +287,8 @@
           brand:        p.brand,
           name:         p.name,
           description:  p.description,
-          rating:       4.5,
-          reviews:      0,
+          rating:       parseFloat(p.rating) || 0,
+          reviews:      p.reviews || 0,
           originalPrice: price,
           salePrice:    price,
           discount:     0,

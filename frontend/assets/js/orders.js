@@ -6,7 +6,7 @@
 (function () {
   'use strict';
 
-  const orders   = window.ordersData || [];
+  let orders = [];
   const listEl   = document.getElementById('ordersList');
   const countEl  = document.getElementById('ordersCount');
   const searchEl = document.getElementById('ordersSearch');
@@ -28,7 +28,7 @@
 
   // ─── Format price ─────────────────────────────────────────────────────────
   function fmt(n) {
-    return '₹' + n.toLocaleString('en-IN');
+    return '₹' + Number(n).toLocaleString('en-IN');
   }
 
   // ─── Product placeholder SVG ──────────────────────────────────────────────
@@ -49,6 +49,75 @@
       <span class="order-status__dot" style="background:${s.dot};"></span>
       ${s.label}
     </span>`;
+  }
+
+  // ─── Build Timeline ───────────────────────────────────────────────────────
+  function buildTimeline(status, createdAt) {
+    const d = new Date(createdAt).toLocaleDateString();
+    const st = status.toLowerCase();
+    
+    if (st === 'cancelled') {
+      return [
+        { label: 'Order Placed', date: d, done: true },
+        { label: 'Cancelled', date: '', done: true }
+      ];
+    }
+    
+    return [
+      { label: 'Order Placed', date: d, done: true },
+      { label: 'Processing', date: '', done: ['processing', 'confirmed', 'out_for_delivery', 'delivered'].includes(st) },
+      { label: 'Confirmed', date: '', done: ['confirmed', 'out_for_delivery', 'delivered'].includes(st) },
+      { label: 'Out for Delivery', date: '', done: ['out_for_delivery', 'delivered'].includes(st) },
+      { label: 'Delivered', date: '', done: st === 'delivered' }
+    ];
+  }
+
+  // ─── Fetch API ────────────────────────────────────────────────────────────
+  async function fetchOrders() {
+    if (listEl) {
+      listEl.innerHTML = `<div style="text-align:center; padding: 2rem;">Loading your orders...</div>`;
+    }
+    
+    try {
+      const response = await fetch('/api/orders', {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json'
+        },
+        credentials: 'same-origin' // Uses HTTP-only cookie automatically
+      });
+      
+      if (response.status === 401) {
+        window.location.href = '/home'; // Redirect if not logged in
+        return;
+      }
+      
+      if (!response.ok) throw new Error('Failed to fetch orders');
+      
+      const result = await response.json();
+      if (result.success && result.data) {
+        orders = result.data.map(o => ({
+          id: o.shortId || o.id,
+          date: new Date(o.createdAt).toLocaleDateString(),
+          status: o.status.toLowerCase(),
+          deliveryDate: o.deliveryDate || 'Pending',
+          price: o.totalAmount,
+          address: o.shippingAddress,
+          product: {
+            name: o.items?.[0]?.productName || 'Order Items',
+            variant: o.items?.[0]?.variantDescription || '',
+            color: '#3b82f6'
+          },
+          timeline: buildTimeline(o.status, o.createdAt)
+        }));
+        render();
+      }
+    } catch (error) {
+      console.error(error);
+      if (listEl) {
+        listEl.innerHTML = `<div style="text-align:center; padding: 2rem; color: var(--color-danger-500);">Failed to load orders.</div>`;
+      }
+    }
   }
 
   // ─── Render cards ─────────────────────────────────────────────────────────
@@ -245,6 +314,7 @@
   }
 
   // ─── Init ─────────────────────────────────────────────────────────────────
-  render();
+  fetchOrders();
 
 })();
+
