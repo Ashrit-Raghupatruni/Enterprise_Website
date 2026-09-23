@@ -1,6 +1,6 @@
 import express from 'express';
 import path from 'path';
-import {fileURLToPath} from 'url';
+import { fileURLToPath } from 'url';
 import "dotenv/config"
 import authRoutes from './src/features/auth/routes/authRoutes.js'
 import profileRoutes from './src/features/profile/routes/profileRoutes.js'
@@ -11,16 +11,16 @@ import jwtAuthenticate from './src/middleware/jwtmiddleware.js'
 import adminGuard from './src/middleware/adminguard.js'
 import { isCategoryInactive } from './src/config/categoryConfig.js'
 
-const app=express();
+const app = express();
 const PORT = process.env.PORT || 3001;
 
 // Fix for __dirname when using ES modules
-const __filename=fileURLToPath(import.meta.url);
-const __dirname=path.dirname(__filename);
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Req Folder Paths generation
-const viewsPath=path.join(__dirname,'frontend/views');
-const publicPath=path.join(__dirname,'frontend');
+const viewsPath = path.join(__dirname, 'frontend/views');
+const publicPath = path.join(__dirname, 'frontend');
 
 // Setting EJS as the view engine
 app.set('view engine', 'ejs');
@@ -42,7 +42,7 @@ app.use((error, req, res, next) => {
 });
 
 // Authentication Routes
-app.use("/",authRoutes);
+app.use("/", authRoutes);
 
 // Profile API Routes
 app.use("/api", profileRoutes);
@@ -59,18 +59,18 @@ app.use("/admin", adminRoutes);
 
 // ─── Site-wide constants ─────────────────────────────────────────────────────
 const site = {
-  name:    'Kishor Enterprises',
+  name: 'Kishor Enterprises',
   tagline: 'Official Electronics Store',
-  phone:   '9963657799',
-  wa:      'https://wa.me/919963657799',
+  phone: '9963657799',
+  wa: 'https://wa.me/919963657799',
 };
 
 // ─── Helper: render stub for pages not yet designed ──────────────────────────
 function stub(label) {
   return (req, res) => {
     res.render('pages/stub', {
-      title:       `${label} — ${site.name}`,
-      pageLabel:   label,
+      title: `${label} — ${site.name}`,
+      pageLabel: label,
       currentPath: req.path,
       site,
     });
@@ -84,7 +84,7 @@ function stub(label) {
 // Landing — marketing / pre-login
 app.get('/', (req, res) => {
   res.render('pages/landing', {
-    title:       `${site.name} — ${site.tagline}`,
+    title: `${site.name} — ${site.tagline}`,
     description: 'Premium electronics at best prices. Mobiles, TVs, ACs, Refrigerators and more with 0% EMI and official warranty.',
     site,
   });
@@ -93,7 +93,7 @@ app.get('/', (req, res) => {
 // Home — main shopping hub (fully built)
 app.get('/home', (req, res) => {
   res.render('pages/home', {
-    title:       `Home — ${site.name}`,
+    title: `Home — ${site.name}`,
     description: 'Shop mobiles, TVs, ACs, refrigerators and more at Enterprise Store.',
     site,
   });
@@ -120,21 +120,21 @@ app.get('/home', (req, res) => {
 // Products — real category page (header + strip + content area)
 app.get('/products', (req, res) => {
   res.render('pages/products/category', {
-    title:          `All Products — ${site.name}`,
-    pageLabel:      'All Products',
+    title: `All Products — ${site.name}`,
+    pageLabel: 'All Products',
     activeCategory: 'all',
-    slug:           'all',
+    slug: 'all',
     site,
   });
 });
 
 const categoryRoutes = [
-  { path: '/products/mobiles',       label: 'Mobiles',            slug: 'mobiles'        },
-  { path: '/products/tvs',           label: 'TVs',                slug: 'tvs'            },
-  { path: '/products/acs',           label: 'Air Conditioners',   slug: 'acs'            },
-  { path: '/products/home-theatres', label: 'Home Theatres',      slug: 'home-theatres'  },
-  { path: '/products/kitchen',       label: 'Kitchen Appliances', slug: 'kitchen'        },
-  { path: '/products/refrigerators', label: 'Refrigerators',      slug: 'refrigerators'  },
+  { path: '/products/mobiles', label: 'Mobiles', slug: 'mobiles' },
+  { path: '/products/tvs', label: 'TVs', slug: 'tvs' },
+  { path: '/products/acs', label: 'Air Conditioners', slug: 'acs' },
+  { path: '/products/home-theatres', label: 'Home Theatres', slug: 'home-theatres' },
+  { path: '/products/kitchen', label: 'Kitchen Appliances', slug: 'kitchen' },
+  { path: '/products/refrigerators', label: 'Refrigerators', slug: 'refrigerators' },
 ];
 
 categoryRoutes.forEach(({ path: routePath, label, slug }) => {
@@ -146,8 +146,8 @@ categoryRoutes.forEach(({ path: routePath, label, slug }) => {
     }
 
     res.render('pages/products/category', {
-      title:          `${label} — ${site.name}`,
-      pageLabel:      label,
+      title: `${label} — ${site.name}`,
+      pageLabel: label,
       activeCategory: slug,
       slug,
       site,
@@ -157,14 +157,14 @@ categoryRoutes.forEach(({ path: routePath, label, slug }) => {
 // Product detail page
 app.get('/product/:id', (req, res) => {
   res.render('pages/products/detail', {
-    title:     `Product Details — ${site.name}`,
+    title: `Product Details — ${site.name}`,
     productId: req.params.id,
     site,
   });
 });
 
 // Shopping
-app.get('/cart',     stub('Shopping Cart'));
+app.get('/cart', stub('Shopping Cart'));
 app.get('/checkout', stub('Checkout'));
 
 // Account
@@ -196,8 +196,8 @@ app.get('/profile/addresses', (req, res) => {
 
 app.get('/404', (req, res) => {
   res.status(404).render('pages/stub', {
-    title:       `Page Not Found — ${site.name}`,
-    pageLabel:   '404 — Not Found',
+    title: `Page Not Found — ${site.name}`,
+    pageLabel: '404 — Not Found',
     currentPath: req.path,
     site,
   });
@@ -205,8 +205,8 @@ app.get('/404', (req, res) => {
 
 app.use((req, res) => {
   res.status(404).render('pages/stub', {
-    title:       `Page Not Found — ${site.name}`,
-    pageLabel:   '404 — Not Found',
+    title: `Page Not Found — ${site.name}`,
+    pageLabel: '404 — Not Found',
     currentPath: req.path,
     site,
   });
