@@ -299,21 +299,22 @@
     }
   }
 
-  if (userDropdownBtn) {
+  if (userDropdownBtn && userDropdownMenu) {
     userDropdownBtn.addEventListener('click', (e) => {
       e.stopPropagation();
+      e.preventDefault();
       toggleUserDropdown();
     });
-  }
 
-  // Close dropdown on outside click
-  document.addEventListener('click', (e) => {
-    if (userDropdownMenu && userDropdownMenu.classList.contains('open')) {
-      if (!userDropdownMenu.contains(e.target) && !userDropdownBtn?.contains(e.target)) {
-        toggleUserDropdown(false);
+    // Close dropdown on outside click
+    document.addEventListener('click', (e) => {
+      if (userDropdownMenu && userDropdownMenu.classList.contains('open')) {
+        if (!userDropdownMenu.contains(e.target) && !userDropdownBtn?.contains(e.target)) {
+          toggleUserDropdown(false);
+        }
       }
-    }
-  });
+    });
+  }
 
   // Admin Logout unified handler
   function performAdminLogout() {
@@ -469,28 +470,34 @@
     Promise.all([API.getOrders({ limit: 5 }), API.getStats()])
       .then(([ordersRes, statsRes]) => {
         if (ordersTbody && ordersRes.data) {
-          ordersTbody.innerHTML = ordersRes.data.map(o => `
-            <tr>
-              <td><strong style="font-family:var(--font-mono); color:var(--color-primary-700);">${o.shortId}</strong></td>
-              <td>
-                <div style="font-weight:var(--font-semibold);">${o.user.username}</div>
-                <div style="font-size:var(--text-xs); color:var(--color-text-muted);">${o.user.phone_number}</div>
-              </td>
-              <td><strong>${formatRupees(o.totalAmount)}</strong></td>
-              <td>
-                <span class="order-status order-status--${o.status.toLowerCase()}">
-                  <span class="order-status__dot"></span>
-                  ${capitalize(o.status.replace(/_/g, ' '))}
-                </span>
-              </td>
-              <td style="font-size:var(--text-xs); color:var(--color-text-muted);">${new Date(o.createdAt).toLocaleDateString()}</td>
-              <td>
-                <button type="button" class="admin-btn-action" data-view-order="${o.id}">
-                  <span>View</span>
-                </button>
-              </td>
-            </tr>
-          `).join('');
+          ordersTbody.innerHTML = ordersRes.data.map(o => {
+            const customerName = o.user?.username || (o.user?.email ? o.user.email.split('@')[0] : 'Customer');
+            const customerPhone = o.user?.phone_number || '-';
+            const statusStr = (o.status || 'PENDING').toLowerCase();
+
+            return `
+              <tr>
+                <td><strong style="font-family:var(--font-mono); color:var(--color-primary-700);">${o.shortId}</strong></td>
+                <td>
+                  <div style="font-weight:var(--font-semibold);">${customerName}</div>
+                  <div style="font-size:var(--text-xs); color:var(--color-text-muted);">${customerPhone}</div>
+                </td>
+                <td><strong>${formatRupees(o.totalAmount)}</strong></td>
+                <td>
+                  <span class="order-status order-status--${statusStr}">
+                    <span class="order-status__dot"></span>
+                    ${capitalize(statusStr.replace(/_/g, ' '))}
+                  </span>
+                </td>
+                <td style="font-size:var(--text-xs); color:var(--color-text-muted);">${new Date(o.createdAt).toLocaleDateString()}</td>
+                <td>
+                  <button type="button" class="admin-btn-action" data-view-order="${o.id}">
+                    <span>View</span>
+                  </button>
+                </td>
+              </tr>
+            `;
+          }).join('');
 
           ordersTbody.querySelectorAll('[data-view-order]').forEach(btn => {
             btn.addEventListener('click', () => openOrderDrawer(btn.dataset.viewOrder));
@@ -502,7 +509,7 @@
           const stats = statsRes.data;
           const els = {
             totalProducts: document.getElementById('statTotalProducts'),
-            totalUsers: document.getElementById('statTotalUsers'),
+            totalUsers: document.getElementById('statTotalUsers') || document.getElementById('statRegisteredUsers'),
             totalOrders: document.getElementById('statTotalOrders'),
             revenue: document.getElementById('statTotalRevenue'),
             lowStock: document.getElementById('statLowStockCount'),
@@ -513,12 +520,48 @@
           if (els.totalUsers) els.totalUsers.textContent = stats.totalUsers;
           if (els.totalOrders) els.totalOrders.textContent = stats.totalOrders;
           if (els.revenue) els.revenue.textContent = formatRupees(stats.totalRevenue);
-          if (els.lowStock) els.lowStock.textContent = stats.lowStockProducts;
-          if (els.pending) els.pending.textContent = stats.pendingOrders;
-          if (els.banners) els.banners.textContent = stats.activeBanners;
+          if (els.lowStock) els.lowStock.textContent = `${stats.lowStockProducts} Items`;
+          if (els.pending) els.pending.textContent = `${stats.pendingOrders} Orders`;
+          if (els.banners) els.banners.textContent = `${stats.activeBanners} Running`;
+        }
+
+        // Low stock products table
+        if (lowStockTbody) {
+          const lowStock = (data.products || []).filter(p => p.stock <= (p.minStockThreshold || 4));
+          if (lowStock.length === 0) {
+            lowStockTbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:var(--space-6); color:var(--color-text-muted); font-size:var(--text-xs);">All products are adequately stocked.</td></tr>`;
+          } else {
+            lowStockTbody.innerHTML = lowStock.map(p => `
+              <tr>
+                <td>
+                  <div style="font-weight:var(--font-semibold); line-height:1.2;">${p.name}</div>
+                  <div style="font-size:var(--text-xs); color:var(--color-text-muted);">${p.category}</div>
+                </td>
+                <td>
+                  <span style="font-weight:var(--font-bold); color:${p.stock === 0 ? 'var(--color-error-600)' : '#d97706'};">
+                    ${p.stock} units
+                  </span>
+                </td>
+                <td>
+                  <span class="badge ${p.stock === 0 ? 'badge--accent' : 'badge--primary'}" style="${p.stock === 0 ? 'background:#fee2e2; color:#991b1b;' : 'background:#fef3c7; color:#b45309;'}">
+                    ${p.status}
+                  </span>
+                </td>
+                <td>
+                  <button type="button" class="admin-btn-action" data-stock-product="${p.id}">
+                    <span>Restock</span>
+                  </button>
+                </td>
+              </tr>
+            `).join('');
+            lowStockTbody.querySelectorAll('[data-stock-product]').forEach(btn => {
+              btn.addEventListener('click', () => openStockModal(btn.dataset.stockProduct));
+            });
+          }
         }
       })
-      .catch(() => {
+      .catch((err) => {
+        console.warn('Failed to load dashboard from API:', err);
         // Fall back to mock data
         initDashboard_Mock();
       });
@@ -680,7 +723,34 @@
     }
   }
 
-  function renderBanners() {
+  let liveBannersLoaded = false;
+
+  async function loadLiveBanners() {
+    if (!useApi) return;
+    try {
+      const res = await API.getBanners();
+      if (res && res.success && Array.isArray(res.data)) {
+        data.banners = res.data.map(b => ({
+          id: b.id,
+          title: b.title,
+          eyebrow: b.eyebrow,
+          subtitle: b.subtitle || '',
+          ctaText: b.ctaText,
+          slug: b.slug,
+          badge: b.badge || '',
+          status: b.status === 'ACTIVE' ? 'Active' : 'Inactive',
+          bgGradient: b.bgGradient || 'linear-gradient(135deg, #0d1e4d 0%, #1e3d8f 60%, #2f52a0 100%)',
+          accentColor: b.accentColor || '#f58500',
+          image: b.image || ''
+        }));
+        liveBannersLoaded = true;
+      }
+    } catch (e) {
+      console.warn('Could not load live banners from API:', e);
+    }
+  }
+
+  async function renderBanners() {
     const grid = document.getElementById('bannersGrid');
     const emptyState = document.getElementById('bannersEmptyState');
     const searchInput = document.getElementById('bannerSearchInput');
@@ -688,13 +758,17 @@
 
     if (!grid) return;
 
+    if (useApi && !liveBannersLoaded) {
+      await loadLiveBanners();
+    }
+
     const query = (searchInput?.value || '').trim().toLowerCase();
     const filterStatus = statusFilter?.value || 'all';
 
     const filtered = data.banners.filter(b => {
-      const matchSearch = b.title.toLowerCase().includes(query) ||
-                          b.eyebrow.toLowerCase().includes(query) ||
-                          b.slug.toLowerCase().includes(query);
+      const matchSearch = (b.title || '').toLowerCase().includes(query) ||
+                          (b.eyebrow || '').toLowerCase().includes(query) ||
+                          (b.slug || '').toLowerCase().includes(query);
       const matchStatus = filterStatus === 'all' || b.status === filterStatus;
       return matchSearch && matchStatus;
     });
@@ -762,8 +836,21 @@
     });
 
     grid.querySelectorAll('[data-toggle-banner]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const item = data.banners.find(x => x.id === btn.dataset.toggleBanner);
+      btn.addEventListener('click', async () => {
+        const bannerId = btn.dataset.toggleBanner;
+        if (useApi) {
+          try {
+            await API.toggleBanner(bannerId);
+            await loadLiveBanners();
+            renderBanners();
+            showAdminToast('Banner visibility toggled.');
+            return;
+          } catch (err) {
+            showAdminToast('Failed to toggle banner.', 'error');
+            return;
+          }
+        }
+        const item = data.banners.find(x => x.id === bannerId);
         if (item) {
           item.status = item.status === 'Active' ? 'Inactive' : 'Active';
           renderBanners();
@@ -773,8 +860,22 @@
     });
 
     grid.querySelectorAll('[data-delete-banner]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const idx = data.banners.findIndex(x => x.id === btn.dataset.deleteBanner);
+      btn.addEventListener('click', async () => {
+        const bannerId = btn.dataset.deleteBanner;
+        if (!confirm('Are you sure you want to delete this banner?')) return;
+        if (useApi) {
+          try {
+            await API.deleteBanner(bannerId);
+            await loadLiveBanners();
+            renderBanners();
+            showAdminToast('Banner deleted successfully.');
+            return;
+          } catch (err) {
+            showAdminToast('Failed to delete banner.', 'error');
+            return;
+          }
+        }
+        const idx = data.banners.findIndex(x => x.id === bannerId);
         if (idx !== -1) {
           const removed = data.banners.splice(idx, 1)[0];
           renderBanners();
@@ -815,7 +916,7 @@
 
   const saveBannerBtn = document.getElementById('saveBannerBtn');
   if (saveBannerBtn) {
-    saveBannerBtn.addEventListener('click', () => {
+    saveBannerBtn.addEventListener('click', async () => {
       const id = document.getElementById('bannerFormId').value;
       const title = document.getElementById('bannerTitle').value.trim();
       const eyebrow = document.getElementById('bannerEyebrow').value.trim();
@@ -830,8 +931,38 @@
         return;
       }
 
+      if (useApi) {
+        try {
+          const bannerPayload = {
+            title,
+            eyebrow,
+            subtitle,
+            ctaText,
+            slug,
+            badge: badge || null,
+            status: status === 'Active' ? 'ACTIVE' : 'INACTIVE',
+            bgGradient: 'linear-gradient(135deg, #0d1e4d 0%, #1e3d8f 60%, #2f52a0 100%)',
+            accentColor: '#f58500'
+          };
+          if (id) {
+            await API.updateBanner(id, bannerPayload);
+            showAdminToast('Banner updated successfully.');
+          } else {
+            await API.createBanner(bannerPayload);
+            showAdminToast('New banner added successfully.');
+          }
+          await loadLiveBanners();
+          closeModal('bannerModal');
+          renderBanners();
+          return;
+        } catch (err) {
+          showAdminToast(`Error saving banner: ${err.message}`, 'error');
+          return;
+        }
+      }
+
       if (id) {
-        // Edit existing
+        // Edit existing mock
         const banner = data.banners.find(b => b.id === id);
         if (banner) {
           Object.assign(banner, { 
@@ -847,7 +978,7 @@
           showAdminToast('Banner updated successfully.');
         }
       } else {
-        // Add new
+        // Add new mock
         const newBanner = {
           id: 'BNR-' + String(data.banners.length + 1).padStart(3, '0'),
           title,
@@ -1049,7 +1180,48 @@
     }
   }
 
-  function renderProducts() {
+  let liveProductsLoaded = false;
+
+  async function loadLiveProducts() {
+    if (!useApi) return;
+    try {
+      const res = await API.getProducts({ limit: 100 });
+      if (res && res.success && Array.isArray(res.data)) {
+        data.products = res.data.map(p => {
+          const primaryImg = (p.productImages && p.productImages.find(img => img.isPrimary)?.imageUrl) ||
+                             p.productImages?.[0]?.imageUrl ||
+                             '';
+          const images = (p.productImages || []).map(img => ({
+            url: img.imageUrl,
+            isPrimary: !!img.isPrimary
+          }));
+          const priceNum = parseFloat(p.price) || 0;
+          return {
+            id: p.id,
+            name: p.name,
+            brand: p.brand || '',
+            category: p.category ? p.category.name : 'General',
+            categoryId: p.categoryId,
+            price: priceNum,
+            originalPrice: priceNum,
+            stock: (p.stock !== undefined && p.stock !== null) ? Number(p.stock) : 0,
+            minStockThreshold: 4,
+            status: (p.availability === 'NOT_AVAILABLE' || p.stock === 0) ? 'Out of Stock' : (Number(p.stock) < 5 ? 'Low Stock' : 'In Stock'),
+            availability: p.availability || 'AVAILABLE',
+            slug: p.slug,
+            description: p.description || '',
+            images,
+            primaryImage: primaryImg
+          };
+        });
+        liveProductsLoaded = true;
+      }
+    } catch (e) {
+      console.warn('Could not load live products from API:', e);
+    }
+  }
+
+  async function renderProducts() {
     const tbody = document.getElementById('productsTableBody');
     const emptyState = document.getElementById('productsEmptyState');
     const searchInput = document.getElementById('productSearchInput');
@@ -1059,16 +1231,20 @@
 
     if (!tbody) return;
 
+    if (useApi && !liveProductsLoaded) {
+      await loadLiveProducts();
+    }
+
     const query = (searchInput?.value || '').trim().toLowerCase();
     const cat = catFilter?.value || 'all';
     const stockStatus = stockFilter?.value || 'all';
 
     const filtered = data.products.filter(p => {
-      const matchQuery = p.name.toLowerCase().includes(query) ||
-                         p.brand.toLowerCase().includes(query) ||
-                         p.category.toLowerCase().includes(query) ||
-                         p.slug.toLowerCase().includes(query);
-      const matchCat = cat === 'all' || p.category === cat;
+      const matchQuery = (p.name || '').toLowerCase().includes(query) ||
+                         (p.brand || '').toLowerCase().includes(query) ||
+                         (p.category || '').toLowerCase().includes(query) ||
+                         (p.slug || '').toLowerCase().includes(query);
+      const matchCat = cat === 'all' || p.category.toLowerCase() === cat.toLowerCase();
       const matchStock = stockStatus === 'all' || p.status === stockStatus;
       return matchQuery && matchCat && matchStock;
     });
@@ -1161,8 +1337,21 @@
     });
 
     tbody.querySelectorAll('[data-toggle-avail]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const prod = data.products.find(x => x.id === btn.dataset.toggleAvail);
+      btn.addEventListener('click', async () => {
+        const prodId = btn.dataset.toggleAvail;
+        if (useApi) {
+          try {
+            await API.toggleProductVisibility(prodId);
+            await loadLiveProducts();
+            renderProducts();
+            showAdminToast('Product visibility updated.');
+            return;
+          } catch (err) {
+            showAdminToast('Failed to update product visibility.', 'error');
+            return;
+          }
+        }
+        const prod = data.products.find(x => x.id === prodId);
         if (prod) {
           prod.availability = prod.availability === 'AVAILABLE' ? 'NOT_AVAILABLE' : 'AVAILABLE';
           renderProducts();
@@ -1172,8 +1361,22 @@
     });
 
     tbody.querySelectorAll('[data-delete-product]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const idx = data.products.findIndex(x => x.id === btn.dataset.deleteProduct);
+      btn.addEventListener('click', async () => {
+        const prodId = btn.dataset.deleteProduct;
+        if (!confirm('Are you sure you want to delete this product?')) return;
+        if (useApi) {
+          try {
+            await API.deleteProduct(prodId);
+            await loadLiveProducts();
+            renderProducts();
+            showAdminToast('Product deleted successfully.');
+            return;
+          } catch (err) {
+            showAdminToast('Failed to delete product.', 'error');
+            return;
+          }
+        }
+        const idx = data.products.findIndex(x => x.id === prodId);
         if (idx !== -1) {
           const removed = data.products.splice(idx, 1)[0];
           renderProducts();
@@ -1234,7 +1437,7 @@
 
   const saveProductBtn = document.getElementById('saveProductBtn');
   if (saveProductBtn) {
-    saveProductBtn.addEventListener('click', () => {
+    saveProductBtn.addEventListener('click', async () => {
       const id = document.getElementById('productFormId').value;
       const name = document.getElementById('productName').value.trim();
       const brand = document.getElementById('productBrand').value.trim();
@@ -1256,6 +1459,36 @@
 
       const primaryImgUrl = currentProductImages.find(x => x.isPrimary)?.url || currentProductImages[0]?.url || '';
       const productImages = currentProductImages.map(x => ({ url: x.url, isPrimary: !!x.isPrimary }));
+
+      if (useApi) {
+        try {
+          const payload = {
+            name,
+            brand,
+            category,
+            price,
+            stock,
+            slug,
+            availability,
+            description,
+            images: productImages
+          };
+          if (id) {
+            await API.updateProduct(id, payload);
+            showAdminToast(`Product "${name}" updated successfully.`);
+          } else {
+            await API.createProduct(payload);
+            showAdminToast(`Product "${name}" created successfully.`);
+          }
+          await loadLiveProducts();
+          closeModal('productModal');
+          renderProducts();
+          return;
+        } catch (err) {
+          showAdminToast(`Error saving product: ${err.message}`, 'error');
+          return;
+        }
+      }
 
       if (id) {
         const prod = data.products.find(p => p.id === id);
@@ -1348,10 +1581,32 @@
 
   const saveStockBtn = document.getElementById('saveStockBtn');
   if (saveStockBtn) {
-    saveStockBtn.addEventListener('click', () => {
+    saveStockBtn.addEventListener('click', async () => {
       const id = document.getElementById('stockProductId').value;
       const stock = Number(document.getElementById('stockQuantityInput').value) || 0;
       const status = document.getElementById('stockStatusSelect').value;
+      const availability = (status === 'Out of Stock' || stock === 0) ? 'NOT_AVAILABLE' : 'AVAILABLE';
+
+      if (useApi) {
+        try {
+          await API.updateProduct(id, { stock, availability });
+          const prod = data.products.find(p => p.id === id);
+          if (prod) {
+            prod.stock = stock;
+            prod.status = status;
+            prod.availability = availability;
+          }
+          showAdminToast(`Stock updated to ${stock} units (${status}) for "${prod ? prod.name : 'Product'}"`);
+          closeModal('stockModal');
+          await loadLiveProducts();
+          renderProducts();
+          initDashboard();
+          return;
+        } catch (err) {
+          showAdminToast(`Failed to update stock: ${err.message}`, 'error');
+          return;
+        }
+      }
 
       const prod = data.products.find(p => p.id === id);
       if (prod) {
@@ -1367,10 +1622,55 @@
   }
 
   /* =========================================================================
-     7. REGISTERED USERS CONTROLLER
+     7. REGISTERED USERS CONTROLLER (DATABASE BACKED)
      ========================================================================= */
 
-  function renderUsers() {
+  let registeredUsersData = [];
+
+  function formatAdminDate(dateStr) {
+    if (!dateStr) return 'Recent';
+    try {
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return dateStr;
+      return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    } catch (e) {
+      return dateStr;
+    }
+  }
+
+  function formatAdminCurrency(amount) {
+    const num = Number(amount) || 0;
+    return '₹' + num.toLocaleString('en-IN');
+  }
+
+  async function loadUsersFromDb() {
+    try {
+      const res = await fetch('/api/admin/users?limit=100');
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success && Array.isArray(json.data)) {
+          registeredUsersData = json.data;
+          return;
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to fetch /api/admin/users from database:', e);
+    }
+    // Fallback to mock data if API is unreachable
+    registeredUsersData = (data.users || []).map(u => ({
+      id: u.id,
+      username: u.name,
+      email: u.email,
+      phone_number: u.phone,
+      gender: u.gender,
+      role: u.role,
+      created_at: u.joinedDate,
+      orderCount: u.ordersCount,
+      addresses: u.addresses || []
+    }));
+  }
+
+  async function renderUsers() {
     const tbody = document.getElementById('usersTableBody');
     const emptyState = document.getElementById('usersEmptyState');
     const searchInput = document.getElementById('userSearchInput');
@@ -1379,18 +1679,23 @@
 
     if (!tbody) return;
 
+    if (registeredUsersData.length === 0) {
+      await loadUsersFromDb();
+    }
+
     const query = (searchInput?.value || '').trim().toLowerCase();
     const role = roleFilter?.value || 'all';
 
-    const filtered = data.users.filter(u => {
-      const matchQuery = u.name.toLowerCase().includes(query) ||
-                         u.email.toLowerCase().includes(query) ||
-                         u.phone.toLowerCase().includes(query);
+    const filtered = registeredUsersData.filter(u => {
+      const name = (u.username || u.name || '').toLowerCase();
+      const email = (u.email || '').toLowerCase();
+      const phone = (u.phone_number || u.phone || '').toLowerCase();
+      const matchQuery = name.includes(query) || email.includes(query) || phone.includes(query);
       const matchRole = role === 'all' || u.role === role;
       return matchQuery && matchRole;
     });
 
-    if (countDisplay) countDisplay.textContent = filtered.length;
+    if (countDisplay) countDisplay.textContent = registeredUsersData.length;
 
     if (filtered.length === 0) {
       tbody.innerHTML = '';
@@ -1401,29 +1706,35 @@
     if (emptyState) emptyState.style.display = 'none';
 
     tbody.innerHTML = filtered.map(u => {
-      const initials = u.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
+      const displayName = u.username || u.name || 'User';
+      const initials = displayName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || 'U';
+      const phoneDisplay = u.phone_number || u.phone || 'N/A';
+      const orders = u.orderCount !== undefined ? u.orderCount : (u.ordersCount || 0);
+      const joinedFormatted = formatAdminDate(u.created_at || u.joinedDate);
+      const genderDisplay = u.gender ? u.gender.replace(/_/g, ' ') : 'Not specified';
+
       return `
         <tr data-user-id="${u.id}">
           <td>
             <div class="admin-cell-user">
               <div class="admin-cell-user__avatar">${initials}</div>
               <div>
-                <strong style="color:var(--color-text-primary);">${u.name}</strong>
-                <div style="font-size:var(--text-xs); color:var(--color-text-muted);">${u.gender || 'Not specified'}</div>
+                <strong style="color:var(--color-text-primary);">${displayName}</strong>
+                <div style="font-size:var(--text-xs); color:var(--color-text-muted);">${genderDisplay}</div>
               </div>
             </div>
           </td>
           <td><span style="font-family:var(--font-mono); font-size:var(--text-xs);">${u.email}</span></td>
-          <td>${u.phone}</td>
+          <td>${phoneDisplay}</td>
           <td>
             <span class="badge ${u.role === 'ADMIN' ? 'badge--accent' : 'badge--primary'}">
               ${u.role}
             </span>
           </td>
-          <td style="font-size:var(--text-xs); color:var(--color-text-muted);">${u.joinedDate}</td>
-          <td><strong>${u.ordersCount}</strong> orders</td>
+          <td style="font-size:var(--text-xs); color:var(--color-text-muted);">${joinedFormatted}</td>
+          <td><strong>${orders}</strong> orders</td>
           <td>
-            <span class="badge badge--success">${u.status}</span>
+            <span class="badge badge--success">Active</span>
           </td>
           <td>
             <button type="button" class="admin-btn-action" data-view-user="${u.id}">
@@ -1439,8 +1750,46 @@
     });
   }
 
-  function openUserDrawer(userId) {
-    const user = data.users.find(u => u.id === userId);
+  // Hook up user search and role filter listeners
+  const userSearchInput = document.getElementById('userSearchInput');
+  const userRoleFilter = document.getElementById('userRoleFilter');
+  const resetUserFiltersBtn = document.getElementById('resetUserFiltersBtn');
+
+  if (userSearchInput) {
+    userSearchInput.addEventListener('input', () => renderUsers());
+  }
+  if (userRoleFilter) {
+    userRoleFilter.addEventListener('change', () => renderUsers());
+  }
+  if (resetUserFiltersBtn) {
+    resetUserFiltersBtn.addEventListener('click', () => {
+      if (userSearchInput) userSearchInput.value = '';
+      if (userRoleFilter) userRoleFilter.value = 'all';
+      renderUsers();
+    });
+  }
+
+  async function openUserDrawer(userId) {
+    let user = registeredUsersData.find(u => u.id === userId);
+    try {
+      if (useApi) {
+        const json = await API.getUserDetail(userId);
+        if (json && json.success && json.data) {
+          user = { ...user, ...json.data };
+        }
+      } else {
+        const res = await fetch(`/api/admin/users/${userId}`);
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && json.data) {
+            user = { ...user, ...json.data };
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('Could not fetch user details:', e);
+    }
+
     if (!user) return;
 
     const drawerBody = document.getElementById('userDrawerBody');
@@ -1449,7 +1798,13 @@
 
     if (!drawerBody || !drawer || !overlay) return;
 
-    const initials = user.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
+    const displayName = user.username || user.name || 'User';
+    const initials = displayName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || 'U';
+    const joinedFormatted = formatAdminDate(user.created_at || user.joinedDate);
+    const phoneDisplay = user.phone_number || user.phone || 'Not provided';
+    const ordersCount = user.orderCount !== undefined ? user.orderCount : (user.ordersCount || (user.orders ? user.orders.length : 0));
+    const totalSpent = user.totalSpent !== undefined ? formatAdminCurrency(user.totalSpent) : (user.totalSpentFormatted || '₹0');
+    const addresses = user.addresses || [];
 
     drawerBody.innerHTML = `
       <!-- User Summary Card -->
@@ -1458,7 +1813,7 @@
           ${initials}
         </div>
         <div>
-          <h4 style="font-size:var(--text-lg); font-weight:var(--font-bold); margin:0;">${user.name}</h4>
+          <h4 style="font-size:var(--text-lg); font-weight:var(--font-bold); margin:0;">${displayName}</h4>
           <span style="font-size:var(--text-xs); color:var(--color-text-muted);">Customer ID: ${user.id}</span>
         </div>
       </div>
@@ -1475,7 +1830,7 @@
           </div>
           <div>
             <span style="color:var(--color-text-muted); font-size:var(--text-xs); display:block;">Phone Number</span>
-            <strong>${user.phone}</strong>
+            <strong>${phoneDisplay}</strong>
           </div>
           <div>
             <span style="color:var(--color-text-muted); font-size:var(--text-xs); display:block;">Account Role</span>
@@ -1483,7 +1838,7 @@
           </div>
           <div>
             <span style="color:var(--color-text-muted); font-size:var(--text-xs); display:block;">Date Registered</span>
-            <strong>${user.joinedDate}</strong>
+            <strong>${joinedFormatted}</strong>
           </div>
         </div>
       </div>
@@ -1496,11 +1851,11 @@
         <div style="display:flex; gap:var(--space-4);">
           <div style="flex:1; padding:var(--space-4); background:var(--color-bg-secondary); border-radius:var(--radius-lg); border:1px solid var(--color-border-light);">
             <span style="font-size:var(--text-xs); color:var(--color-text-muted);">Total Completed Orders</span>
-            <div style="font-size:var(--text-2xl); font-weight:var(--font-extrabold); color:var(--color-primary-700);">${user.ordersCount}</div>
+            <div style="font-size:var(--text-2xl); font-weight:var(--font-extrabold); color:var(--color-primary-700);">${ordersCount}</div>
           </div>
           <div style="flex:1; padding:var(--space-4); background:var(--color-bg-secondary); border-radius:var(--radius-lg); border:1px solid var(--color-border-light);">
             <span style="font-size:var(--text-xs); color:var(--color-text-muted);">Lifetime Spend</span>
-            <div style="font-size:var(--text-2xl); font-weight:var(--font-extrabold); color:var(--color-accent-600);">${user.totalSpent}</div>
+            <div style="font-size:var(--text-2xl); font-weight:var(--font-extrabold); color:var(--color-accent-600);">${totalSpent}</div>
           </div>
         </div>
       </div>
@@ -1508,12 +1863,42 @@
       <!-- Saved Delivery Addresses -->
       <div>
         <h5 style="font-size:var(--text-xs); font-weight:var(--font-bold); color:var(--color-text-muted); text-transform:uppercase; letter-spacing:var(--tracking-wider); margin-bottom:var(--space-3);">
-          Saved Addresses (${user.addresses.length})
+          Saved Addresses (${addresses.length})
         </h5>
-        ${user.addresses.length === 0 ? '<p style="font-size:var(--text-xs); color:var(--color-text-muted);">No addresses saved yet.</p>' : user.addresses.map(a => `
+        ${addresses.length === 0 ? '<p style="font-size:var(--text-xs); color:var(--color-text-muted);">No addresses saved yet.</p>' : addresses.map(a => `
           <div style="padding:var(--space-3) var(--space-4); background:var(--color-bg-secondary); border-radius:var(--radius-lg); border:1px solid var(--color-border-light); margin-bottom:var(--space-2); font-size:var(--text-sm);">
-            <strong style="color:var(--color-primary-700);">${a.name}</strong>
-            <p style="margin:4px 0 0 0; color:var(--color-text-secondary);">${a.line1}, ${a.city}, ${a.state} — ${a.pincode}</p>
+            <strong style="color:var(--color-primary-700);">${a.full_name || a.name || 'Address'}</strong>
+            <p style="margin:4px 0 0 0; color:var(--color-text-secondary);">${a.address_line_1 || a.line1 || ''}, ${a.city || ''}, ${a.state || ''} — ${a.postal_code || a.pincode || ''}</p>
+          </div>
+        `).join('')}
+      </div>
+
+      <!-- Placed Orders by User -->
+      <div>
+        <h5 style="font-size:var(--text-xs); font-weight:var(--font-bold); color:var(--color-text-muted); text-transform:uppercase; letter-spacing:var(--tracking-wider); margin-bottom:var(--space-3);">
+          Placed Orders (${(user.orders || []).length})
+        </h5>
+        ${(!user.orders || user.orders.length === 0) ? '<p style="font-size:var(--text-xs); color:var(--color-text-muted);">No orders placed yet.</p>' : user.orders.map(order => `
+          <div style="padding:var(--space-3) var(--space-4); background:var(--color-bg-secondary); border-radius:var(--radius-lg); border:1px solid var(--color-border-light); margin-bottom:var(--space-3); font-size:var(--text-sm);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:var(--space-2); padding-bottom:var(--space-2); border-bottom:1px solid var(--color-border-light);">
+              <div>
+                <strong style="color:var(--color-primary-700); font-size:var(--text-sm);">${order.shortId || order.id}</strong>
+                <span style="font-size:11px; color:var(--color-text-muted); margin-left:8px;">${formatAdminDate(order.createdAt)}</span>
+              </div>
+              <span class="badge ${order.status === 'DELIVERED' ? 'badge--success' : (order.status === 'PROCESSING' ? 'badge--warning' : 'badge--primary')}" style="font-size:10px;">${order.status}</span>
+            </div>
+            
+            <!-- Products List (Product ID & Product Name) -->
+            <div style="display:flex; flex-direction:column; gap:6px;">
+              ${(order.items && order.items.length > 0) ? order.items.map(item => `
+                <div style="background:#ffffff; padding:6px 10px; border-radius:var(--radius-md); border:1px solid var(--color-border-light); font-size:12px;">
+                  <div style="font-weight:600; color:var(--color-text-primary);">${item.productName}</div>
+                  <div style="font-size:11px; color:var(--color-text-muted); font-family:monospace; margin-top:2px;">
+                    <span style="color:var(--color-primary-600); font-weight:500;">Product ID:</span> ${item.productId || 'N/A'}
+                  </div>
+                </div>
+              `).join('') : '<span style="font-size:11px; color:var(--color-text-muted);">No products in this order</span>'}
+            </div>
           </div>
         `).join('')}
       </div>
@@ -1540,8 +1925,61 @@
      ========================================================================= */
 
   let currentOrderFilter = 'all';
+  let currentOrderSort = 'date-desc';
+  let liveOrdersLoaded = false;
 
-  function renderOrders() {
+  const ORDER_STATUS_RANK = {
+    'processing': 1,
+    'confirmed': 2,
+    'out_for_delivery': 3,
+    'delivered': 4,
+    'cancelled': 5
+  };
+
+  async function loadLiveOrders() {
+    if (!useApi) return;
+    try {
+      const res = await API.getOrders({ limit: 100 });
+      if (res && res.success && Array.isArray(res.data)) {
+        data.orders = res.data.map(o => {
+          const custName = o.user?.username || (o.user?.email ? o.user.email.split('@')[0] : 'Customer');
+          const custEmail = o.user?.email || '';
+          const custPhone = o.user?.phone_number || '-';
+          const items = (o.items || []).map(i => ({
+            name: i.productName || 'Product',
+            variant: i.variantDescription || 'Standard',
+            quantity: i.quantity || 1,
+            unitPrice: parseFloat(i.unitPrice) || 0,
+            subtotal: parseFloat(i.lineTotal) || ((parseFloat(i.unitPrice) || 0) * (i.quantity || 1))
+          }));
+
+          return {
+            id: o.id,
+            shortId: o.shortId,
+            customer: {
+              name: custName,
+              email: custEmail,
+              phone: custPhone
+            },
+            items: items.length > 0 ? items : [{ name: 'Order Item', variant: 'Standard', quantity: o.itemCount || 1, subtotal: parseFloat(o.totalAmount) || 0 }],
+            totalAmount: parseFloat(o.totalAmount) || 0,
+            subtotal: parseFloat(o.subtotal) || parseFloat(o.totalAmount) || 0,
+            paymentMethod: o.paymentMethod || 'Online',
+            paymentStatus: o.paymentStatus || 'Paid',
+            status: (o.status || 'PENDING').toLowerCase(),
+            shippingAddress: o.shippingAddress || 'Registered Address',
+            createdAt: o.createdAt ? new Date(o.createdAt).getTime() : 0,
+            date: formatAdminDate(o.createdAt)
+          };
+        });
+        liveOrdersLoaded = true;
+      }
+    } catch (e) {
+      console.warn('Could not load live orders from API:', e);
+    }
+  }
+
+  async function renderOrders() {
     const tbody = document.getElementById('ordersTableBody');
     const emptyState = document.getElementById('ordersEmptyState');
     const searchInput = document.getElementById('orderSearchInput');
@@ -1549,15 +1987,50 @@
 
     if (!tbody) return;
 
+    if (useApi && !liveOrdersLoaded) {
+      await loadLiveOrders();
+    }
+
     const query = (searchInput?.value || '').trim().toLowerCase();
 
     const filtered = data.orders.filter(o => {
-      const matchQuery = o.id.toLowerCase().includes(query) ||
-                         o.shortId.toLowerCase().includes(query) ||
-                         o.customer.name.toLowerCase().includes(query) ||
-                         o.customer.phone.includes(query);
+      const matchQuery = (o.id || '').toLowerCase().includes(query) ||
+                         (o.shortId || '').toLowerCase().includes(query) ||
+                         (o.customer?.name || '').toLowerCase().includes(query) ||
+                         (o.customer?.phone || '').includes(query);
       const matchFilter = currentOrderFilter === 'all' || o.status === currentOrderFilter;
       return matchQuery && matchFilter;
+    });
+
+    // Sort according to payment, order status, date
+    filtered.sort((a, b) => {
+      switch (currentOrderSort) {
+        case 'date-desc':
+          return (b.createdAt || 0) - (a.createdAt || 0);
+        case 'date-asc':
+          return (a.createdAt || 0) - (b.createdAt || 0);
+        case 'status-asc': {
+          const rankA = ORDER_STATUS_RANK[a.status] || 99;
+          const rankB = ORDER_STATUS_RANK[b.status] || 99;
+          return rankA - rankB;
+        }
+        case 'status-desc': {
+          const rankA = ORDER_STATUS_RANK[a.status] || 99;
+          const rankB = ORDER_STATUS_RANK[b.status] || 99;
+          return rankB - rankA;
+        }
+        case 'payment-status': {
+          const pA = (a.paymentStatus || '').toLowerCase();
+          const pB = (b.paymentStatus || '').toLowerCase();
+          return pA.localeCompare(pB);
+        }
+        case 'payment-high':
+          return (b.totalAmount || 0) - (a.totalAmount || 0);
+        case 'payment-low':
+          return (a.totalAmount || 0) - (b.totalAmount || 0);
+        default:
+          return (b.createdAt || 0) - (a.createdAt || 0);
+      }
     });
 
     if (countDisplay) countDisplay.textContent = filtered.length;
@@ -1614,8 +2087,42 @@
     });
   }
 
-  function openOrderDrawer(orderId) {
-    const order = data.orders.find(o => o.id === orderId);
+  async function openOrderDrawer(orderId) {
+    let order = data.orders.find(o => o.id === orderId);
+
+    if (useApi) {
+      try {
+        const res = await API.getOrderDetail(orderId);
+        if (res && res.success && res.data) {
+          const o = res.data;
+          order = {
+            id: o.id,
+            shortId: o.shortId,
+            customer: {
+              name: o.user?.username || o.user?.email || 'Customer',
+              email: o.user?.email || '',
+              phone: o.user?.phone_number || '-'
+            },
+            items: (o.items || []).map(i => ({
+              name: i.productName || 'Product',
+              variant: i.variantDescription || 'Standard',
+              quantity: i.quantity || 1,
+              subtotal: parseFloat(i.lineTotal) || ((parseFloat(i.unitPrice) || 0) * (i.quantity || 1))
+            })),
+            subtotal: parseFloat(o.subtotal) || parseFloat(o.totalAmount) || 0,
+            totalAmount: parseFloat(o.totalAmount) || 0,
+            paymentMethod: o.paymentMethod || 'Online',
+            paymentStatus: o.paymentStatus || 'Paid',
+            status: (o.status || 'PENDING').toLowerCase(),
+            shippingAddress: o.shippingAddress || 'Registered Address',
+            date: formatAdminDate(o.createdAt)
+          };
+        }
+      } catch (e) {
+        console.warn('Could not fetch fresh order detail from API:', e);
+      }
+    }
+
     if (!order) return;
 
     const drawerBody = document.getElementById('orderDrawerBody');
@@ -1701,36 +2208,45 @@
       </div>
     `;
 
-  function updateOrderStatus(orderId, newStatus) {
-    if (!useApi) {
-      // Mock implementation
-      const order = data.orders.find(o => o.id === orderId);
-      if (order) {
-        order.status = newStatus;
-        showAdminToast(`Order ${order.shortId} status updated to "${capitalize(newStatus.replace(/_/g, ' '))}".`);
-        renderOrders();
-        initDashboard();
-      }
-      return;
+    // Attach status update listener
+    const updateBtn = document.getElementById('updateOrderStatusBtn');
+    const selectEl = document.getElementById('drawerStatusSelect');
+    if (updateBtn && selectEl) {
+      updateBtn.addEventListener('click', () => {
+        updateOrderStatus(order.id, selectEl.value);
+      });
     }
 
-    // Use API
-    API.updateOrderStatus(orderId, newStatus)
-      .then((res) => {
+    drawer.classList.add('open');
+    overlay.classList.add('open');
+  }
+
+  async function updateOrderStatus(orderId, newStatus) {
+    if (useApi) {
+      try {
+        const res = await API.updateOrderStatus(orderId, newStatus.toUpperCase());
         if (res.success) {
           showAdminToast(`Order status updated to ${newStatus.replace(/_/g, ' ')}`, 'success');
+          await loadLiveOrders();
           renderOrders();
           initDashboard();
           openOrderDrawer(orderId);
         }
-      })
-      .catch(() => {
-        showAdminToast('Failed to update order status', 'error');
-      });
-  }
+      } catch (err) {
+        showAdminToast(`Failed to update order status: ${err.message}`, 'error');
+      }
+      return;
+    }
 
-    drawer.classList.add('open');
-    overlay.classList.add('open');
+    // Mock implementation
+    const order = data.orders.find(o => o.id === orderId);
+    if (order) {
+      order.status = newStatus;
+      showAdminToast(`Order ${order.shortId} status updated to "${capitalize(newStatus.replace(/_/g, ' '))}".`);
+      renderOrders();
+      initDashboard();
+      openOrderDrawer(orderId);
+    }
   }
 
   function closeOrderDrawer() {
@@ -1757,6 +2273,83 @@
       });
     });
   }
+
+  // Order Search Input
+  const orderSearchInput = document.getElementById('orderSearchInput');
+  if (orderSearchInput) {
+    orderSearchInput.addEventListener('input', () => {
+      renderOrders();
+    });
+  }
+
+  // Order Sort Select & Clickable Column Headers
+  function updateOrderSortIndicators() {
+    const iconDate = document.getElementById('sortIndicatorDate');
+    const iconStatus = document.getElementById('sortIndicatorStatus');
+    const iconPayment = document.getElementById('sortIndicatorPayment');
+
+    if (iconDate) { iconDate.textContent = '⇅'; iconDate.style.color = ''; iconDate.style.opacity = '0.6'; }
+    if (iconStatus) { iconStatus.textContent = '⇅'; iconStatus.style.color = ''; iconStatus.style.opacity = '0.6'; }
+    if (iconPayment) { iconPayment.textContent = '⇅'; iconPayment.style.color = ''; iconPayment.style.opacity = '0.6'; }
+
+    if (currentOrderSort === 'date-desc' && iconDate) {
+      iconDate.textContent = '↓';
+      iconDate.style.color = 'var(--color-primary-600)';
+      iconDate.style.opacity = '1';
+    } else if (currentOrderSort === 'date-asc' && iconDate) {
+      iconDate.textContent = '↑';
+      iconDate.style.color = 'var(--color-primary-600)';
+      iconDate.style.opacity = '1';
+    } else if (currentOrderSort === 'status-asc' && iconStatus) {
+      iconStatus.textContent = '↑';
+      iconStatus.style.color = 'var(--color-primary-600)';
+      iconStatus.style.opacity = '1';
+    } else if (currentOrderSort === 'status-desc' && iconStatus) {
+      iconStatus.textContent = '↓';
+      iconStatus.style.color = 'var(--color-primary-600)';
+      iconStatus.style.opacity = '1';
+    } else if ((currentOrderSort === 'payment-high' || currentOrderSort === 'payment-status') && iconPayment) {
+      iconPayment.textContent = '↓';
+      iconPayment.style.color = 'var(--color-primary-600)';
+      iconPayment.style.opacity = '1';
+    } else if (currentOrderSort === 'payment-low' && iconPayment) {
+      iconPayment.textContent = '↑';
+      iconPayment.style.color = 'var(--color-primary-600)';
+      iconPayment.style.opacity = '1';
+    }
+  }
+
+  const orderSortSelect = document.getElementById('orderSortSelect');
+  if (orderSortSelect) {
+    orderSortSelect.value = currentOrderSort;
+    orderSortSelect.addEventListener('change', () => {
+      currentOrderSort = orderSortSelect.value;
+      updateOrderSortIndicators();
+      renderOrders();
+    });
+  }
+
+  document.querySelectorAll('.admin-th-sortable').forEach(th => {
+    th.addEventListener('click', () => {
+      const field = th.dataset.sortField;
+      if (field === 'date') {
+        currentOrderSort = (currentOrderSort === 'date-desc') ? 'date-asc' : 'date-desc';
+      } else if (field === 'status') {
+        currentOrderSort = (currentOrderSort === 'status-asc') ? 'status-desc' : 'status-asc';
+      } else if (field === 'payment') {
+        if (currentOrderSort === 'payment-high') {
+          currentOrderSort = 'payment-low';
+        } else if (currentOrderSort === 'payment-low') {
+          currentOrderSort = 'payment-status';
+        } else {
+          currentOrderSort = 'payment-high';
+        }
+      }
+      if (orderSortSelect) orderSortSelect.value = currentOrderSort;
+      updateOrderSortIndicators();
+      renderOrders();
+    });
+  });
 
   function capitalize(str) {
     if (!str) return '';
@@ -1897,7 +2490,7 @@
     const inputEmail = document.getElementById('adminEmailInput');
     if (inputEmail && !inputEmail.value) inputEmail.value = email;
     const inputPhone = document.getElementById('adminPhoneInput');
-    if (inputPhone && phone && (!inputPhone.value || inputPhone.value === '+91 99636 57799')) inputPhone.value = phone;
+    if (inputPhone && !inputPhone.value && phone) inputPhone.value = phone;
   }
 
   function initAdminProfilePage() {
@@ -1913,10 +2506,11 @@
       });
     });
 
-    // 2. Personal Info Form
+    // 2. Personal Info Form (Real Database Updates via /api/admin/profile)
     const personalForm = document.getElementById('adminPersonalForm');
+    const saveProfileBtn = document.getElementById('saveAdminProfileBtn');
     if (personalForm) {
-      personalForm.addEventListener('submit', (e) => {
+      personalForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const username = document.getElementById('adminFullNameInput')?.value.trim();
         const email = document.getElementById('adminEmailInput')?.value.trim();
@@ -1927,23 +2521,68 @@
           return;
         }
 
+        if (saveProfileBtn) {
+          saveProfileBtn.disabled = true;
+          saveProfileBtn.textContent = 'Saving Changes...';
+        }
+
         try {
+          const res = await fetch('/api/admin/profile', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, email, phone })
+          });
+
+          const json = await res.json();
+          if (!res.ok || !json.success) {
+            throw new Error(json.message || 'Failed to save profile changes.');
+          }
+
+          const updatedUser = json.data;
+
+          // Update localStorage authUser
           let authUser = {};
-          const stored = localStorage.getItem('authUser');
-          if (stored) authUser = JSON.parse(stored);
-          authUser.username = username;
-          authUser.email = email;
-          authUser.phone_number = phone;
+          try {
+            const stored = localStorage.getItem('authUser');
+            if (stored) authUser = JSON.parse(stored);
+          } catch (e) {}
+          authUser.username = updatedUser.username;
+          authUser.email = updatedUser.email;
+          authUser.phone_number = updatedUser.phone_number;
           localStorage.setItem('authUser', JSON.stringify(authUser));
-          hydrateAdminUser();
-          showAdminToast('Admin profile details updated successfully!');
+
+          // Update visible DOM elements
+          const profName = document.getElementById('adminProfileDisplayName');
+          if (profName) profName.textContent = updatedUser.username;
+          const profEmail = document.getElementById('adminProfileDisplayEmail');
+          if (profEmail) profEmail.textContent = updatedUser.email;
+          const hdrName = document.getElementById('headerUserName');
+          if (hdrName) hdrName.textContent = updatedUser.username;
+          const sideName = document.getElementById('sidebarUserName');
+          if (sideName) sideName.textContent = updatedUser.username;
+
+          if (updatedUser.avatar) {
+            const profAv = document.getElementById('adminProfileLargeAvatar');
+            if (profAv) profAv.textContent = updatedUser.avatar;
+            const hdrAv = document.getElementById('headerUserAvatar');
+            if (hdrAv) hdrAv.textContent = updatedUser.avatar;
+            const sideAv = document.getElementById('sidebarUserAvatar');
+            if (sideAv) sideAv.textContent = updatedUser.avatar;
+          }
+
+          showAdminToast(json.message || 'Admin profile details saved to database successfully!');
         } catch (err) {
-          showAdminToast('Failed to save profile changes.', 'warning');
+          showAdminToast(err.message || 'Failed to save profile changes.', 'error');
+        } finally {
+          if (saveProfileBtn) {
+            saveProfileBtn.disabled = false;
+            saveProfileBtn.textContent = 'Save Profile Changes';
+          }
         }
       });
     }
 
-    // 3. Password Live Validation & Form Submit
+    // 3. Password Live Validation & Form Submit (Real Database Password Update)
     const newPassInput = document.getElementById('adminNewPass');
     const confirmPassInput = document.getElementById('adminConfirmPass');
     const chkLength = document.getElementById('chkLength');
@@ -1978,8 +2617,9 @@
     if (confirmPassInput) confirmPassInput.addEventListener('input', validatePasswordInputs);
 
     const passForm = document.getElementById('adminPasswordForm');
+    const updatePassBtn = document.getElementById('updateAdminPasswordBtn');
     if (passForm) {
-      passForm.addEventListener('submit', (e) => {
+      passForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const curPass = document.getElementById('adminCurrentPass')?.value || '';
         if (!curPass) {
@@ -1989,13 +2629,40 @@
 
         const valid = validatePasswordInputs();
         if (!valid) {
-          showAdminToast('Please fulfill all password requirements.', 'warning');
+          showAdminToast('Please fulfill all password requirements before updating.', 'warning');
           return;
         }
 
-        passForm.reset();
-        validatePasswordInputs();
-        showAdminToast('Password updated securely!');
+        const newPass = newPassInput?.value || '';
+
+        if (updatePassBtn) {
+          updatePassBtn.disabled = true;
+          updatePassBtn.textContent = 'Updating Password...';
+        }
+
+        try {
+          const res = await fetch('/api/admin/profile/password', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ currentPassword: curPass, newPassword: newPass })
+          });
+
+          const json = await res.json();
+          if (!res.ok || !json.success) {
+            throw new Error(json.message || 'Failed to update password.');
+          }
+
+          passForm.reset();
+          validatePasswordInputs();
+          showAdminToast(json.message || 'Password updated securely in database!');
+        } catch (err) {
+          showAdminToast(err.message || 'Failed to update password.', 'error');
+        } finally {
+          if (updatePassBtn) {
+            updatePassBtn.disabled = false;
+            updatePassBtn.textContent = 'Update Password';
+          }
+        }
       });
     }
   }
@@ -2016,8 +2683,16 @@
      11. INITIALIZATION
      ========================================================================= */
 
-  document.addEventListener('DOMContentLoaded', () => {
+  document.addEventListener('DOMContentLoaded', async () => {
     hydrateAdminUser();
+    if (useApi) {
+      await Promise.allSettled([
+        loadLiveBanners(),
+        loadLiveProducts(),
+        loadLiveOrders(),
+        loadUsersFromDb()
+      ]);
+    }
     initDashboard();
     setupBannerImageControls();
     setupProductImageControls();

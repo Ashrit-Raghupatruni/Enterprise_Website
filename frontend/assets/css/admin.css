@@ -230,6 +230,8 @@
   border: 1px solid transparent;
   transition: var(--transition-fast);
   user-select: none;
+  text-decoration: none;
+  color: inherit;
 }
 
 .admin-header__user:hover,
