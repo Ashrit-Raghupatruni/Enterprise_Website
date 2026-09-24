@@ -8,6 +8,7 @@ import productRoutes from './src/features/products/routes/productRoutes.js'
 import orderRoutes from './src/features/orders/routes/orderRoutes.js'
 import adminRoutes from './src/features/admin/routes/adminRoutes.js'
 import adminApiRoutes from './src/features/admin/routes/adminApiRoutes.js'
+import ordersRoutes from './src/features/orders/routes/orders.routes.js'
 import jwtAuthenticate from './src/middleware/jwtmiddleware.js'
 import adminGuard from './src/middleware/adminguard.js'
 import jwt from 'jsonwebtoken';
@@ -52,8 +53,8 @@ app.use("/api", profileRoutes);
 // Product API Routes
 app.use("/api", productRoutes);
 
-// Order API Routes
-app.use("/api", orderRoutes);
+// Orders API Routes
+app.use("/api", ordersRoutes);
 
 
 // Admin API Routes (protected by JWT + admin guard)

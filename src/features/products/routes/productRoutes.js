@@ -2,6 +2,7 @@ import express from "express";
 import jwt from "jsonwebtoken";
 import "dotenv/config";
 import { ProductController } from "../controllers/productController.js";
+import jwtAuthenticate from "../../../middleware/jwtmiddleware.js";
 
 const router = express.Router();
 const productController = new ProductController();
@@ -36,6 +37,15 @@ router.post(
     next();
   },
   productController.recordInteraction.bind(productController)
+);
+
+// POST /api/products/:id/rate
+// Body: { rating: Number }
+// Rate a product (requires authentication)
+router.post(
+  "/products/:id/rate",
+  jwtAuthenticate,
+  productController.rateProduct.bind(productController)
 );
 
 // ─── Existing product routes ──────────────────────────────────────────────────

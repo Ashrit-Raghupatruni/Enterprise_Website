@@ -21,10 +21,22 @@
   }
 
   function starsSVG(rating) {
-    return Array.from({ length: 5 }, (_, i) => {
-      const full = i < Math.floor(rating);
-      return `<svg width="14" height="14" viewBox="0 0 16 16" style="fill:${full ? 'var(--color-warning-500)' : 'var(--gray-300)'}"><path d="M8 1.5l1.8 5.5H16l-4.6 3.3 1.8 5.5L8 11.5l-5.2 3.3 1.8-5.5L0 7h6.2z"/></svg>`;
+    const rId = Math.random().toString(36).slice(2, 8);
+    const percent = Math.round((rating % 1) * 100);
+    
+    const stars = Array.from({ length: 5 }, (_, i) => {
+      let fill = 'var(--gray-300)';
+      let defs = '';
+      if (rating >= i + 1) {
+        fill = 'var(--color-warning-500)';
+      } else if (rating > i) {
+        fill = `url(#grad-${rId}-${i})`;
+        defs = `<defs><linearGradient id="grad-${rId}-${i}" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="${percent}%" stop-color="var(--color-warning-500)" /><stop offset="${percent}%" stop-color="var(--gray-300)" /></linearGradient></defs>`;
+      }
+      return `<svg data-star="${i+1}" class="pdp-star-icon" width="18" height="18" viewBox="0 0 16 16" style="fill:${fill}; cursor: pointer; transition: transform 0.1s; margin-right: 2px;">${defs}<path d="M8 1.5l1.8 5.5H16l-4.6 3.3 1.8 5.5L8 11.5l-5.2 3.3 1.8-5.5L0 7h6.2z"/></svg>`;
     }).join('');
+    
+    return stars;
   }
 
   function placeholder(color, size = 320) {
@@ -87,12 +99,12 @@
     // Rating
     if (ratingEl) {
       ratingEl.innerHTML = `
-        <span class="pdp-info__rating-badge">
-          ${starsSVG(product.rating || 4.8)}
-          <strong>${product.rating || 4.8}</strong>
+        <span class="pdp-info__rating-badge" title="Rating">
+          ${starsSVG(product.rating || 0)}
+          <strong>${product.rating || 0}</strong>
         </span>
         <span class="pdp-info__rating-sep"></span>
-        <span class="pdp-info__rating-count">${(product.reviews || 1240).toLocaleString()} ratings</span>`;
+        <span class="pdp-info__rating-count">${(product.reviews || 0).toLocaleString()} ratings</span>`;
     }
 
     // Badge
@@ -271,10 +283,16 @@
       ).join('');
     }
 
-    // ─── Description toggle ─────────────────────────────────────────────────
     if (descBody && product.description) {
       descBody.textContent = product.description;
-      descBody.classList.add('pdp-description__body--collapsed');
+      
+      if (product.description.length <= 150) {
+        descBody.classList.remove('pdp-description__body--collapsed');
+        if (descToggle) descToggle.style.display = 'none';
+      } else {
+        descBody.classList.add('pdp-description__body--collapsed');
+        if (descToggle) descToggle.style.display = 'inline-flex';
+      }
     }
 
     if (descToggle) {
@@ -329,7 +347,7 @@
           </div>
           <div>
             <p class="pdp-delivery__title">Store Pickup Available</p>
-            <p class="pdp-delivery__note">Main Road, Hyderabad — Ready same day</p>
+            <p class="pdp-delivery__note">Kishor Enterprises, All Andhra Road, Pathapatnam, Srikakulam(dist), AP — 532213 <br>— Ready same day</p>
           </div>
         </div>` : ''}
         ${d.installation ? `
@@ -368,20 +386,28 @@
 
     // ─── Related products carousel ──────────────────────────────────────────
     loadRelatedProducts(product);
+
+    // ─── Render Reviews ─────────────────────────────────────────────────────
+    renderReviews(product);
   }
 
   // ─── Related Products ─────────────────────────────────────────────────────
   async function loadRelatedProducts(currentProduct) {
     if (!relTrack) return;
 
-    if (currentProduct.relatedCategory === 'mobiles') {
-      try {
-        const res = await fetch('/api/products/category/mobiles');
-        const json = await res.json();
-        if (json.success && Array.isArray(json.data)) {
-          const others = json.data.filter(p => p.slug !== currentProduct.slug && p.id !== currentProduct.dbId);
+    const cat = currentProduct.relatedCategory || currentProduct.category;
+    if (!cat) return;
+
+    try {
+      const res = await fetch(`/api/products/category/${encodeURIComponent(cat)}`);
+      const json = await res.json();
+      
+      if (json.success && Array.isArray(json.data) && json.data.length > 0) {
+        const others = json.data.filter(p => p.slug !== currentProduct.slug && p.id !== currentProduct.dbId);
+        
+        if (others.length > 0) {
           renderRelatedTrack(others.map(p => ({
-            id: p.slug,
+            id: p.slug || p.id,
             brand: p.brand,
             name: p.name,
             salePrice: parseFloat(p.price) || 0,
@@ -392,9 +418,9 @@
           })));
           return;
         }
-      } catch (err) {
-        console.error('Failed to load related mobile products:', err);
       }
+    } catch (err) {
+      console.error('Failed to load related products from API:', err);
     }
 
     if (window.categoryPlpData && currentProduct.relatedCategory) {
@@ -523,15 +549,16 @@
           id: p.slug || p.id,
           slug: p.slug,
           dbId: p.id,
-          category: 'mobiles',
+          category: p.category ? p.category.name : 'mobiles',
           brand: p.brand,
           name: p.name,
-          tagline: `${p.brand} Official Smartphone · 100% Genuine`,
+          tagline: `${p.brand} Official Product · 100% Genuine`,
           originalPrice: price,
           salePrice: price,
           discount: 0,
-          rating: 4.8,
-          reviews: 1240,
+          rating: parseFloat(p.rating) || 0,
+          reviews: p.reviews || 0,
+          productReviews: p.productReviews || [],
           availability: p.availability,
           imageUrl: primaryImg,
           images: allImages.length ? allImages : [primaryImg],
@@ -564,7 +591,7 @@
               rows: [
                 ['Delivery', isAvailable ? 'Available for Delivery' : 'Out of Stock'],
                 ['Payment Modes', 'Cash on Delivery, UPI, Cards, 0% EMI'],
-                ['Store Pickup', 'Available at Hyderabad Main Branch'],
+                ['Store Pickup', 'Available at Kishor Enterprises, Pathapatnam'],
               ]
             }
           ],
@@ -579,7 +606,7 @@
             from: Math.ceil(price / 12),
             months: 12,
           },
-          relatedCategory: 'mobiles',
+          relatedCategory: p.category ? p.category.name : 'mobiles',
         };
 
         renderProduct(backendProduct);
@@ -594,6 +621,122 @@
       if (titleEl) titleEl.textContent = 'Product Not Found';
       if (taglineEl) taglineEl.textContent = 'The product you are looking for is currently unavailable or does not exist.';
     }
+  }
+
+  // ─── Render & Submit Reviews ──────────────────────────────────────────────
+  function renderReviews(product) {
+    const listEl = document.getElementById('pdpReviewsList');
+    if (listEl && product.productReviews) {
+      if (product.productReviews.length === 0) {
+        listEl.innerHTML = '<p class="pdp-reviews__empty">No reviews yet. Be the first to review!</p>';
+      } else {
+        listEl.innerHTML = product.productReviews.map(review => `
+          <div class="pdp-review-card">
+            <div class="pdp-review-card__header">
+              <div class="pdp-review-card__avatar">${review.user.username ? review.user.username.charAt(0).toUpperCase() : 'U'}</div>
+              <div class="pdp-review-card__meta">
+                <p class="pdp-review-card__name">${review.user.username || 'User'}</p>
+                <div class="pdp-review-card__stars">${starsSVG(review.rating)}</div>
+              </div>
+            </div>
+            ${review.comment ? `<p class="pdp-review-card__comment">${review.comment}</p>` : ''}
+          </div>
+        `).join('');
+      }
+    }
+  }
+
+  // Handle Review Submission
+  const submitStars = document.querySelectorAll('.pdp-star-icon-interactive');
+  const submitBtn = document.getElementById('pdpSubmitReviewBtn');
+  const submitComment = document.getElementById('pdpSubmitComment');
+  let currentRating = 0;
+
+  if (submitStars.length > 0) {
+    submitStars.forEach(star => {
+      const getHoverRating = (e, star) => {
+        return parseInt(star.dataset.star, 10);
+      };
+
+      star.addEventListener('click', (e) => {
+        currentRating = getHoverRating(e, star);
+        updateInteractiveStars(currentRating);
+      });
+      star.addEventListener('mousemove', (e) => {
+        updateInteractiveStars(getHoverRating(e, star), true);
+      });
+      star.addEventListener('mouseleave', () => {
+        updateInteractiveStars(currentRating);
+      });
+    });
+  }
+
+  function updateInteractiveStars(rating, hover = false) {
+    const textVal = document.getElementById('pdpHoverRatingVal');
+    if (textVal) textVal.textContent = rating || '0';
+    
+    submitStars.forEach((star, index) => {
+      const starNumber = index + 1;
+      if (rating >= starNumber) {
+        star.style.fill = 'var(--color-warning-500)';
+      } else if (rating > index) {
+        const percent = Math.round((rating - index) * 100);
+        const stop1 = document.getElementById('dynamicStarStop1');
+        const stop2 = document.getElementById('dynamicStarStop2');
+        if (stop1 && stop2) {
+          stop1.setAttribute('offset', `${percent}%`);
+          stop2.setAttribute('offset', `${percent}%`);
+        }
+        star.style.fill = 'url(#dynamicStarGradient)';
+      } else {
+        star.style.fill = 'var(--gray-300)';
+      }
+      star.style.transform = hover && (rating > index && rating <= starNumber) ? 'scale(1.1)' : 'scale(1)';
+    });
+  }
+
+  if (submitBtn) {
+    submitBtn.addEventListener('click', async () => {
+      if (currentRating === 0) {
+        alert('Please select a star rating.');
+        return;
+      }
+      try {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Submitting...';
+        const res = await fetch(`/api/products/${rawId}/rate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            rating: currentRating,
+            comment: submitComment ? submitComment.value : ''
+          }),
+          credentials: 'same-origin'
+        });
+        if (res.status === 401) {
+          alert('Please login to rate this product.');
+          window.location.href = '/profile';
+          return;
+        }
+        const json = await res.json();
+        if (json.success) {
+          alert('Review submitted successfully!');
+          // Clear box
+          currentRating = 0;
+          updateInteractiveStars(0);
+          if (submitComment) submitComment.value = '';
+          // Optionally, reload page to fetch fresh reviews
+          window.location.reload();
+        } else {
+          alert(json.message || 'Failed to submit review.');
+        }
+      } catch (error) {
+        console.error('Submit review error:', error);
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Submit Review';
+      }
+    });
   }
 
   // ─── Buy Now + Add to Cart ────────────────────────────────────────────────

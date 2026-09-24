@@ -197,6 +197,8 @@ export class TrendingService {
       brand:        product.brand,
       description:  product.description,
       price,
+      rating:       product.rating,
+      reviews:      product.reviews,
       availability: product.availability,
       category:     product.category?.name || "",
       imageUrl:     primaryImg,
