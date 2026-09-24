@@ -6,24 +6,86 @@
 (function () {
   'use strict';
 
-  const orders   = window.ordersData || [];
-  const listEl   = document.getElementById('ordersList');
-  const countEl  = document.getElementById('ordersCount');
+  let orders = window.ordersData || [];
+  const listEl = document.getElementById('ordersList');
+  const countEl = document.getElementById('ordersCount');
   const searchEl = document.getElementById('ordersSearch');
-  const overlay  = document.getElementById('ordersOverlay');
-  const drawer   = document.getElementById('ordersDrawer');
+  const overlay = document.getElementById('ordersOverlay');
+  const drawer = document.getElementById('ordersDrawer');
   const closeBtn = document.getElementById('ordersDrawerClose');
 
   let activeFilter = 'all';
-  let searchQuery  = '';
+  let searchQuery = '';
+
+  // ─── Fetch real user orders from API ───────────────────────────────────────
+  async function fetchRealOrders() {
+    try {
+      const headers = { Accept: 'application/json' };
+      const token = localStorage.getItem('authToken');
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      const res = await fetch('/api/orders', {
+        headers,
+        credentials: 'same-origin',
+      });
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success && Array.isArray(json.data) && json.data.length > 0) {
+          const apiOrders = json.data.map(dbOrder => {
+            const firstItem = dbOrder.items?.[0] || {};
+            const itemCount = dbOrder.items?.length || 1;
+            const extraItemsText = itemCount > 1 ? ` + ${itemCount - 1} more item${itemCount > 2 ? 's' : ''}` : '';
+            const statusKey = (dbOrder.status || 'PROCESSING').toLowerCase();
+            const dateStr = new Date(dbOrder.createdAt).toLocaleDateString('en-IN', {
+              day: 'numeric',
+              month: 'short',
+              year: 'numeric'
+            });
+
+            const primaryImg = firstItem.product?.productImages?.find(img => img.isPrimary)?.imageUrl
+              || firstItem.product?.productImages?.[0]?.imageUrl
+              || '';
+
+            return {
+              id: dbOrder.shortId || dbOrder.id,
+              dbId: dbOrder.id,
+              date: dateStr,
+              status: statusKey,
+              price: Number(dbOrder.totalAmount),
+              deliveryDate: dbOrder.deliveryDate || '3-5 Business Days',
+              address: dbOrder.shippingAddress || 'Registered Address',
+              product: {
+                name: (firstItem.productName || 'Electronics Item') + extraItemsText,
+                variant: firstItem.variantDescription || 'Standard Warranty',
+                color: '#1e3d8f',
+                imageUrl: primaryImg,
+              },
+              timeline: [
+                { label: 'Order Placed', date: dateStr, done: true },
+                { label: 'Confirmed', date: dateStr, done: statusKey !== 'processing' && statusKey !== 'cancelled' },
+                { label: 'Out for Delivery', date: 'In transit', done: statusKey === 'out_for_delivery' || statusKey === 'delivered' },
+                { label: 'Delivered', date: dbOrder.deliveryDate || 'Expected soon', done: statusKey === 'delivered' },
+              ]
+            };
+          });
+
+          // Prepend real orders
+          orders = [...apiOrders, ...(window.ordersData || [])];
+          render();
+        }
+      }
+    } catch (e) {
+      console.warn('Could not fetch orders from API:', e);
+    }
+  }
 
   // ─── Status config ────────────────────────────────────────────────────────
   const STATUS = {
-    processing:       { label: 'Processing',        dot: '#eab308' },
-    confirmed:        { label: 'Confirmed',          dot: '#3b82f6' },
-    out_for_delivery: { label: 'Out for Delivery',   dot: '#f97316' },
-    delivered:        { label: 'Delivered',          dot: '#22c55e' },
-    cancelled:        { label: 'Cancelled',          dot: '#ef4444' },
+    processing: { label: 'Processing', dot: '#eab308' },
+    confirmed: { label: 'Confirmed', dot: '#3b82f6' },
+    out_for_delivery: { label: 'Out for Delivery', dot: '#f97316' },
+    delivered: { label: 'Delivered', dot: '#22c55e' },
+    cancelled: { label: 'Cancelled', dot: '#ef4444' },
   };
 
   // ─── Format price ─────────────────────────────────────────────────────────
@@ -31,15 +93,22 @@
     return '₹' + n.toLocaleString('en-IN');
   }
 
-  // ─── Product placeholder SVG ──────────────────────────────────────────────
+  // ─── Product placeholder & Image renderer ───────────────────────────────
   function placeholder(color, size = 88) {
     return `<svg viewBox="0 0 ${size} ${size}" fill="none" xmlns="http://www.w3.org/2000/svg">
       <rect width="${size}" height="${size}" fill="var(--color-bg-tertiary)"/>
-      <rect x="${size*.18}" y="${size*.15}" width="${size*.64}" height="${size*.7}" rx="${size*.07}" fill="${color}18" stroke="${color}40" stroke-width="1.2"/>
-      <rect x="${size*.28}" y="${size*.27}" width="${size*.44}" height="${size*.48}" rx="${size*.04}" fill="${color}0a"/>
-      <rect x="${size*.33}" y="${size*.36}" width="${size*.34}" height="${size*.04}" rx="${size*.02}" fill="${color}50"/>
-      <rect x="${size*.33}" y="${size*.46}" width="${size*.24}" height="${size*.03}" rx="${size*.015}" fill="${color}30"/>
+      <rect x="${size * .18}" y="${size * .15}" width="${size * .64}" height="${size * .7}" rx="${size * .07}" fill="${color}18" stroke="${color}40" stroke-width="1.2"/>
+      <rect x="${size * .28}" y="${size * .27}" width="${size * .44}" height="${size * .48}" rx="${size * .04}" fill="${color}0a"/>
+      <rect x="${size * .33}" y="${size * .36}" width="${size * .34}" height="${size * .04}" rx="${size * .02}" fill="${color}50"/>
+      <rect x="${size * .33}" y="${size * .46}" width="${size * .24}" height="${size * .03}" rx="${size * .015}" fill="${color}30"/>
     </svg>`;
+  }
+
+  function renderProductImage(product, size = 88, isDrawer = false) {
+    if (product && product.imageUrl) {
+      return `<img src="${product.imageUrl}" alt="${product.name || 'Product'}" class="${isDrawer ? 'drawer-product__img' : 'order-card__img'}" loading="lazy" />`;
+    }
+    return placeholder(product?.color || '#1e3d8f', size);
   }
 
   // ─── Status badge HTML ────────────────────────────────────────────────────
@@ -96,7 +165,7 @@
         </div>
         <div class="order-card__body">
           <div class="order-card__image" aria-hidden="true">
-            ${placeholder(o.product.color, 88)}
+            ${renderProductImage(o.product, 88, false)}
           </div>
           <div class="order-card__info">
             <h3 class="order-card__product-name">${o.product.name}</h3>
@@ -104,10 +173,10 @@
             <p class="order-card__price">${fmt(o.price)}</p>
             <p class="order-card__delivery">
               ${o.status === 'delivered'
-                ? `<strong>Delivered</strong> on ${o.deliveryDate}`
-                : o.status === 'cancelled'
-                ? 'Order Cancelled'
-                : `<strong>Expected</strong> by ${o.deliveryDate}`}
+        ? `<strong>Delivered</strong> on ${o.deliveryDate}`
+        : o.status === 'cancelled'
+          ? 'Order Cancelled'
+          : `<strong>Expected</strong> by ${o.deliveryDate}`}
             </p>
           </div>
           <div class="order-card__action">
@@ -162,8 +231,8 @@
     document.body.style.overflow = '';
   }
 
-  closeBtn    && closeBtn.addEventListener('click', closeDrawer);
-  overlay     && overlay.addEventListener('click', closeDrawer);
+  closeBtn && closeBtn.addEventListener('click', closeDrawer);
+  overlay && overlay.addEventListener('click', closeDrawer);
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrawer(); });
 
   // ─── Populate drawer ──────────────────────────────────────────────────────
@@ -178,7 +247,7 @@
       <!-- Product -->
       <div class="drawer-product">
         <div class="drawer-product__image" aria-hidden="true">
-          ${placeholder(o.product.color, 80)}
+          ${renderProductImage(o.product, 80, true)}
         </div>
         <div>
           <p class="drawer-product__name">${o.product.name}</p>
@@ -201,9 +270,9 @@
         <p class="drawer-section__title">Order Timeline</p>
         <div class="order-timeline">
           ${o.timeline.map((step, i) => {
-            const isCurrent = i === lastDoneIdx + 1 && o.status !== 'cancelled' && o.status !== 'delivered';
-            const cls = step.done ? 'timeline-step--done' : (isCurrent ? 'timeline-step--current' : '');
-            return `
+      const isCurrent = i === lastDoneIdx + 1 && o.status !== 'cancelled' && o.status !== 'delivered';
+      const cls = step.done ? 'timeline-step--done' : (isCurrent ? 'timeline-step--current' : '');
+      return `
               <div class="timeline-step ${cls}">
                 <div class="timeline-step__dot"></div>
                 <div class="timeline-step__content">
@@ -211,7 +280,7 @@
                   <p class="timeline-step__date">${step.date}</p>
                 </div>
               </div>`;
-          }).join('')}
+    }).join('')}
         </div>
       </div>
 
@@ -246,5 +315,6 @@
 
   // ─── Init ─────────────────────────────────────────────────────────────────
   render();
+  fetchRealOrders();
 
 })();

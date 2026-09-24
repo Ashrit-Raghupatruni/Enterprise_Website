@@ -70,10 +70,12 @@
 
   let selectedColor = 0;
   let selectedVariants = {};
+  let currentProductData = null;
 
   // ─── Main Render Function ─────────────────────────────────────────────────
   function renderProduct(product) {
     if (!product) return;
+    currentProductData = product;
 
     const isAvailable = product.availability ? product.availability === 'AVAILABLE' : true;
 
@@ -597,7 +599,70 @@
   // ─── Buy Now + Add to Cart ────────────────────────────────────────────────
   document.querySelectorAll('[data-action="buy-now"]').forEach(btn => {
     btn.addEventListener('click', () => {
+      if (currentProductData) {
+        const itemToCheckout = {
+          id: currentProductData.slug || currentProductData.id || currentProductData.dbId,
+          dbId: currentProductData.dbId || currentProductData.id,
+          productId: currentProductData.dbId || currentProductData.id,
+          slug: currentProductData.slug,
+          name: currentProductData.name,
+          brand: currentProductData.brand,
+          price: currentProductData.salePrice || currentProductData.originalPrice || currentProductData.price,
+          originalPrice: currentProductData.originalPrice || currentProductData.price,
+          imageUrl: currentProductData.imageUrl || (currentProductData.images && currentProductData.images[0]) || '',
+          quantity: 1,
+          variantDescription: Object.entries(selectedVariants).map(([k, v]) => `${k}: ${v}`).join(', ') || '1 Year Official Warranty',
+        };
+        try {
+          localStorage.setItem('ks_checkout_item', JSON.stringify(itemToCheckout));
+        } catch (e) { }
+      }
       window.location.href = '/checkout';
+    });
+  });
+
+  document.querySelectorAll('[data-action="add-cart"]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (currentProductData) {
+        const itemToCart = {
+          id: currentProductData.slug || currentProductData.id || currentProductData.dbId,
+          dbId: currentProductData.dbId || currentProductData.id,
+          productId: currentProductData.dbId || currentProductData.id,
+          slug: currentProductData.slug,
+          name: currentProductData.name,
+          brand: currentProductData.brand,
+          price: currentProductData.salePrice || currentProductData.originalPrice || currentProductData.price,
+          originalPrice: currentProductData.originalPrice || currentProductData.price,
+          imageUrl: currentProductData.imageUrl || (currentProductData.images && currentProductData.images[0]) || '',
+          quantity: 1,
+          variantDescription: Object.entries(selectedVariants).map(([k, v]) => `${k}: ${v}`).join(', ') || '1 Year Official Warranty',
+        };
+        try {
+          let cart = [];
+          const existing = localStorage.getItem('ks_cart');
+          if (existing) cart = JSON.parse(existing);
+          const existingIdx = cart.findIndex(c => c.id === itemToCart.id);
+          if (existingIdx >= 0) cart[existingIdx].quantity += 1;
+          else cart.push(itemToCart);
+          localStorage.setItem('ks_cart', JSON.stringify(cart));
+        } catch (e) { }
+
+        // Trigger interaction recording for CART_ADD
+        try {
+          fetch(`/api/products/${encodeURIComponent(currentProductData.slug || currentProductData.id)}/interaction`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-session-id': getSessionId() },
+            body: JSON.stringify({ type: 'CART_ADD' }),
+            keepalive: true,
+          }).catch(() => {});
+        } catch (_) {}
+
+        // Temporary button confirmation feedback
+        const label = btn.querySelector('.pdp-buy-bar__cart-label');
+        const origText = label ? label.textContent : 'Add to Cart';
+        if (label) label.textContent = 'Added ✓';
+        setTimeout(() => { if (label) label.textContent = origText; }, 2000);
+      }
     });
   });
 
