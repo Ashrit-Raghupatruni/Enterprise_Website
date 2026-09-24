@@ -152,7 +152,7 @@
         return { success: true };
       }
       try {
-        const res = bannerId 
+        const res = bannerId
           ? await API.updateBanner(bannerId, bannerData)
           : await API.createBanner(bannerData);
         if (res.success) showAdminToast(`Banner ${bannerId ? 'updated' : 'created'} successfully`);
@@ -191,7 +191,7 @@
         return { success: true };
       }
       try {
-        const res = productId 
+        const res = productId
           ? await API.updateProduct(productId, productData)
           : await API.createProduct(productData);
         if (res.success) showAdminToast(`Product ${productId ? 'updated' : 'created'} successfully`);
@@ -234,7 +234,7 @@
 
     const toast = document.createElement('div');
     toast.className = `admin-toast admin-toast--${type}`;
-    
+
     let iconSvg = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>`;
     if (type === 'warning') {
       iconSvg = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>`;
@@ -322,12 +322,16 @@
       fetch('/logout', { method: 'POST', credentials: 'same-origin' })
         .finally(() => {
           localStorage.removeItem('authUser');
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('pendingRoute');
           setTimeout(() => {
             window.location.href = '/login';
           }, 600);
         });
     } catch (e) {
       localStorage.removeItem('authUser');
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('pendingRoute');
       window.location.href = '/login';
     }
   }
@@ -528,7 +532,7 @@
     // Fallback mock implementation - same as original
     const ordersTbody = document.getElementById('dashboardOrdersTableBody');
     const lowStockTbody = document.getElementById('dashboardLowStockTableBody');
-    
+
     if (ordersTbody) {
       const recent = data.orders.slice(0, 5);
       ordersTbody.innerHTML = recent.map(o => `
@@ -693,8 +697,8 @@
 
     const filtered = data.banners.filter(b => {
       const matchSearch = b.title.toLowerCase().includes(query) ||
-                          b.eyebrow.toLowerCase().includes(query) ||
-                          b.slug.toLowerCase().includes(query);
+        b.eyebrow.toLowerCase().includes(query) ||
+        b.slug.toLowerCase().includes(query);
       const matchStatus = filterStatus === 'all' || b.status === filterStatus;
       return matchSearch && matchStatus;
     });
@@ -834,15 +838,15 @@
         // Edit existing
         const banner = data.banners.find(b => b.id === id);
         if (banner) {
-          Object.assign(banner, { 
-            title, 
-            eyebrow, 
-            subtitle, 
-            ctaText, 
-            slug, 
-            badge, 
+          Object.assign(banner, {
+            title,
+            eyebrow,
+            subtitle,
+            ctaText,
+            slug,
+            badge,
             status,
-            image: currentBannerImage 
+            image: currentBannerImage
           });
           showAdminToast('Banner updated successfully.');
         }
@@ -1065,9 +1069,9 @@
 
     const filtered = data.products.filter(p => {
       const matchQuery = p.name.toLowerCase().includes(query) ||
-                         p.brand.toLowerCase().includes(query) ||
-                         p.category.toLowerCase().includes(query) ||
-                         p.slug.toLowerCase().includes(query);
+        p.brand.toLowerCase().includes(query) ||
+        p.category.toLowerCase().includes(query) ||
+        p.slug.toLowerCase().includes(query);
       const matchCat = cat === 'all' || p.category === cat;
       const matchStock = stockStatus === 'all' || p.status === stockStatus;
       return matchQuery && matchCat && matchStock;
@@ -1094,11 +1098,11 @@
         stockColor = '#dc2626';
       }
 
-      const primaryImg = p.primaryImage || 
-                         (Array.isArray(p.images) && (p.images.find(x => x.isPrimary)?.url || p.images[0]?.url || (typeof p.images[0] === 'string' ? p.images[0] : null))) || 
-                         p.image || null;
+      const primaryImg = p.primaryImage ||
+        (Array.isArray(p.images) && (p.images.find(x => x.isPrimary)?.url || p.images[0]?.url || (typeof p.images[0] === 'string' ? p.images[0] : null))) ||
+        p.image || null;
 
-      const imgHtml = primaryImg 
+      const imgHtml = primaryImg
         ? `<img src="${primaryImg}" alt="${p.name}" class="admin-cell-product__thumb-img" onerror="this.parentElement.innerHTML='<svg viewBox=\\'0 0 24 24\\' fill=\\'none\\' stroke=\\'currentColor\\' stroke-width=\\'1.75\\'><rect x=\\'5\\' y=\\'2\\' width=\\'14\\' height=\\'20\\' rx=\\'2\\' ry=\\'2\\'></rect><line x1=\\'12\\' y1=\\'18\\' x2=\\'12.01\\' y2=\\'18\\'></line></svg>'"/>`
         : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
              <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
@@ -1260,15 +1264,15 @@
       if (id) {
         const prod = data.products.find(p => p.id === id);
         if (prod) {
-          Object.assign(prod, { 
-            name, 
-            brand, 
-            category, 
-            price, 
-            stock, 
-            slug, 
-            availability, 
-            description, 
+          Object.assign(prod, {
+            name,
+            brand,
+            category,
+            price,
+            stock,
+            slug,
+            availability,
+            description,
             status,
             images: productImages,
             primaryImage: primaryImgUrl
@@ -1384,8 +1388,8 @@
 
     const filtered = data.users.filter(u => {
       const matchQuery = u.name.toLowerCase().includes(query) ||
-                         u.email.toLowerCase().includes(query) ||
-                         u.phone.toLowerCase().includes(query);
+        u.email.toLowerCase().includes(query) ||
+        u.phone.toLowerCase().includes(query);
       const matchRole = role === 'all' || u.role === role;
       return matchQuery && matchRole;
     });
@@ -1553,9 +1557,9 @@
 
     const filtered = data.orders.filter(o => {
       const matchQuery = o.id.toLowerCase().includes(query) ||
-                         o.shortId.toLowerCase().includes(query) ||
-                         o.customer.name.toLowerCase().includes(query) ||
-                         o.customer.phone.includes(query);
+        o.shortId.toLowerCase().includes(query) ||
+        o.customer.name.toLowerCase().includes(query) ||
+        o.customer.phone.includes(query);
       const matchFilter = currentOrderFilter === 'all' || o.status === currentOrderFilter;
       return matchQuery && matchFilter;
     });
@@ -1701,33 +1705,33 @@
       </div>
     `;
 
-  function updateOrderStatus(orderId, newStatus) {
-    if (!useApi) {
-      // Mock implementation
-      const order = data.orders.find(o => o.id === orderId);
-      if (order) {
-        order.status = newStatus;
-        showAdminToast(`Order ${order.shortId} status updated to "${capitalize(newStatus.replace(/_/g, ' '))}".`);
-        renderOrders();
-        initDashboard();
-      }
-      return;
-    }
-
-    // Use API
-    API.updateOrderStatus(orderId, newStatus)
-      .then((res) => {
-        if (res.success) {
-          showAdminToast(`Order status updated to ${newStatus.replace(/_/g, ' ')}`, 'success');
+    function updateOrderStatus(orderId, newStatus) {
+      if (!useApi) {
+        // Mock implementation
+        const order = data.orders.find(o => o.id === orderId);
+        if (order) {
+          order.status = newStatus;
+          showAdminToast(`Order ${order.shortId} status updated to "${capitalize(newStatus.replace(/_/g, ' '))}".`);
           renderOrders();
           initDashboard();
-          openOrderDrawer(orderId);
         }
-      })
-      .catch(() => {
-        showAdminToast('Failed to update order status', 'error');
-      });
-  }
+        return;
+      }
+
+      // Use API
+      API.updateOrderStatus(orderId, newStatus)
+        .then((res) => {
+          if (res.success) {
+            showAdminToast(`Order status updated to ${newStatus.replace(/_/g, ' ')}`, 'success');
+            renderOrders();
+            initDashboard();
+            openOrderDrawer(orderId);
+          }
+        })
+        .catch(() => {
+          showAdminToast('Failed to update order status', 'error');
+        });
+    }
 
     drawer.classList.add('open');
     overlay.classList.add('open');

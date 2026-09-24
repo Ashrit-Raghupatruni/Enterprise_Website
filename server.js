@@ -5,10 +5,12 @@ import "dotenv/config"
 import authRoutes from './src/features/auth/routes/authRoutes.js'
 import profileRoutes from './src/features/profile/routes/profileRoutes.js'
 import productRoutes from './src/features/products/routes/productRoutes.js'
+import orderRoutes from './src/features/orders/routes/orderRoutes.js'
 import adminRoutes from './src/features/admin/routes/adminRoutes.js'
 import adminApiRoutes from './src/features/admin/routes/adminApiRoutes.js'
 import jwtAuthenticate from './src/middleware/jwtmiddleware.js'
 import adminGuard from './src/middleware/adminguard.js'
+import jwt from 'jsonwebtoken';
 import { isCategoryInactive } from './src/config/categoryConfig.js'
 
 const app = express();
@@ -49,6 +51,9 @@ app.use("/api", profileRoutes);
 
 // Product API Routes
 app.use("/api", productRoutes);
+
+// Order API Routes
+app.use("/api", orderRoutes);
 
 
 // Admin API Routes (protected by JWT + admin guard)
@@ -163,18 +168,42 @@ app.get('/product/:id', (req, res) => {
   });
 });
 
+// ─── Auth Guard for Customer Pages ──────────────────────────────────────────
+function requireAuthPage(req, res, next) {
+  const header = req.headers.cookie || '';
+  const match  = header.split(';').map(c => c.trim()).find(c => c.startsWith('authToken='));
+  let token = match ? decodeURIComponent(match.slice('authToken='.length)) : null;
+  if (token && token.startsWith('"') && token.endsWith('"')) token = token.slice(1, -1);
+
+  if (token) {
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      req.user = decoded;
+      return next();
+    } catch (_) {}
+  }
+
+  return res.redirect(`/login?pendingRoute=${encodeURIComponent(req.originalUrl || req.path)}`);
+}
+
 // Shopping
 app.get('/cart', stub('Shopping Cart'));
-app.get('/checkout', stub('Checkout'));
+app.get('/checkout', requireAuthPage, (req, res) => {
+  res.render('pages/checkout/checkout', {
+    title: `Checkout — ${site.name}`,
+    pageLabel: 'Checkout',
+    site,
+  });
+});
 
 // Account
-app.get('/orders', (req, res) => {
+app.get('/orders', requireAuthPage, (req, res) => {
   res.render('pages/account/orders', {
     title: `My Orders — ${site.name}`,
     site,
   });
 });
-app.get('/profile', (req, res) => {
+app.get('/profile', requireAuthPage, (req, res) => {
   res.render('pages/account/profile', {
     title: `My Profile — ${site.name}`,
     site,
@@ -182,7 +211,7 @@ app.get('/profile', (req, res) => {
   });
 });
 
-app.get('/profile/addresses', (req, res) => {
+app.get('/profile/addresses', requireAuthPage, (req, res) => {
   res.render('pages/account/profile', {
     title: `Manage Addresses — ${site.name}`,
     site,
