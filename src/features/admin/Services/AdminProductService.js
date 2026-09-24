@@ -56,14 +56,16 @@ export class AdminProductService {
 
   /**
    * Create a new product
-   * Required: name, description, brand, price, categoryId, slug
-   * Optional: availability
+   * Required: name, description, brand, price, categoryId or category, slug
+   * Optional: availability, images
    */
   async create(data) {
     try {
+      const categoryIdentifier = data.categoryId || data.category;
+
       // Validate required fields
-      if (!data.name || !data.description || !data.brand || !data.price || !data.categoryId || !data.slug) {
-        const error = new Error('Missing required fields: name, description, brand, price, categoryId, slug');
+      if (!data.name || !data.description || !data.brand || !data.price || !categoryIdentifier || !data.slug) {
+        const error = new Error('Missing required fields: name, description, brand, price, categoryId/category, slug');
         error.status = 400;
         throw error;
       }
@@ -85,23 +87,36 @@ export class AdminProductService {
       }
 
       // Check if category exists
-      const categoryExists = await this.repository.categoryExists(data.categoryId);
-      if (!categoryExists) {
-        const error = new Error('Category not found');
+      const category = await this.repository.categoryExists(categoryIdentifier);
+      if (!category) {
+        const error = new Error(`Category "${categoryIdentifier}" not found`);
         error.status = 404;
         throw error;
       }
 
-      // Create product
-      const product = await this.repository.create({
+      const createData = {
         name: data.name,
         description: data.description,
         brand: data.brand,
         price: data.price,
-        categoryId: data.categoryId,
+        categoryId: category.id,
         slug: data.slug,
-        availability: data.availability || 'AVAILABLE'
-      });
+        availability: data.availability || 'AVAILABLE',
+        stock: data.stock !== undefined ? Math.max(0, parseInt(data.stock, 10) || 0) : 0
+      };
+
+      const images = data.images || data.productImages;
+      if (Array.isArray(images) && images.length > 0) {
+        createData.productImages = {
+          create: images.map((img, idx) => ({
+            imageUrl: typeof img === 'string' ? img : (img.url || img.imageUrl),
+            isPrimary: typeof img === 'object' ? !!img.isPrimary : (idx === 0)
+          }))
+        };
+      }
+
+      // Create product
+      const product = await this.repository.create(createData);
 
       return {
         success: true,
@@ -148,17 +163,31 @@ export class AdminProductService {
         }
       }
 
-      // If categoryId is being updated, check if category exists
-      if (data.categoryId && data.categoryId !== existing.categoryId) {
-        const categoryExists = await this.repository.categoryExists(data.categoryId);
-        if (!categoryExists) {
-          const error = new Error('Category not found');
-          error.status = 404;
-          throw error;
+      const updateData = { ...data };
+      delete updateData.category;
+      delete updateData.images;
+      delete updateData.productImages;
+
+      if (data.stock !== undefined) {
+        updateData.stock = Math.max(0, parseInt(data.stock, 10) || 0);
+        if (updateData.stock === 0 && !data.availability) {
+          updateData.availability = 'NOT_AVAILABLE';
         }
       }
 
-      const product = await this.repository.update(id, data);
+      // If category or categoryId is being updated, check if category exists
+      const categoryIdentifier = data.categoryId || data.category;
+      if (categoryIdentifier) {
+        const category = await this.repository.categoryExists(categoryIdentifier);
+        if (!category) {
+          const error = new Error(`Category "${categoryIdentifier}" not found`);
+          error.status = 404;
+          throw error;
+        }
+        updateData.categoryId = category.id;
+      }
+
+      const product = await this.repository.update(id, updateData);
 
       return {
         success: true,

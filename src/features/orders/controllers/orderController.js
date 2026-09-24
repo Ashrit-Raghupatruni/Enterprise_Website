@@ -5,26 +5,72 @@ export class OrderController {
     this.orderService = new OrderService();
   }
 
-  getUserOrders = async (req, res) => {
+  createOrder = async (req, res) => {
     try {
-      const userId = req.user?.userId || req.user?.id;
+      const userId = req.user.userId || req.user.id;
+      const { addressId, items, paymentMethod } = req.body;
 
-      if (!userId) {
-        return res.status(401).json({ success: false, message: "Unauthorized: User ID not found" });
-      }
+      const result = await this.orderService.createOrder({
+        userId,
+        addressId,
+        items,
+        paymentMethod,
+      });
 
-      const orders = await this.orderService.getUserOrders(userId);
-
-      res.status(200).json({
+      return res.status(201).json({
         success: true,
-        data: orders
+        message: 'Order placed successfully!',
+        data: result.order,
+        shortId: result.order.shortId,
+        addressSnapshot: result.addressSnapshot,
       });
     } catch (error) {
-      console.error('getUserOrders error:', error);
-      res.status(500).json({
+      console.error('Create order error:', error);
+      const status = error.status || 500;
+      return res.status(status).json({
         success: false,
-        message: error.message || 'Internal server error'
+        message: error.message || 'Internal server error while creating order.',
       });
     }
-  }
+  };
+
+  getUserOrders = async (req, res) => {
+    try {
+      const userId = req.user.userId || req.user.id;
+      const orders = await this.orderService.getUserOrders(userId);
+
+      return res.status(200).json({
+        success: true,
+        data: orders,
+      });
+    } catch (error) {
+      console.error('Fetch user orders error:', error);
+      const status = error.status || 500;
+      return res.status(status).json({
+        success: false,
+        message: error.message || 'Internal server error while fetching orders.',
+      });
+    }
+  };
+
+  getOrderDetail = async (req, res) => {
+    try {
+      const userId = req.user.userId || req.user.id;
+      const { id } = req.params;
+
+      const order = await this.orderService.getUserOrderById(userId, id);
+
+      return res.status(200).json({
+        success: true,
+        data: order,
+      });
+    } catch (error) {
+      console.error('Fetch order detail error:', error);
+      const status = error.status || 500;
+      return res.status(status).json({
+        success: false,
+        message: error.message || 'Internal server error while fetching order details.',
+      });
+    }
+  };
 }

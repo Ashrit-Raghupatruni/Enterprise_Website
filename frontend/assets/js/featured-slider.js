@@ -95,7 +95,7 @@
         </div>
 
         <div class="product-card__footer">
-          <a href="/products/${p.id}" class="btn btn--primary product-card__cta"
+          <a href="/product/${p.slug || p.id}" class="btn btn--primary product-card__cta"
             aria-label="View ${p.name}">
             View Product
           </a>
