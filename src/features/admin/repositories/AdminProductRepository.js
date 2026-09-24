@@ -17,6 +17,9 @@ export class AdminProductRepository {
         brand: true,
         price: true,
         availability: true,
+        stock: true,
+        rating: true,
+        reviews: true,
         slug: true,
         createdAt: true,
         updatedAt: true,
@@ -70,6 +73,9 @@ export class AdminProductRepository {
         brand: true,
         price: true,
         availability: true,
+        stock: true,
+        rating: true,
+        reviews: true,
         slug: true,
         createdAt: true,
         updatedAt: true,
@@ -118,6 +124,9 @@ export class AdminProductRepository {
         brand: true,
         price: true,
         availability: true,
+        stock: true,
+        rating: true,
+        reviews: true,
         slug: true,
         createdAt: true,
         updatedAt: true,
@@ -140,6 +149,9 @@ export class AdminProductRepository {
         brand: true,
         price: true,
         availability: true,
+        stock: true,
+        rating: true,
+        reviews: true,
         slug: true,
         createdAt: true,
         updatedAt: true,
@@ -176,11 +188,19 @@ export class AdminProductRepository {
   }
 
   /**
-   * Check if category exists
+   * Check if category exists by ID or Name
    */
-  async categoryExists(categoryId) {
-    return prisma.category.findUnique({
-      where: { id: categoryId }
+  async categoryExists(identifier) {
+    if (!identifier) return null;
+    const byId = await prisma.category.findUnique({
+      where: { id: identifier }
+    });
+    if (byId) return byId;
+
+    return prisma.category.findFirst({
+      where: {
+        name: { equals: identifier, mode: 'insensitive' }
+      }
     });
   }
 }

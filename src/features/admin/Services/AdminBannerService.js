@@ -117,7 +117,11 @@ export class AdminBannerService {
         }
       }
 
-      const banner = await this.repository.update(id, data);
+      const updateData = { ...data };
+      delete updateData.image;
+      delete updateData.imageUrl;
+
+      const banner = await this.repository.update(id, updateData);
 
       return {
         success: true,

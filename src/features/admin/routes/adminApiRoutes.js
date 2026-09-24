@@ -7,6 +7,7 @@ import AdminAttributeController from '../controllers/AdminAttributeController.js
 import AdminVariantController from '../controllers/AdminVariantController.js';
 import AdminUserController from '../controllers/AdminUserController.js';
 import AdminOrderController from '../controllers/AdminOrderController.js';
+import AdminProfileController from '../controllers/AdminProfileController.js';
 
 const router = express.Router();
 
@@ -50,6 +51,11 @@ router.get('/users/:id', AdminUserController.getDetail);
 router.get('/orders', AdminOrderController.list);
 router.get('/orders/:id', AdminOrderController.getDetail);
 router.patch('/orders/:id/status', AdminOrderController.updateStatus);
+
+// Profile
+router.get('/profile', AdminProfileController.getProfile);
+router.put('/profile', AdminProfileController.updateProfile);
+router.put('/profile/password', AdminProfileController.updatePassword);
 
 export default router;
 

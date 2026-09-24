@@ -130,7 +130,7 @@
           <div style="background: var(--color-bg-card); padding: var(--space-4) var(--space-5); border-radius: var(--radius-lg); border: 1px solid var(--color-border-light); display: flex; align-items: center; justify-content: space-between;">
             <div>
               <span style="font-size: var(--text-xs); color: var(--color-text-muted); font-weight: var(--font-bold); text-transform: uppercase;">Active Banners</span>
-              <div style="font-size: var(--text-xl); font-weight: var(--font-extrabold); color: var(--color-primary-700);">5 Running</div>
+              <div class="admin-stat-card__value" id="statActiveBanners" style="font-size: var(--text-xl); font-weight: var(--font-extrabold); color: var(--color-primary-700);">5 Running</div>
             </div>
             <a href="/admin/banners" class="btn btn--ghost btn--sm" style="font-size: var(--text-xs);">Manage &rarr;</a>
           </div>
@@ -138,7 +138,7 @@
           <div style="background: var(--color-bg-card); padding: var(--space-4) var(--space-5); border-radius: var(--radius-lg); border: 1px solid var(--color-border-light); display: flex; align-items: center; justify-content: space-between;">
             <div>
               <span style="font-size: var(--text-xs); color: var(--color-text-muted); font-weight: var(--font-bold); text-transform: uppercase;">Low Stock Alert</span>
-              <div style="font-size: var(--text-xl); font-weight: var(--font-extrabold); color: #d97706;">7 Items</div>
+              <div class="admin-stat-card__value" id="statLowStockCount" style="font-size: var(--text-xl); font-weight: var(--font-extrabold); color: #d97706;">7 Items</div>
             </div>
             <a href="/admin/products" class="btn btn--ghost btn--sm" style="font-size: var(--text-xs);">Restock &rarr;</a>
           </div>
@@ -146,7 +146,7 @@
           <div style="background: var(--color-bg-card); padding: var(--space-4) var(--space-5); border-radius: var(--radius-lg); border: 1px solid var(--color-border-light); display: flex; align-items: center; justify-content: space-between;">
             <div>
               <span style="font-size: var(--text-xs); color: var(--color-text-muted); font-weight: var(--font-bold); text-transform: uppercase;">Pending Shipments</span>
-              <div style="font-size: var(--text-xl); font-weight: var(--font-extrabold); color: var(--color-accent-600);">5 Orders</div>
+              <div class="admin-stat-card__value" id="statPendingCount" style="font-size: var(--text-xl); font-weight: var(--font-extrabold); color: var(--color-accent-600);">5 Orders</div>
             </div>
             <a href="/admin/orders" class="btn btn--ghost btn--sm" style="font-size: var(--text-xs);">Fulfill &rarr;</a>
           </div>

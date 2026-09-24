@@ -56,7 +56,7 @@ export class AdminBannerRepository {
    * Find banner by slug
    */
   async findBySlug(slug) {
-    return prisma.banner.findUnique({
+    return prisma.banner.findFirst({
       where: { slug }
     });
   }
