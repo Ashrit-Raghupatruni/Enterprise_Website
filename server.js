@@ -8,7 +8,6 @@ import productRoutes from './src/features/products/routes/productRoutes.js'
 import orderRoutes from './src/features/orders/routes/orderRoutes.js'
 import adminRoutes from './src/features/admin/routes/adminRoutes.js'
 import adminApiRoutes from './src/features/admin/routes/adminApiRoutes.js'
-import ordersRoutes from './src/features/orders/routes/orders.routes.js'
 import jwtAuthenticate from './src/middleware/jwtmiddleware.js'
 import adminGuard from './src/middleware/adminguard.js'
 import jwt from 'jsonwebtoken';
@@ -54,7 +53,7 @@ app.use("/api", profileRoutes);
 app.use("/api", productRoutes);
 
 // Orders API Routes
-app.use("/api", ordersRoutes);
+app.use("/api", orderRoutes);
 
 
 // Admin API Routes (protected by JWT + admin guard)
@@ -234,6 +233,12 @@ app.get('/404', (req, res) => {
 });
 
 app.use((req, res) => {
+  if (req.path.startsWith('/api') || req.originalUrl.startsWith('/api') || req.xhr || req.headers.accept?.includes('application/json')) {
+    return res.status(404).json({
+      success: false,
+      message: `API endpoint ${req.method} ${req.originalUrl} not found.`
+    });
+  }
   res.status(404).render('pages/stub', {
     title: `Page Not Found — ${site.name}`,
     pageLabel: '404 — Not Found',

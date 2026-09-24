@@ -881,7 +881,12 @@
         return;
       }
 
-      const json = await res.json();
+      let json;
+      try {
+        json = await res.json();
+      } catch (parseErr) {
+        throw new Error('Server returned an invalid response. Please try again.');
+      }
 
       if (res.ok && json.success) {
         // Clear checkout state
