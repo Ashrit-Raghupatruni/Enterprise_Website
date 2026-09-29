@@ -179,6 +179,26 @@ export class AdminProductRepository {
   }
 
   /**
+   * Replace product images
+   */
+  async updateImages(productId, images) {
+    await prisma.productImage.deleteMany({
+      where: { productId }
+    });
+
+    if (Array.isArray(images) && images.length > 0) {
+      const hasPrimary = images.some(img => typeof img === 'object' && img.isPrimary);
+      await prisma.productImage.createMany({
+        data: images.map((img, idx) => ({
+          productId,
+          imageUrl: (typeof img === 'string' ? img : (img.url || img.imageUrl)).trim(),
+          isPrimary: typeof img === 'object' ? (hasPrimary ? !!img.isPrimary : idx === 0) : (idx === 0)
+        }))
+      });
+    }
+  }
+
+  /**
    * Delete product by ID
    */
   async remove(id) {

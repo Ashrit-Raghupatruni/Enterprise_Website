@@ -63,9 +63,15 @@ export class AdminProductService {
     try {
       const categoryIdentifier = data.categoryId || data.category;
 
-      // Validate required fields
-      if (!data.name || !data.description || !data.brand || !data.price || !categoryIdentifier || !data.slug) {
-        const error = new Error('Missing required fields: name, description, brand, price, categoryId/category, slug');
+      // Validate required core fields with specific messages
+      const missing = [];
+      if (!data.name || !String(data.name).trim()) missing.push('name');
+      if (!data.brand || !String(data.brand).trim()) missing.push('brand');
+      if (data.price === undefined || data.price === null || data.price === '') missing.push('price');
+      if (!categoryIdentifier) missing.push('category');
+
+      if (missing.length > 0) {
+        const error = new Error(`Missing required fields: ${missing.join(', ')}`);
         error.status = 400;
         throw error;
       }
@@ -78,12 +84,19 @@ export class AdminProductService {
         throw error;
       }
 
-      // Check if slug already exists
-      const slugExists = await this.repository.findBySlug(data.slug);
+      // Auto-generate slug if omitted or blank
+      let slug = (data.slug && String(data.slug).trim())
+        ? String(data.slug).trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+        : String(data.name).toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+
+      if (!slug) {
+        slug = `prod-${Date.now()}`;
+      }
+
+      // Check if slug exists; append short unique suffix if needed
+      const slugExists = await this.repository.findBySlug(slug);
       if (slugExists) {
-        const error = new Error('Product slug already exists');
-        error.status = 409;
-        throw error;
+        slug = `${slug}-${Math.random().toString(36).substring(2, 6)}`;
       }
 
       // Check if category exists
@@ -94,25 +107,38 @@ export class AdminProductService {
         throw error;
       }
 
+      // Ensure description is never blank (Prisma schema requires non-null String)
+      const description = (data.description && String(data.description).trim())
+        ? String(data.description).trim()
+        : `${String(data.name).trim()} - Official ${String(data.brand).trim()} product.`;
+
       const createData = {
-        name: data.name,
-        description: data.description,
-        brand: data.brand,
+        name: String(data.name).trim(),
+        description,
+        brand: String(data.brand).trim(),
         price: data.price,
         categoryId: category.id,
-        slug: data.slug,
+        slug,
         availability: data.availability || 'AVAILABLE',
         stock: data.stock !== undefined ? Math.max(0, parseInt(data.stock, 10) || 0) : 0
       };
 
-      const images = data.images || data.productImages;
-      if (Array.isArray(images) && images.length > 0) {
-        createData.productImages = {
-          create: images.map((img, idx) => ({
-            imageUrl: typeof img === 'string' ? img : (img.url || img.imageUrl),
-            isPrimary: typeof img === 'object' ? !!img.isPrimary : (idx === 0)
-          }))
-        };
+      const rawImages = data.images || data.productImages;
+      if (Array.isArray(rawImages)) {
+        const validImages = rawImages.filter(img => {
+          const url = typeof img === 'string' ? img : (img?.url || img?.imageUrl);
+          return url && typeof url === 'string' && url.trim().length > 0;
+        });
+
+        if (validImages.length > 0) {
+          const hasPrimary = validImages.some(img => typeof img === 'object' && img.isPrimary);
+          createData.productImages = {
+            create: validImages.map((img, idx) => ({
+              imageUrl: (typeof img === 'string' ? img : (img.url || img.imageUrl)).trim(),
+              isPrimary: typeof img === 'object' ? (hasPrimary ? !!img.isPrimary : idx === 0) : (idx === 0)
+            }))
+          };
+        }
       }
 
       // Create product
@@ -155,12 +181,14 @@ export class AdminProductService {
 
       // If slug is being updated, check for duplicates
       if (data.slug && data.slug !== existing.slug) {
-        const slugExists = await this.repository.findBySlug(data.slug);
-        if (slugExists) {
+        const cleanSlug = String(data.slug).trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+        const slugExists = await this.repository.findBySlug(cleanSlug);
+        if (slugExists && slugExists.id !== id) {
           const error = new Error('Product slug already exists');
           error.status = 409;
           throw error;
         }
+        data.slug = cleanSlug;
       }
 
       const updateData = { ...data };
@@ -185,6 +213,12 @@ export class AdminProductService {
           throw error;
         }
         updateData.categoryId = category.id;
+      }
+
+      // Update images if provided
+      const rawImages = data.images || data.productImages;
+      if (Array.isArray(rawImages)) {
+        await this.repository.updateImages(id, rawImages);
       }
 
       const product = await this.repository.update(id, updateData);

@@ -1378,6 +1378,8 @@
     });
   }
 
+  let productSlugManual = false;
+
   function resetProductForm() {
     const form = document.getElementById('productForm');
     if (form) form.reset();
@@ -1386,17 +1388,39 @@
     const title = document.getElementById('productModalTitle');
     if (title) title.textContent = 'Add New Product';
     currentProductImages = [];
+    productSlugManual = false;
     renderProductGallery();
     const urlInput = document.getElementById('productImageUrlInput');
     if (urlInput) urlInput.value = '';
     const fileInput = document.getElementById('productFileInput');
     if (fileInput) fileInput.value = '';
+    const descInput = document.getElementById('productDescription');
+    if (descInput) descInput.value = '';
+  }
+
+  // Auto-generate URL Slug from Product Name
+  const productNameInput = document.getElementById('productName');
+  const productSlugInput = document.getElementById('productSlug');
+  if (productNameInput && productSlugInput) {
+    productSlugInput.addEventListener('input', () => {
+      productSlugManual = !!productSlugInput.value.trim();
+    });
+    productNameInput.addEventListener('input', () => {
+      if (!productSlugManual) {
+        productSlugInput.value = productNameInput.value
+          .toLowerCase()
+          .trim()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/(^-|-$)/g, '');
+      }
+    });
   }
 
   function editProduct(id) {
     const prod = data.products.find(p => p.id === id);
     if (!prod) return;
 
+    productSlugManual = true;
     document.getElementById('productFormId').value = prod.id;
     document.getElementById('productName').value = prod.name;
     document.getElementById('productBrand').value = prod.brand;
@@ -1436,13 +1460,21 @@
       const category = document.getElementById('productCategory').value;
       const price = Number(document.getElementById('productPrice').value) || 0;
       const stock = Number(document.getElementById('productStock').value) || 0;
-      const slug = document.getElementById('productSlug').value.trim();
+      let slug = document.getElementById('productSlug').value.trim();
       const availability = document.getElementById('productAvailability').value;
-      const description = document.getElementById('productDescription').value.trim();
+      let description = document.getElementById('productDescription') ? document.getElementById('productDescription').value.trim() : '';
 
-      if (!name || !brand || !slug || price <= 0) {
-        alert('Please fill in product name, brand, price and slug.');
+      if (!name || !brand || price <= 0) {
+        showAdminToast('Please fill in product name, brand, and a valid price.', 'error');
         return;
+      }
+
+      if (!slug) {
+        slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || `prod-${Date.now()}`;
+      }
+
+      if (!description) {
+        description = `${name} - Official ${brand} ${category}.`;
       }
 
       let status = 'In Stock';
@@ -1450,7 +1482,9 @@
       else if (stock < 5) status = 'Low Stock';
 
       const primaryImgUrl = currentProductImages.find(x => x.isPrimary)?.url || currentProductImages[0]?.url || '';
-      const productImages = currentProductImages.map(x => ({ url: x.url, isPrimary: !!x.isPrimary }));
+      const productImages = currentProductImages
+        .filter(x => x && x.url && String(x.url).trim().length > 0)
+        .map(x => ({ url: String(x.url).trim(), isPrimary: !!x.isPrimary }));
 
       if (useApi) {
         try {
