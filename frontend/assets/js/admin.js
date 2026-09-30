@@ -135,6 +135,50 @@
         method: 'PATCH',
         body: JSON.stringify({ status, cancelReason })
       });
+    },
+
+    // Cloudinary upload operations
+    async uploadImage(fileOrData, type = 'general', category = '') {
+      if (fileOrData instanceof File || fileOrData instanceof Blob) {
+        const formData = new FormData();
+        formData.append('image', fileOrData);
+        const params = new URLSearchParams({ type });
+        if (category) params.append('category', category);
+        const response = await fetch(`/api/admin/upload?${params.toString()}`, {
+          method: 'POST',
+          body: formData
+        });
+        if (!response.ok) {
+          const error = await response.json().catch(() => ({}));
+          throw new Error(error.message || `Upload failed with status ${response.status}`);
+        }
+        return await response.json();
+      } else {
+        const params = new URLSearchParams({ type });
+        if (category) params.append('category', category);
+        return this.fetch(`/upload?${params.toString()}`, {
+          method: 'POST',
+          body: JSON.stringify({ image: fileOrData, category })
+        });
+      }
+    },
+
+    async uploadMultipleImages(files, type = 'product', category = '') {
+      const formData = new FormData();
+      Array.from(files).forEach(file => {
+        formData.append('images', file);
+      });
+      const params = new URLSearchParams({ type });
+      if (category) params.append('category', category);
+      const response = await fetch(`/api/admin/upload/multiple?${params.toString()}`, {
+        method: 'POST',
+        body: formData
+      });
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(error.message || `Batch upload failed with status ${response.status}`);
+      }
+      return await response.json();
     }
   };
 
@@ -587,17 +631,47 @@
       });
     });
 
+    // Handle banner file upload to Cloudinary
+    async function handleBannerFile(file) {
+      if (!file || !file.type.startsWith('image/')) return;
+      const spinner = document.getElementById('bannerUploadSpinner');
+      if (spinner) spinner.style.display = 'inline-flex';
+
+      try {
+        if (useApi) {
+          const res = await API.uploadImage(file, 'banner');
+          if (res && res.success && res.url) {
+            setBannerImage(res.url);
+            showAdminToast('Banner image uploaded to Cloudinary!');
+            return;
+          }
+        }
+        // Fallback / mock mode
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          setBannerImage(ev.target.result);
+        };
+        reader.readAsDataURL(file);
+      } catch (err) {
+        console.error('Cloudinary banner image upload error:', err);
+        showAdminToast(`Cloudinary upload failed: ${err.message}`, 'error');
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          setBannerImage(ev.target.result);
+        };
+        reader.readAsDataURL(file);
+      } finally {
+        if (spinner) spinner.style.display = 'none';
+      }
+    }
+
     // File input change (local file)
     const fileInput = document.getElementById('bannerFileInput');
     if (fileInput) {
       fileInput.addEventListener('change', (e) => {
         const file = e.target.files?.[0];
         if (file) {
-          const reader = new FileReader();
-          reader.onload = (ev) => {
-            setBannerImage(ev.target.result);
-          };
-          reader.readAsDataURL(file);
+          handleBannerFile(file);
         }
       });
     }
@@ -621,12 +695,8 @@
       });
       dropzone.addEventListener('drop', (e) => {
         const file = e.dataTransfer?.files?.[0];
-        if (file && file.type.startsWith('image/')) {
-          const reader = new FileReader();
-          reader.onload = (ev) => {
-            setBannerImage(ev.target.result);
-          };
-          reader.readAsDataURL(file);
+        if (file) {
+          handleBannerFile(file);
         }
       });
     }
@@ -675,7 +745,8 @@
           status: b.status === 'ACTIVE' ? 'Active' : 'Inactive',
           bgGradient: b.bgGradient || 'linear-gradient(135deg, #0d1e4d 0%, #1e3d8f 60%, #2f52a0 100%)',
           accentColor: b.accentColor || '#f58500',
-          image: b.image || ''
+          image: b.imageUrl || b.image || '',
+          imageUrl: b.imageUrl || b.image || ''
         }));
         liveBannersLoaded = true;
       }
@@ -734,7 +805,7 @@
       <div class="admin-banner-card" data-id="${b.id}">
         <!-- Visual Banner Header Preview -->
         <div class="admin-banner-preview" style="background:${b.bgGradient || 'linear-gradient(135deg, #0d1e4d 0%, #1e3d8f 60%, #2f52a0 100%)'};">
-          ${b.image ? `<img src="${b.image}" alt="${b.title}" class="admin-banner-preview__bg-img" onerror="this.style.display='none'"/>` : ''}
+          ${(b.imageUrl || b.image) ? `<img src="${b.imageUrl || b.image}" alt="${b.title}" class="admin-banner-preview__bg-img" onerror="this.style.display='none'"/>` : ''}
           <div>
             <span class="admin-banner-preview__eyebrow">${b.eyebrow}</span>
             <h3 class="admin-banner-preview__title">${b.title}</h3>
@@ -889,8 +960,8 @@
         catSel.value = 'custom';
       }
     }
-
-    setBannerImage(banner.image || '');
+    
+    setBannerImage(banner.imageUrl || banner.image || '');
 
     document.getElementById('bannerModalTitle').textContent = 'Edit Banner';
     openModal('bannerModal');
@@ -932,6 +1003,7 @@
             ctaText,
             slug,
             badge: badge || null,
+            imageUrl: currentBannerImage || null,
             status: status === 'Active' ? 'ACTIVE' : 'INACTIVE',
             bgGradient: existingBanner?.bgGradient || theme.bg,
             accentColor: existingBanner?.accentColor || theme.accent
@@ -965,7 +1037,8 @@
             slug,
             badge,
             status,
-            image: currentBannerImage
+            image: currentBannerImage,
+            imageUrl: currentBannerImage
           });
           showAdminToast('Banner updated successfully.');
         }
@@ -981,6 +1054,7 @@
           badge,
           status,
           image: currentBannerImage,
+          imageUrl: currentBannerImage,
           bgGradient: 'linear-gradient(135deg, #0d1e4d 0%, #1e3d8f 60%, #2f52a0 100%)',
           accentColor: '#f58500',
           clicks: 0
@@ -1099,22 +1173,63 @@
       });
     });
 
+    // Handle multiple product files upload to Cloudinary
+    async function handleProductFiles(files) {
+      if (!files || files.length === 0) return;
+      const validFiles = Array.from(files).filter(f => f.type.startsWith('image/'));
+      if (validFiles.length === 0) return;
+
+      const spinner = document.getElementById('productUploadSpinner');
+      const spinnerText = document.getElementById('productUploadSpinnerText');
+      if (spinner) {
+        spinner.style.display = 'inline-flex';
+        if (spinnerText) spinnerText.textContent = `Uploading ${validFiles.length} image(s) to Cloudinary...`;
+      }
+
+      try {
+        if (useApi) {
+          const category = document.getElementById('productCategory')?.value || '';
+          const res = await API.uploadMultipleImages(validFiles, 'product', category);
+          if (res && res.success && Array.isArray(res.images)) {
+            res.images.forEach(img => {
+              addProductImage(img.url);
+            });
+            showAdminToast(`${res.images.length} image(s) uploaded to Cloudinary (${res.folder || 'products'})!`);
+            return;
+          }
+        }
+        // Fallback or mock mode
+        for (const file of validFiles) {
+          const reader = new FileReader();
+          reader.onload = (ev) => {
+            addProductImage(ev.target.result);
+          };
+          reader.readAsDataURL(file);
+        }
+      } catch (err) {
+        console.error('Cloudinary product images upload error:', err);
+        showAdminToast(`Cloudinary upload failed: ${err.message}`, 'error');
+        // Fallback to local DataURL
+        for (const file of validFiles) {
+          const reader = new FileReader();
+          reader.onload = (ev) => {
+            addProductImage(ev.target.result);
+          };
+          reader.readAsDataURL(file);
+        }
+      } finally {
+        if (spinner) spinner.style.display = 'none';
+      }
+    }
+
     // File input (multiple local files)
     const fileInput = document.getElementById('productFileInput');
     if (fileInput) {
       fileInput.addEventListener('change', (e) => {
         const files = Array.from(e.target.files || []);
-        if (files.length === 0) return;
-
-        files.forEach(file => {
-          if (file.type.startsWith('image/')) {
-            const reader = new FileReader();
-            reader.onload = (ev) => {
-              addProductImage(ev.target.result);
-            };
-            reader.readAsDataURL(file);
-          }
-        });
+        if (files.length > 0) {
+          handleProductFiles(files);
+        }
         fileInput.value = '';
       });
     }
@@ -1138,15 +1253,9 @@
       });
       dropzone.addEventListener('drop', (e) => {
         const files = Array.from(e.dataTransfer?.files || []);
-        files.forEach(file => {
-          if (file.type.startsWith('image/')) {
-            const reader = new FileReader();
-            reader.onload = (ev) => {
-              addProductImage(ev.target.result);
-            };
-            reader.readAsDataURL(file);
-          }
-        });
+        if (files.length > 0) {
+          handleProductFiles(files);
+        }
       });
     }
 
