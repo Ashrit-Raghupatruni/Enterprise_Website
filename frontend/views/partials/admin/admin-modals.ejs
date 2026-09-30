@@ -247,6 +247,33 @@
         <label class="admin-label" for="productDescription">Description</label>
         <textarea id="productDescription" name="description" class="admin-textarea" rows="2" placeholder="Key specifications, display details, warranty..."></textarea>
       </div>
+
+      <!-- ── Product Variants Section ── -->
+      <div class="admin-form-group" id="productVariantsSection">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-2);">
+          <div style="display: flex; align-items: center; gap: var(--space-2);">
+            <label class="admin-label" style="margin-bottom: 0;">Product Variants</label>
+            <span class="admin-badge-count" id="productVariantsCount">0 variants</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: var(--space-2);">
+            <button type="button" class="btn btn--outline btn--xs" id="openCreateAttrModalBtn" title="Create a new Variant Attribute">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+              <span>+ New Attribute</span>
+            </button>
+            <button type="button" class="btn btn--outline btn--xs" id="addVariantCardBtn">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+              <span>+ Add Variant</span>
+            </button>
+          </div>
+        </div>
+        <p class="admin-form-hint" style="margin-top: 0; margin-bottom: var(--space-3);">
+          Configure product variants with combinations of attributes (RAM, Storage, Color, etc.) and optional price overrides.
+        </p>
+
+        <div id="productVariantsContainer" class="admin-variants-container">
+          <!-- Populated dynamically by admin.js -->
+        </div>
+      </div>
     </form>
     <div class="admin-modal__footer">
       <button type="button" class="btn btn--outline btn--sm" data-close-modal="productModal">Cancel</button>
@@ -366,6 +393,41 @@
 </div>
 
 <!-- ════════════════════════════════════════
-     7. REUSABLE TOAST CONTAINER
+     7. CREATE VARIANT ATTRIBUTE MODAL
+════════════════════════════════════════ -->
+<div class="admin-modal-backdrop" id="createAttributeModal" role="dialog" aria-modal="true" aria-labelledby="createAttributeModalTitle" aria-hidden="true">
+  <div class="admin-modal" style="max-width: 480px;">
+    <div class="admin-modal__header">
+      <h3 class="admin-modal__title" id="createAttributeModalTitle">Create Variant Attribute</h3>
+      <button class="admin-modal__close" data-close-modal="createAttributeModal" aria-label="Close modal">&times;</button>
+    </div>
+    <div class="admin-modal__body">
+      <form id="createAttributeForm" onsubmit="return false;">
+        <div class="admin-form-group">
+          <label class="admin-label" for="newAttrDisplayName">Attribute Display Name <span style="color:var(--color-danger); font-size:12px;">*</span></label>
+          <input type="text" id="newAttrDisplayName" class="admin-input" placeholder="e.g. Processor, Material, Display Size" required />
+          <p class="admin-form-hint">Label shown to customers on the storefront product page.</p>
+        </div>
+        <div class="admin-form-group">
+          <label class="admin-label" for="newAttrName">Attribute Code / Key <span style="color:var(--color-danger); font-size:12px;">*</span></label>
+          <input type="text" id="newAttrName" class="admin-input" placeholder="e.g. processor, material, display-size" required />
+          <p class="admin-form-hint">Unique system identifier (auto-generated from display name).</p>
+        </div>
+        <div class="admin-form-group" style="margin-bottom: 0;">
+          <label class="admin-label" for="newAttrInitialValues">Initial Values / Options (optional)</label>
+          <input type="text" id="newAttrInitialValues" class="admin-input" placeholder="e.g. Intel Core i7, AMD Ryzen 7, Apple M3" />
+          <p class="admin-form-hint">Separate multiple values with commas. You can also add more later.</p>
+        </div>
+      </form>
+    </div>
+    <div class="admin-modal__footer">
+      <button type="button" class="btn btn--outline btn--sm" data-close-modal="createAttributeModal">Cancel</button>
+      <button type="button" class="btn btn--primary btn--sm" id="saveAttributeBtn">Create Attribute</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     8. REUSABLE TOAST CONTAINER
 ════════════════════════════════════════ -->
 <div class="admin-toast-container" id="adminToastContainer" aria-live="polite"></div>

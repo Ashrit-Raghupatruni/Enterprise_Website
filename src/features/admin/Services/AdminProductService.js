@@ -1,5 +1,6 @@
 import { AdminProductRepository } from '../repositories/AdminProductRepository.js';
 import { uploadImageSource } from '../../../config/cloudinary.js';
+import prisma from '../../../config/prisma.js';
 
 export class AdminProductService {
   constructor() {
@@ -198,6 +199,26 @@ export class AdminProductService {
       // Create product
       const product = await this.repository.create(createData);
 
+      // If variants provided, create them linked to the product
+      if (Array.isArray(data.variants) && data.variants.length > 0) {
+        for (const v of data.variants) {
+          if (Array.isArray(v.attributeValueIds) && v.attributeValueIds.length > 0) {
+            await prisma.productVariant.create({
+              data: {
+                productId: product.id,
+                priceOverride: (v.priceOverride !== undefined && v.priceOverride !== null && v.priceOverride !== '')
+                  ? parseFloat(v.priceOverride)
+                  : null,
+                availability: v.availability || 'AVAILABLE',
+                attributeValues: {
+                  connect: v.attributeValueIds.map(id => ({ id }))
+                }
+              }
+            });
+          }
+        }
+      }
+
       return {
         success: true,
         message: 'Product created successfully',
@@ -248,6 +269,7 @@ export class AdminProductService {
       delete updateData.category;
       delete updateData.images;
       delete updateData.productImages;
+      delete updateData.variants;
 
       if (data.stock !== undefined) {
         updateData.stock = Math.max(0, parseInt(data.stock, 10) || 0);
@@ -280,6 +302,30 @@ export class AdminProductService {
       }
 
       const product = await this.repository.update(id, updateData);
+
+      // If variants are explicitly provided in update payload, re-sync them
+      if (Array.isArray(data.variants)) {
+        await prisma.productVariant.deleteMany({
+          where: { productId: id }
+        });
+
+        for (const v of data.variants) {
+          if (Array.isArray(v.attributeValueIds) && v.attributeValueIds.length > 0) {
+            await prisma.productVariant.create({
+              data: {
+                productId: id,
+                priceOverride: (v.priceOverride !== undefined && v.priceOverride !== null && v.priceOverride !== '')
+                  ? parseFloat(v.priceOverride)
+                  : null,
+                availability: v.availability || 'AVAILABLE',
+                attributeValues: {
+                  connect: v.attributeValueIds.map(valId => ({ id: valId }))
+                }
+              }
+            });
+          }
+        }
+      }
 
       return {
         success: true,

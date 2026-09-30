@@ -37,6 +37,27 @@ export class AdminProductRepository {
           },
           orderBy: { isPrimary: 'desc' }
         },
+        variants: {
+          select: {
+            id: true,
+            availability: true,
+            priceOverride: true,
+            attributeValues: {
+              select: {
+                id: true,
+                value: true,
+                displayValue: true,
+                attribute: {
+                  select: {
+                    id: true,
+                    name: true,
+                    displayName: true
+                  }
+                }
+              }
+            }
+          }
+        },
         _count: {
           select: {
             variants: true,
@@ -52,7 +73,7 @@ export class AdminProductRepository {
     return {
       products: products.map(p => ({
         ...p,
-        variantsCount: p._count?.variants || 0,
+        variantsCount: p._count?.variants || (p.variants?.length || 0),
         primaryImage: p.productImages?.find(img => img.isPrimary) || p.productImages?.[0] || null,
         _count: undefined
       })),
@@ -92,6 +113,27 @@ export class AdminProductRepository {
             isPrimary: true
           },
           orderBy: { isPrimary: 'desc' }
+        },
+        variants: {
+          select: {
+            id: true,
+            availability: true,
+            priceOverride: true,
+            attributeValues: {
+              select: {
+                id: true,
+                value: true,
+                displayValue: true,
+                attribute: {
+                  select: {
+                    id: true,
+                    name: true,
+                    displayName: true
+                  }
+                }
+              }
+            }
+          }
         },
         _count: {
           select: {

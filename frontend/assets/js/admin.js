@@ -52,6 +52,21 @@
       if (filters.search) params.append('search', filters.search);
       return this.fetch(`/banners?${params}`);
     },
+    async getAttributes() {
+      return this.fetch('/attributes');
+    },
+    async createAttribute(data) {
+      return this.fetch('/attributes', {
+        method: 'POST',
+        body: JSON.stringify(data)
+      });
+    },
+    async createAttributeValue(attributeId, data) {
+      return this.fetch(`/attributes/${attributeId}/values`, {
+        method: 'POST',
+        body: JSON.stringify(data)
+      });
+    },
     async getProducts(filters = {}) {
       const params = new URLSearchParams();
       if (filters.search) params.append('search', filters.search);
@@ -1312,7 +1327,8 @@
             slug: p.slug,
             description: p.description || '',
             images,
-            primaryImage: primaryImg
+            primaryImage: primaryImg,
+            variants: p.variants || []
           };
         });
         liveProductsLoaded = true;
@@ -1489,6 +1505,355 @@
 
   let productSlugManual = false;
 
+  // ─── Variant Attributes & Cards Management ──────────────────────────────
+  let availableAttributes = [];
+
+  async function loadAdminAttributes() {
+    try {
+      if (useApi) {
+        const res = await API.getAttributes();
+        if (res && res.success && Array.isArray(res.data)) {
+          availableAttributes = res.data;
+          return;
+        }
+      }
+    } catch (e) {
+      console.warn('Could not load attributes from API:', e);
+    }
+
+    if (!availableAttributes.length) {
+      availableAttributes = [
+        { id: 'attr-ram', name: 'RAM', displayName: 'RAM', values: [
+          { id: 'cmue4phix000s9gdxka1vv50u', value: '8gb', displayValue: '8GB' },
+          { id: 'cmue4phix000t9gdx9rz0s7jp', value: '12gb', displayValue: '12GB' },
+          { id: 'cmue4phix000u9gdx4ui0c3d0', value: '16gb', displayValue: '16GB' }
+        ]},
+        { id: 'attr-storage', name: 'Storage', displayName: 'Storage', values: [
+          { id: 'cmue4ph83000n9gdx7lce6uh7', value: '128gb', displayValue: '128GB' },
+          { id: 'cmue4ph83000o9gdxnz6tsk75', value: '256gb', displayValue: '256GB' },
+          { id: 'cmue4ph83000p9gdxv9izipwb', value: '512gb', displayValue: '512GB' },
+          { id: 'cmue4ph83000q9gdx4rt2np3q', value: '1tb', displayValue: '1TB' }
+        ]},
+        { id: 'attr-color', name: 'Color', displayName: 'Color', values: [
+          { id: 'cmue4pgm6000i9gdxow1dzicc', value: 'black', displayValue: 'Phantom Black' },
+          { id: 'cmue4pgm6000j9gdx8q2wgfid', value: 'silver', displayValue: 'Titanium Silver' },
+          { id: 'cmue4pgm6000k9gdx90e3fjiy', value: 'blue', displayValue: 'Deep Ocean Blue' },
+          { id: 'cmue4pgm6000l9gdx8v2n5ml9', value: 'gold', displayValue: 'Desert Gold' },
+          { id: 'cmuo47gzf000ee8e53e8zy3b7', value: 'green', displayValue: 'Emerald Green' }
+        ]},
+        { id: 'attr-screen', name: 'Screen Size', displayName: 'Screen Size', values: [
+          { id: 'cmuo47h7i000ge8e5w7n2shxj', value: '24-inch', displayValue: '24 Inch' },
+          { id: 'cmuo47h9u000he8e5ksf9mx5f', value: '32-inch', displayValue: '32 Inch' },
+          { id: 'cmuo47heb000ie8e53xo0mtgx', value: '40-inch', displayValue: '40 Inch' },
+          { id: 'cmuo47hh1000je8e5n3whd2n3', value: '43-inch', displayValue: '43 Inch' },
+          { id: 'cmuo47hll000ke8e5rdnd3h7e', value: '50-inch', displayValue: '50 Inch' },
+          { id: 'cmuo47hpl000le8e5a7giwdeu', value: '55-inch', displayValue: '55 Inch' },
+          { id: 'cmuo47hta000me8e5aqbw9tdm', value: '65-inch', displayValue: '65 Inch' },
+          { id: 'cmuo47hv6000ne8e5owf09q99', value: '75-inch', displayValue: '75 Inch' }
+        ]},
+        { id: 'attr-cap', name: 'Capacity', displayName: 'Capacity', values: [
+          { id: 'cmuo47i0t000pe8e5jhimnirp', value: '1-ton', displayValue: '1.0 Ton' },
+          { id: 'cmuo47i4l000qe8e5e96c32dw', value: '1.5-ton', displayValue: '1.5 Ton' },
+          { id: 'cmuo47ifg000re8e5d6kkufrt', value: '2-ton', displayValue: '2.0 Ton' }
+        ]},
+        { id: 'attr-star', name: 'Star Rating', displayName: 'Energy Rating', values: [
+          { id: 'cmuo47ior000te8e5fu02z6k2', value: '3-star', displayValue: '3 Star' },
+          { id: 'cmuo47isp000ue8e5t8p1jhqy', value: '5-star', displayValue: '5 Star' }
+        ]}
+      ];
+    }
+  }
+
+  function updateVariantCardsIndex() {
+    const container = document.getElementById('productVariantsContainer');
+    const countBadge = document.getElementById('productVariantsCount');
+    if (!container) return;
+    const cards = container.querySelectorAll('.admin-variant-card');
+    if (countBadge) {
+      countBadge.textContent = `${cards.length} variant${cards.length === 1 ? '' : 's'}`;
+    }
+    cards.forEach((card, idx) => {
+      card.dataset.variantIndex = idx;
+      const titleBadge = card.querySelector('.admin-variant-badge');
+      if (titleBadge) {
+        titleBadge.textContent = `Variant #${idx + 1}`;
+      }
+    });
+  }
+
+  function syncAttributeDropdowns(card) {
+    const rows = Array.from(card.querySelectorAll('.admin-attr-row'));
+    const addAttrBtn = card.querySelector('.add-attr-btn');
+
+    // Collect currently chosen attributes in this card
+    const chosenAttrNames = rows
+      .map(r => r.querySelector('.attr-name-select')?.value)
+      .filter(Boolean);
+
+    // Disable Add Attribute button if all available attributes are already chosen
+    if (addAttrBtn) {
+      const allChosen = availableAttributes.length > 0 && chosenAttrNames.length >= availableAttributes.length;
+      addAttrBtn.disabled = allChosen;
+      addAttrBtn.style.opacity = allChosen ? '0.5' : '1';
+      addAttrBtn.style.cursor = allChosen ? 'not-allowed' : 'pointer';
+      addAttrBtn.title = allChosen ? 'All available attributes have been added' : 'Add another attribute';
+    }
+
+    // Update each row's attribute dropdown: exclude attributes chosen in other rows
+    rows.forEach(row => {
+      const nameSelect = row.querySelector('.attr-name-select');
+      const valSelect = row.querySelector('.attr-val-select');
+      if (!nameSelect) return;
+
+      const currentVal = nameSelect.value;
+      const otherChosen = chosenAttrNames.filter(name => name !== currentVal);
+      const allowedAttrs = availableAttributes.filter(a => !otherChosen.includes(a.name));
+
+      // Rebuild options while preserving current selection
+      nameSelect.innerHTML = `<option value="">-- Select Attribute --</option>` +
+        allowedAttrs.map(a => `<option value="${a.name}" ${a.name === currentVal ? 'selected' : ''}>${a.displayName || a.name}</option>`).join('');
+
+      if (!nameSelect.value) {
+        valSelect.disabled = true;
+        valSelect.innerHTML = `<option value="">-- Select Attribute First --</option>`;
+      }
+    });
+  }
+
+  function addAttributeRow(card, selectedAttrName = '', selectedValId = '') {
+    const list = card.querySelector('.variant-attrs-list');
+    if (!list) return;
+
+    // Find canonical attribute from availableAttributes
+    let matchedAttr = null;
+    if (selectedAttrName) {
+      matchedAttr = availableAttributes.find(a =>
+        a.name === selectedAttrName ||
+        a.name.toLowerCase() === selectedAttrName.toLowerCase() ||
+        (a.displayName && a.displayName.toLowerCase() === selectedAttrName.toLowerCase()) ||
+        a.id === selectedAttrName
+      );
+    }
+    const initialAttrName = matchedAttr ? matchedAttr.name : (selectedAttrName || '');
+
+    const chosenNames = Array.from(card.querySelectorAll('.attr-name-select'))
+      .map(s => s.value)
+      .filter(Boolean);
+
+    if (availableAttributes.length > 0 && !initialAttrName && chosenNames.length >= availableAttributes.length) {
+      showAdminToast('All available attributes have already been added to this variant.', 'warning');
+      return;
+    }
+
+    const row = document.createElement('div');
+    row.className = 'admin-attr-row';
+
+    row.innerHTML = `
+      <div class="admin-attr-row__select-group">
+        <select class="admin-form-select attr-name-select">
+          <option value="">-- Select Attribute --</option>
+        </select>
+      </div>
+      <div class="admin-attr-row__select-group">
+        <select class="admin-form-select attr-val-select" disabled>
+          <option value="">-- Select Attribute First --</option>
+        </select>
+      </div>
+      <button type="button" class="admin-attr-remove-btn" title="Remove attribute">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    `;
+
+    const nameSelect = row.querySelector('.attr-name-select');
+    const valSelect = row.querySelector('.attr-val-select');
+    const removeBtn = row.querySelector('.admin-attr-remove-btn');
+
+    removeBtn.addEventListener('click', () => {
+      row.remove();
+      syncAttributeDropdowns(card);
+    });
+
+    function populateValuesForSelectedAttribute(attrName, preselectValId = '') {
+      if (!attrName) {
+        valSelect.disabled = true;
+        valSelect.innerHTML = `<option value="">-- Select Attribute First --</option>`;
+        return;
+      }
+      const attrObj = availableAttributes.find(a =>
+        a.name === attrName ||
+        a.name.toLowerCase() === attrName.toLowerCase() ||
+        (a.displayName && a.displayName.toLowerCase() === attrName.toLowerCase()) ||
+        a.id === attrName
+      );
+      if (!attrObj) {
+        valSelect.disabled = true;
+        valSelect.innerHTML = `<option value="">-- No values available --</option>`;
+        return;
+      }
+
+      valSelect.disabled = false;
+      const valuesList = Array.isArray(attrObj.values) ? attrObj.values : [];
+      valSelect.innerHTML = `<option value="">-- Select Value --</option>` +
+        valuesList.map(v => {
+          const isSelected = preselectValId && (v.id === preselectValId || v.value === preselectValId || v.displayValue === preselectValId);
+          return `<option value="${v.id}" ${isSelected ? 'selected' : ''}>${v.displayValue || v.value}</option>`;
+        }).join('') +
+        `<option value="__ADD_NEW_VAL__" style="color:var(--color-primary-700); font-weight:600;">+ Add New Value...</option>`;
+
+      if (preselectValId) {
+        const found = valuesList.find(v => v.id === preselectValId || v.value === preselectValId || v.displayValue === preselectValId);
+        if (found) {
+          valSelect.value = found.id;
+        }
+      }
+    }
+
+    valSelect.addEventListener('change', async () => {
+      if (valSelect.value === '__ADD_NEW_VAL__') {
+        const attrObj = availableAttributes.find(a =>
+          a.name === nameSelect.value ||
+          a.name.toLowerCase() === (nameSelect.value || '').toLowerCase()
+        );
+        if (!attrObj) {
+          valSelect.value = '';
+          return;
+        }
+        const inputVal = prompt(`Enter new option/value for "${attrObj.displayName || attrObj.name}":`);
+        if (!inputVal || !inputVal.trim()) {
+          valSelect.value = '';
+          return;
+        }
+        const newValTrimmed = inputVal.trim();
+        const slug = newValTrimmed.toLowerCase().replace(/[^a-z0-9_-]+/g, '-').replace(/(^-|-$)/g, '');
+        try {
+          if (useApi) {
+            const res = await API.createAttributeValue(attrObj.id, {
+              value: slug,
+              displayValue: newValTrimmed
+            });
+            if (res && res.success && res.data) {
+              showAdminToast(`Added "${newValTrimmed}" to ${attrObj.displayName || attrObj.name}.`);
+              await loadAdminAttributes();
+              populateValuesForSelectedAttribute(nameSelect.value, res.data.id);
+              return;
+            }
+          } else {
+            const fakeVal = {
+              id: 'val-' + Math.random().toString(36).substring(2, 9),
+              value: slug,
+              displayValue: newValTrimmed
+            };
+            if (!Array.isArray(attrObj.values)) attrObj.values = [];
+            attrObj.values.push(fakeVal);
+            populateValuesForSelectedAttribute(nameSelect.value, fakeVal.id);
+            showAdminToast(`Added "${newValTrimmed}" to ${attrObj.displayName || attrObj.name}.`);
+            return;
+          }
+        } catch (err) {
+          showAdminToast(err.message || 'Error adding value.', 'error');
+        }
+        valSelect.value = '';
+      }
+    });
+
+    nameSelect.addEventListener('change', () => {
+      populateValuesForSelectedAttribute(nameSelect.value);
+      syncAttributeDropdowns(card);
+    });
+
+    list.appendChild(row);
+
+    // Pre-populate nameSelect options taking existing rows into account
+    const otherChosen = Array.from(card.querySelectorAll('.attr-name-select'))
+      .filter(s => s !== nameSelect)
+      .map(s => s.value)
+      .filter(Boolean);
+
+    const allowedAttrs = availableAttributes.filter(a => !otherChosen.includes(a.name));
+    nameSelect.innerHTML = `<option value="">-- Select Attribute --</option>` +
+      allowedAttrs.map(a => `<option value="${a.name}" ${a.name === initialAttrName ? 'selected' : ''}>${a.displayName || a.name}</option>`).join('');
+
+    if (initialAttrName) {
+      nameSelect.value = initialAttrName;
+      populateValuesForSelectedAttribute(initialAttrName, selectedValId);
+    }
+
+    syncAttributeDropdowns(card);
+  }
+
+  function addVariantCard(initialData = null) {
+    const container = document.getElementById('productVariantsContainer');
+    if (!container) return;
+
+    const card = document.createElement('div');
+    card.className = 'admin-variant-card';
+
+    card.innerHTML = `
+      <div class="admin-variant-card__header">
+        <div class="admin-variant-card__title">
+          <span class="admin-variant-badge">Variant #1</span>
+        </div>
+        <button type="button" class="admin-variant-remove-btn" title="Remove this variant">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          <span>Remove</span>
+        </button>
+      </div>
+
+      <div class="admin-form-row" style="margin-bottom: var(--space-3);">
+        <div class="admin-form-group" style="margin-bottom: 0;">
+          <label class="admin-label" style="font-size: 11px;">Price Override (₹)</label>
+          <input type="number" class="admin-input variant-price-override" placeholder="Leave blank to use base price" min="0" step="any" value="${(initialData?.priceOverride !== undefined && initialData?.priceOverride !== null) ? initialData.priceOverride : ''}"/>
+        </div>
+        <div class="admin-form-group" style="margin-bottom: 0;">
+          <label class="admin-label" style="font-size: 11px;">Availability</label>
+          <select class="admin-form-select variant-availability">
+            <option value="AVAILABLE" ${(initialData?.availability === 'AVAILABLE' || !initialData) ? 'selected' : ''}>Available</option>
+            <option value="NOT_AVAILABLE" ${initialData?.availability === 'NOT_AVAILABLE' ? 'selected' : ''}>Out of Stock</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="admin-variant-attrs-wrap">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-2);">
+          <span style="font-size: 11px; font-weight: 600; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.5px;">Attributes & Options</span>
+          <button type="button" class="btn btn--outline btn--xs add-attr-btn">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            <span>Add Attribute</span>
+          </button>
+        </div>
+        
+        <div class="variant-attrs-list"></div>
+      </div>
+    `;
+
+    const removeBtn = card.querySelector('.admin-variant-remove-btn');
+    removeBtn.addEventListener('click', () => {
+      card.remove();
+      updateVariantCardsIndex();
+    });
+
+    const addAttrBtn = card.querySelector('.add-attr-btn');
+    addAttrBtn.addEventListener('click', () => {
+      addAttributeRow(card);
+    });
+
+    container.appendChild(card);
+    updateVariantCardsIndex();
+
+    // Populate initial attributes or add one initial blank attribute row
+    if (initialData && Array.isArray(initialData.attributeValues) && initialData.attributeValues.length > 0) {
+      initialData.attributeValues.forEach(av => {
+        const attrName = av.attribute?.name || av.attribute?.displayName;
+        const valId = av.id;
+        addAttributeRow(card, attrName, valId);
+      });
+    } else {
+      addAttributeRow(card);
+    }
+
+    return card;
+  }
+
   function resetProductForm() {
     const form = document.getElementById('productForm');
     if (form) form.reset();
@@ -1505,6 +1870,13 @@
     if (fileInput) fileInput.value = '';
     const descInput = document.getElementById('productDescription');
     if (descInput) descInput.value = '';
+
+    // Reset variants container and add initial variant with 1 attribute row
+    const varContainer = document.getElementById('productVariantsContainer');
+    if (varContainer) {
+      varContainer.innerHTML = '';
+      addVariantCard();
+    }
   }
 
   // Auto-generate URL Slug from Product Name
@@ -1525,7 +1897,10 @@
     });
   }
 
-  function editProduct(id) {
+  async function editProduct(id) {
+    if (!availableAttributes || availableAttributes.length === 0) {
+      await loadAdminAttributes();
+    }
     const prod = data.products.find(p => p.id === id);
     if (!prod) return;
 
@@ -1555,6 +1930,17 @@
     }
 
     renderProductGallery();
+
+    // Populate variants
+    const varContainer = document.getElementById('productVariantsContainer');
+    if (varContainer) {
+      varContainer.innerHTML = '';
+      if (Array.isArray(prod.variants) && prod.variants.length > 0) {
+        prod.variants.forEach(v => addVariantCard(v));
+      } else {
+        addVariantCard();
+      }
+    }
 
     document.getElementById('productModalTitle').textContent = 'Edit Product Details';
     openModal('productModal');
@@ -1595,6 +1981,32 @@
         .filter(x => x && x.url && String(x.url).trim().length > 0)
         .map(x => ({ url: String(x.url).trim(), isPrimary: !!x.isPrimary }));
 
+      // Collect variants
+      const variantElements = document.querySelectorAll('.admin-variant-card');
+      const variants = [];
+      variantElements.forEach(card => {
+        const priceOverrideInput = card.querySelector('.variant-price-override');
+        const priceOverride = priceOverrideInput && priceOverrideInput.value.trim() ? parseFloat(priceOverrideInput.value.trim()) : null;
+        const availSelect = card.querySelector('.variant-availability');
+        const availability = availSelect ? availSelect.value : 'AVAILABLE';
+
+        const attributeValueIds = [];
+        card.querySelectorAll('.admin-attr-row').forEach(row => {
+          const valSelect = row.querySelector('.attr-val-select');
+          if (valSelect && valSelect.value && valSelect.value.trim()) {
+            attributeValueIds.push(valSelect.value.trim());
+          }
+        });
+
+        if (attributeValueIds.length > 0) {
+          variants.push({
+            priceOverride,
+            availability,
+            attributeValueIds
+          });
+        }
+      });
+
       if (useApi) {
         try {
           const payload = {
@@ -1606,7 +2018,8 @@
             slug,
             availability,
             description,
-            images: productImages
+            images: productImages,
+            variants
           };
           if (id) {
             await API.updateProduct(id, payload);
@@ -1639,7 +2052,8 @@
             description,
             status,
             images: productImages,
-            primaryImage: primaryImgUrl
+            primaryImage: primaryImgUrl,
+            variants
           });
           showAdminToast(`Product "${prod.name}" updated successfully.`);
         }
@@ -1659,7 +2073,8 @@
           rating: 5.0,
           description,
           images: productImages,
-          primaryImage: primaryImgUrl
+          primaryImage: primaryImgUrl,
+          variants
         };
         data.products.unshift(newProduct);
         showAdminToast(`New product "${name}" added to catalogue.`);
@@ -3159,12 +3574,104 @@
     }
   });
 
+  function initAttributeModal() {
+    const openBtn1 = document.getElementById('openCreateAttrModalBtn');
+    const openBtn2 = document.getElementById('pageHeaderNewAttrBtn');
+    const nameInput = document.getElementById('newAttrName');
+    const displayInput = document.getElementById('newAttrDisplayName');
+    const valuesInput = document.getElementById('newAttrInitialValues');
+    const saveBtn = document.getElementById('saveAttributeBtn');
+    const form = document.getElementById('createAttributeForm');
+
+    function openModalHandler() {
+      if (form) form.reset();
+      openModal('createAttributeModal');
+    }
+
+    if (openBtn1) openBtn1.addEventListener('click', openModalHandler);
+    if (openBtn2) openBtn2.addEventListener('click', openModalHandler);
+
+    if (displayInput && nameInput) {
+      displayInput.addEventListener('input', () => {
+        nameInput.value = displayInput.value.toLowerCase().trim().replace(/[^a-z0-9_-]+/g, '-').replace(/(^-|-$)/g, '');
+      });
+    }
+
+    if (saveBtn) {
+      saveBtn.addEventListener('click', async () => {
+        const displayName = displayInput ? displayInput.value.trim() : '';
+        let name = nameInput ? nameInput.value.trim() : '';
+        if (!name && displayName) {
+          name = displayName.toLowerCase().replace(/[^a-z0-9_-]+/g, '-').replace(/(^-|-$)/g, '');
+        }
+        const values = valuesInput ? valuesInput.value.trim() : '';
+
+        if (!displayName || !name) {
+          showAdminToast('Please provide both Display Name and Attribute Key.', 'warning');
+          return;
+        }
+
+        saveBtn.disabled = true;
+        const originalText = saveBtn.textContent;
+        saveBtn.textContent = 'Saving…';
+
+        try {
+          let res;
+          if (useApi) {
+            res = await API.createAttribute({
+              name,
+              displayName,
+              values
+            });
+          } else {
+            const newAttr = {
+              id: 'attr-' + Date.now(),
+              name,
+              displayName,
+              values: values.split(',').map(v => v.trim()).filter(Boolean).map(v => ({
+                id: 'val-' + Math.random().toString(36).substring(2, 9),
+                value: v.toLowerCase().replace(/[^a-z0-9_-]+/g, '-'),
+                displayValue: v
+              }))
+            };
+            availableAttributes.push(newAttr);
+            res = { success: true, data: newAttr };
+          }
+
+          if (res && res.success) {
+            showAdminToast(`Attribute "${displayName}" created successfully.`);
+            closeModal('createAttributeModal');
+            if (form) form.reset();
+            
+            // Reload all available attributes from server
+            if (useApi) {
+              await loadAdminAttributes();
+            }
+
+            // Refresh all currently open variant cards in product modal
+            document.querySelectorAll('.admin-variant-card').forEach(card => {
+              syncAttributeDropdowns(card);
+            });
+          } else {
+            showAdminToast(res?.message || 'Failed to create attribute.', 'error');
+          }
+        } catch (err) {
+          showAdminToast(err.message || 'Error creating attribute.', 'error');
+        } finally {
+          saveBtn.disabled = false;
+          saveBtn.textContent = originalText;
+        }
+      });
+    }
+  }
+
   /* =========================================================================
      11. INITIALIZATION
      ========================================================================= */
 
   document.addEventListener('DOMContentLoaded', async () => {
     hydrateAdminUser();
+    await loadAdminAttributes();
     if (useApi) {
       await Promise.allSettled([
         loadLiveBanners(),
@@ -3182,6 +3689,14 @@
     renderOrders();
     initAdminCancelModal();
     initAdminProfilePage();
+    initAttributeModal();
+
+    const addVariantCardBtn = document.getElementById('addVariantCardBtn');
+    if (addVariantCardBtn) {
+      addVariantCardBtn.addEventListener('click', () => {
+        addVariantCard();
+      });
+    }
   });
 
 }());

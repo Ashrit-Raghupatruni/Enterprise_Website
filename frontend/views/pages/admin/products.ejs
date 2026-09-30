@@ -30,7 +30,11 @@
             <h1 class="admin-page-header__title">Product & Stock Management</h1>
             <p class="admin-page-header__subtitle">Manage mobile phones, consumer electronics, stock levels, pricing, and catalog visibility.</p>
           </div>
-          <div class="admin-page-header__actions">
+          <div class="admin-page-header__actions" style="display: flex; gap: var(--space-2);">
+            <button type="button" class="btn btn--outline btn--sm" id="pageHeaderNewAttrBtn" data-open-modal="createAttributeModal">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+              <span>+ New Attribute</span>
+            </button>
             <button type="button" class="btn btn--primary btn--sm" id="addNewProductBtn" data-open-modal="productModal">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
               <span>Add New Product</span>

@@ -108,6 +108,15 @@ export class ProductRepository {
       include: {
         productImages: true,
         category: true,
+        variants: {
+          include: {
+            attributeValues: {
+              include: {
+                attribute: true,
+              },
+            },
+          },
+        },
         productReviews: {
           include: { user: true },
           orderBy: { createdAt: 'desc' },

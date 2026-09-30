@@ -2365,3 +2365,104 @@
   gap: 3px;
 }
 
+/* ── Product Variants Section ── */
+.admin-variants-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+}
+
+.admin-variant-card {
+  background: var(--color-bg-secondary, #f8fafc);
+  border: 1px solid var(--color-border-light, #e2e8f0);
+  border-radius: var(--radius-lg, 8px);
+  padding: var(--space-3) var(--space-4);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.admin-variant-card:hover {
+  border-color: var(--color-primary-200, #cbd5e1);
+}
+
+.admin-variant-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-3);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--color-border-light, #e2e8f0);
+}
+
+.admin-variant-badge {
+  font-size: 11px;
+  font-weight: var(--font-bold, 700);
+  color: var(--color-primary-700, #1e3d8f);
+  background-color: var(--color-primary-50, #eff6ff);
+  border: 1px solid var(--color-primary-100, #dbeafe);
+  padding: 2px 8px;
+  border-radius: var(--radius-full, 9999px);
+}
+
+.admin-variant-remove-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--text-xs, 12px);
+  font-weight: 500;
+  color: var(--color-danger-600, #dc2626);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.admin-variant-remove-btn:hover {
+  background-color: var(--color-danger-50, #fef2f2);
+}
+
+.admin-variant-attrs-wrap {
+  background: #ffffff;
+  border: 1px solid var(--color-border-light, #e2e8f0);
+  border-radius: var(--radius-md, 6px);
+  padding: var(--space-3);
+}
+
+.admin-attr-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.admin-attr-row:last-child {
+  margin-bottom: 0;
+}
+
+.admin-attr-row__select-group {
+  flex: 1;
+}
+
+.admin-attr-remove-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: transparent;
+  border: 1px solid var(--color-border-light, #e2e8f0);
+  border-radius: var(--radius-md, 6px);
+  color: var(--color-text-muted, #94a3b8);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.admin-attr-remove-btn:hover {
+  background-color: var(--color-danger-50, #fef2f2);
+  border-color: var(--color-danger-200, #fecaca);
+  color: var(--color-danger-600, #dc2626);
+}
+
+
