@@ -171,6 +171,7 @@ model Banner {
   ctaText      String
   slug         String
   badge        String?
+  imageUrl     String?
   status       BannerStatus @default(ACTIVE)
   bgGradient   String       @default("linear-gradient(135deg, #0d1e4d 0%, #1e3d8f 100%)")
   accentColor  String       @default("#f58500")

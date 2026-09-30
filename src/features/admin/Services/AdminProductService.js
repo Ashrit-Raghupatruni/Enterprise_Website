@@ -1,8 +1,70 @@
 import { AdminProductRepository } from '../repositories/AdminProductRepository.js';
+import { uploadImageSource } from '../../../config/cloudinary.js';
 
 export class AdminProductService {
   constructor() {
     this.repository = new AdminProductRepository();
+  }
+
+  _resolveProductCategoryFolder(category) {
+    if (!category) return 'enterprise_store/products';
+    const cat = String(category).toLowerCase().trim();
+    if (cat.includes('ac') || cat.includes('air condition')) return 'enterprise_store/products/acs';
+    if (cat.includes('mobile') || cat.includes('phone')) return 'enterprise_store/products/mobiles';
+    if (cat.includes('tv') || cat.includes('television')) return 'enterprise_store/products/tvs';
+    if (cat.includes('refrigerat') || cat.includes('fridge')) return 'enterprise_store/products/refrigerators';
+    if (cat.includes('theatre') || cat.includes('theater')) return 'enterprise_store/products/home-theatres';
+    if (cat.includes('kitchen') || cat.includes('appliance')) return 'enterprise_store/products/kitchen';
+
+    const cleanSlug = cat.replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    return cleanSlug ? `enterprise_store/products/${cleanSlug}` : 'enterprise_store/products';
+  }
+
+  /**
+   * Helper: Resolve raw image list (uploading base64 to Cloudinary if necessary)
+   */
+  async _resolveProductImageList(images, category = '') {
+    if (!Array.isArray(images) || images.length === 0) {
+      return [];
+    }
+
+    const folder = this._resolveProductCategoryFolder(category);
+    const resolved = [];
+    let hasPrimary = false;
+
+    for (let i = 0; i < images.length; i++) {
+      const item = images[i];
+      let url = typeof item === 'string' ? item : (item.url || item.imageUrl);
+      const isPrimary = typeof item === 'object' ? !!item.isPrimary : (i === 0);
+
+      if (!url || typeof url !== 'string') continue;
+      url = url.trim();
+      if (!url) continue;
+
+      // If it's a base64 data URI, upload to Cloudinary in the category folder
+      if (url.startsWith('data:image/')) {
+        try {
+          const uploadRes = await uploadImageSource(url, { folder });
+          url = uploadRes.secure_url || uploadRes.url;
+        } catch (err) {
+          console.error('Failed to upload product image to Cloudinary:', err);
+          throw new Error(`Cloudinary upload failed for image #${i + 1}: ${err.message}`);
+        }
+      }
+
+      if (isPrimary) hasPrimary = true;
+      resolved.push({
+        imageUrl: url,
+        isPrimary
+      });
+    }
+
+    // Ensure at least one image is marked primary
+    if (resolved.length > 0 && !hasPrimary) {
+      resolved[0].isPrimary = true;
+    }
+
+    return resolved;
   }
 
   /**
@@ -57,7 +119,7 @@ export class AdminProductService {
   /**
    * Create a new product
    * Required: name, description, brand, price, categoryId or category, slug
-   * Optional: availability, images
+   * Optional: availability, images, stock
    */
   async create(data) {
     try {
@@ -105,14 +167,14 @@ export class AdminProductService {
         stock: data.stock !== undefined ? Math.max(0, parseInt(data.stock, 10) || 0) : 0
       };
 
-      const images = data.images || data.productImages;
-      if (Array.isArray(images) && images.length > 0) {
-        createData.productImages = {
-          create: images.map((img, idx) => ({
-            imageUrl: typeof img === 'string' ? img : (img.url || img.imageUrl),
-            isPrimary: typeof img === 'object' ? !!img.isPrimary : (idx === 0)
-          }))
-        };
+      const rawImages = data.images || data.productImages;
+      if (Array.isArray(rawImages) && rawImages.length > 0) {
+        const resolvedImages = await this._resolveProductImageList(rawImages, category.name || data.category);
+        if (resolvedImages.length > 0) {
+          createData.productImages = {
+            create: resolvedImages
+          };
+        }
       }
 
       // Create product
@@ -156,7 +218,7 @@ export class AdminProductService {
       // If slug is being updated, check for duplicates
       if (data.slug && data.slug !== existing.slug) {
         const slugExists = await this.repository.findBySlug(data.slug);
-        if (slugExists) {
+        if (slugExists && slugExists.id !== id) {
           const error = new Error('Product slug already exists');
           error.status = 409;
           throw error;
@@ -185,6 +247,17 @@ export class AdminProductService {
           throw error;
         }
         updateData.categoryId = category.id;
+      }
+
+      // If images are provided in update payload, resolve & sync them
+      const rawImages = data.images || data.productImages;
+      if (Array.isArray(rawImages)) {
+        const categoryName = categoryIdentifier || existing.category?.name || '';
+        const resolvedImages = await this._resolveProductImageList(rawImages, categoryName);
+        updateData.productImages = {
+          deleteMany: {},
+          create: resolvedImages
+        };
       }
 
       const product = await this.repository.update(id, updateData);
