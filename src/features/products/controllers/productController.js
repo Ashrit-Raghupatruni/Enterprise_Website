@@ -25,8 +25,7 @@ export class ProductController {
       const { category } = req.query;
       let products;
       if (category) {
-        const dbCategoryName = CATEGORY_MAP[category.toLowerCase()] || category;
-        products = await this.productService.getProductsByCategory(dbCategoryName);
+        products = await this.productService.getProductsByCategory(category);
       } else {
         products = await this.productService.getAllProducts();
       }
@@ -43,8 +42,7 @@ export class ProductController {
   async getProductsByCategory(req, res) {
     try {
       const categoryParam = req.params.category;
-      const dbCategoryName = CATEGORY_MAP[categoryParam.toLowerCase()] || categoryParam;
-      const products = await this.productService.getProductsByCategory(dbCategoryName);
+      const products = await this.productService.getProductsByCategory(categoryParam);
       return res.status(200).json({
         success: true,
         data: products,

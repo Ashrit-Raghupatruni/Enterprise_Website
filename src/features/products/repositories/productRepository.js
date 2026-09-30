@@ -11,21 +11,89 @@ export class ProductRepository {
     });
   }
 
-  async findByCategory(categoryName) {
+  async findByCategory(categoryIdentifier) {
+    if (!categoryIdentifier) return [];
+
+    const norm = String(categoryIdentifier).trim().toLowerCase();
+
+    // Map common aliases/slugs/IDs to all possible names and IDs
+    const ALIAS_MAP = {
+      mobiles: {
+        names: ['Mobile', 'Mobiles', 'Smartphone', 'Smartphones'],
+        ids: ['cat-mobiles', 'cmue51oyl0000wce21x70win2']
+      },
+      mobile: {
+        names: ['Mobile', 'Mobiles', 'Smartphone', 'Smartphones'],
+        ids: ['cat-mobiles', 'cmue51oyl0000wce21x70win2']
+      },
+      tvs: {
+        names: ['TV', 'TVs', 'Television', 'Televisions'],
+        ids: ['cat-tvs', 'cmue52t24000jwce2vk59txc5']
+      },
+      tv: {
+        names: ['TV', 'TVs', 'Television', 'Televisions'],
+        ids: ['cat-tvs', 'cmue52t24000jwce2vk59txc5']
+      },
+      acs: {
+        names: ['AC', 'ACs', 'Air Conditioner', 'Air Conditioners'],
+        ids: ['cat-acs', 'cmue58f0m000mwoe2yrknn0ed']
+      },
+      ac: {
+        names: ['AC', 'ACs', 'Air Conditioner', 'Air Conditioners'],
+        ids: ['cat-acs', 'cmue58f0m000mwoe2yrknn0ed']
+      },
+      'air-conditioners': {
+        names: ['AC', 'ACs', 'Air Conditioner', 'Air Conditioners'],
+        ids: ['cat-acs', 'cmue58f0m000mwoe2yrknn0ed']
+      },
+      'home-theatres': {
+        names: ['Home Theatre', 'Home Theatres', 'Home Theater', 'Home Theaters', 'Audio', 'Soundbars'],
+        ids: ['cat-home-theatres']
+      },
+      'home-theatre': {
+        names: ['Home Theatre', 'Home Theatres', 'Home Theater', 'Home Theaters', 'Audio', 'Soundbars'],
+        ids: ['cat-home-theatres']
+      },
+      kitchen: {
+        names: ['Kitchen Ware', 'Kitchen Appliances', 'Kitchen', 'Appliances'],
+        ids: ['cat-kitchen']
+      },
+      refrigerators: {
+        names: ['Refrigerator', 'Refrigerators', 'Fridge', 'Fridges'],
+        ids: ['cat-refrigerators']
+      },
+      refrigerator: {
+        names: ['Refrigerator', 'Refrigerators', 'Fridge', 'Fridges'],
+        ids: ['cat-refrigerators']
+      }
+    };
+
+    const target = ALIAS_MAP[norm];
+    const targetNames = target ? target.names : [categoryIdentifier];
+    const targetIds = target ? target.ids : [categoryIdentifier];
+
     return await prisma.product.findMany({
       where: {
-        category: {
-          name: {
-            equals: categoryName,
-            mode: "insensitive",
+        OR: [
+          { categoryId: { in: targetIds } },
+          { categoryId: { equals: categoryIdentifier } },
+          {
+            category: {
+              name: { in: targetNames, mode: 'insensitive' }
+            }
           },
-        },
+          {
+            category: {
+              name: { contains: norm, mode: 'insensitive' }
+            }
+          }
+        ]
       },
       include: {
         productImages: true,
         category: true,
       },
-      orderBy: { createdAt: "asc" },
+      orderBy: { createdAt: "desc" },
     });
   }
 

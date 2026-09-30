@@ -67,6 +67,8 @@
       badge: b.badge || '',
       bgGradient: b.bgGradient || 'linear-gradient(135deg, #0d1e4d 0%, #1e3d8f 100%)',
       accentColor: b.accentColor || '#f58500',
+      imageUrl: b.imageUrl || b.image || '',
+      image: b.imageUrl || b.image || '',
       slug: b.slug
     }));
 
@@ -81,9 +83,13 @@
     const banners = bannerList.toArray();
     if (!banners.length) return;
 
-    track.innerHTML = banners.map((b, i) => `
+    track.innerHTML = banners.map((b, i) => {
+      const bannerImg = b.imageUrl || b.image || '';
+      return `
       <div class="plp-banner__slide${i === 0 ? ' active' : ''}" data-index="${i}">
-        <div class="plp-banner__bg" style="background: ${b.bgGradient};" aria-hidden="true"></div>
+        <div class="plp-banner__bg" style="background: ${b.bgGradient};" aria-hidden="true">
+          ${bannerImg ? `<img src="${bannerImg}" alt="${b.title || 'Category Banner'}" class="plp-banner__bg-img" onerror="this.style.display='none'"/>` : ''}
+        </div>
         <div class="plp-banner__overlay" aria-hidden="true"></div>
 
         <div class="plp-banner__content">
@@ -100,16 +106,20 @@
         </div>
 
         <div class="plp-banner__illustration" aria-hidden="true">
-          <svg viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="80" cy="80" r="64" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.12)" stroke-width="1.5" />
-            <circle cx="80" cy="80" r="44" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.08)" stroke-width="1" />
-            <text x="80" y="88" text-anchor="middle" font-size="38" font-weight="900" fill="rgba(255,255,255,0.25)" font-family="system-ui,sans-serif">
-              ${categoryEmoji}
-            </text>
-          </svg>
+          ${bannerImg
+            ? `<img src="${bannerImg}" alt="${b.title || 'Category Banner'}" class="plp-banner__illustration-img" onerror="this.parentElement.innerHTML=\`<svg viewBox='0 0 160 160' fill='none'><circle cx='80' cy='80' r='64' fill='rgba(255,255,255,0.05)' stroke='rgba(255,255,255,0.12)' stroke-width='1.5'/><text x='80' y='88' text-anchor='middle' font-size='38' font-weight='900' fill='rgba(255,255,255,0.25)'>${categoryEmoji}</text></svg>\`"/>`
+            : `<svg viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="80" cy="80" r="64" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.12)" stroke-width="1.5" />
+                <circle cx="80" cy="80" r="44" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.08)" stroke-width="1" />
+                <text x="80" y="88" text-anchor="middle" font-size="38" font-weight="900" fill="rgba(255,255,255,0.25)" font-family="system-ui,sans-serif">
+                  ${categoryEmoji}
+                </text>
+              </svg>`
+          }
         </div>
       </div>
-    `).join('');
+    `;
+    }).join('');
 
     // Optional click analytics
     track.querySelectorAll('[data-cat-cta]').forEach(cta => {

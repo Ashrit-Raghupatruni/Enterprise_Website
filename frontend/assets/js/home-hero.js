@@ -111,6 +111,8 @@
               ctaAlt: { label: 'Explore Store', href: '/products' },
               bg: b.bgGradient || 'linear-gradient(135deg, #0d1e4d 0%, #1e3d8f 60%, #2f52a0 100%)',
               accent: b.accentColor || '#f58500',
+              image: b.imageUrl || b.image || '',
+              imageUrl: b.imageUrl || b.image || '',
               icon
             };
           });
@@ -134,7 +136,9 @@
     const banners = bannerList.toArray();
     if (!banners.length) return;
 
-    track.innerHTML = banners.map((b, i) => `
+    track.innerHTML = banners.map((b, i) => {
+      const bannerImg = b.imageUrl || b.image || '';
+      return `
       <div
         class="home-hero__slide${i === 0 ? ' active' : ''}"
         role="tabpanel"
@@ -143,7 +147,9 @@
         data-index="${i}"
         data-banner-id="${b.id || ''}"
       >
-        <div class="home-hero__slide-bg" style="background:${b.bg};"></div>
+        <div class="home-hero__slide-bg" style="background:${b.bg};">
+          ${bannerImg ? `<img src="${bannerImg}" alt="${b.title || 'Banner'}" class="home-hero__slide-bg-img" onerror="this.style.display='none'"/>` : ''}
+        </div>
         <div class="home-hero__slide-overlay"></div>
 
         <div class="home-hero__content">
@@ -165,11 +171,17 @@
         </div>
 
         <div class="home-hero__illustration" aria-hidden="true">
-          ${icons[b.icon] || icons.deals}
+          ${bannerImg
+            ? `<div class="home-hero__media-wrap">
+                 <img src="${bannerImg}" alt="${b.title || 'Banner'}" class="home-hero__illustration-img" onerror="this.parentElement.innerHTML=\`${icons[b.icon] || icons.deals}\`"/>
+               </div>`
+            : (icons[b.icon] || icons.deals)
+          }
         </div>
 
       </div>
-    `).join('');
+    `;
+    }).join('');
 
     // Optional click analytics
     track.querySelectorAll('[data-banner-cta]').forEach(ctaEl => {
