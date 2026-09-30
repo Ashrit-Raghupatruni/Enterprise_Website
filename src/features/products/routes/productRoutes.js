@@ -50,6 +50,7 @@ router.post(
 
 // ─── Existing product routes ──────────────────────────────────────────────────
 router.get("/products", productController.getProducts.bind(productController));
+router.get("/products/category/trending", productController.getTrendingProducts.bind(productController));
 router.get("/products/category/:category", productController.getProductsByCategory.bind(productController));
 router.get("/products/:id", productController.getProductByIdOrSlug.bind(productController));
 

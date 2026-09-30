@@ -5,6 +5,13 @@
 
 <%
 const banners = {
+  trending: {
+    eyebrow: "Today's Top Picks",
+    title: 'Trending Deals & Top Rated',
+    subtitle: 'The hottest deals, most popular electronics, and customer favourites based on live store demand.',
+    bg: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 55%, #4338ca 100%)',
+    accent: '#f59e0b',
+  },
   mobiles: {
     eyebrow: 'New Arrivals 2025',
     title: 'Latest Smartphones',
@@ -88,6 +95,7 @@ const b = banners[slug] || {
               <circle cx="80" cy="80" r="64" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.12)" stroke-width="1.5" />
               <circle cx="80" cy="80" r="44" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.08)" stroke-width="1" />
               <text x="80" y="88" text-anchor="middle" font-size="38" font-weight="900" fill="rgba(255,255,255,0.2)" font-family="system-ui,sans-serif">
+                <% if (slug === 'trending') { %>🔥<% } %>
                 <% if (slug === 'mobiles') { %>📱<% } %>
                 <% if (slug === 'tvs') { %>📺<% } %>
                 <% if (slug === 'acs') { %>❄️<% } %>

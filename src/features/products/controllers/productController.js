@@ -86,7 +86,7 @@ export class ProductController {
    */
   async getTrendingProducts(req, res) {
     try {
-      const limit = Math.min(parseInt(req.query.limit) || 10, 50); // cap at 50
+      const limit = Math.min(parseInt(req.query.limit) || 20, 100); // cap at 100
       const products = await this.trendingService.getTrendingProducts(limit);
       return res.status(200).json({
         success: true,

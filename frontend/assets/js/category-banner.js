@@ -35,6 +35,7 @@
       };
 
   const emojiMap = {
+    trending: '🔥',
     mobiles: '📱',
     tvs: '📺',
     acs: '❄️',

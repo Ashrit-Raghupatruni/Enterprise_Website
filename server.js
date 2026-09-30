@@ -108,6 +108,30 @@ app.get('/home', (req, res) => {
   });
 });
 
+// /all route resolves to /home
+app.get('/all', (req, res) => {
+  res.redirect(301, '/home');
+});
+
+app.get('/products/all', (req, res) => {
+  res.redirect(301, '/home');
+});
+
+// Trending products route (renders all trending products from DB)
+app.get('/trending', (req, res) => {
+  res.redirect(301, '/products/trending');
+});
+
+app.get('/products/trending', (req, res) => {
+  res.render('pages/products/category', {
+    title: `Trending Deals & Products — ${site.name}`,
+    pageLabel: 'Trending Deals & Products',
+    activeCategory: 'trending',
+    slug: 'trending',
+    site,
+  });
+});
+
 // =====================================================================
 //  STUB ROUTES — render when designs are provided these become real pages
 // =====================================================================
