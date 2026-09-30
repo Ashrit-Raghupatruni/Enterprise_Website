@@ -12,6 +12,7 @@ import jwtAuthenticate from './src/middleware/jwtmiddleware.js'
 import adminGuard from './src/middleware/adminguard.js'
 import jwt from 'jsonwebtoken';
 import { isCategoryInactive } from './src/config/categoryConfig.js'
+import bannerRoutes from './src/features/banners/routes/bannerRoutes.js'
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -51,6 +52,9 @@ app.use("/api", profileRoutes);
 
 // Product API Routes
 app.use("/api", productRoutes);
+
+// Banner API Routes (public storefront)
+app.use("/api", bannerRoutes);
 
 // Orders API Routes
 app.use("/api", orderRoutes);
@@ -100,6 +104,30 @@ app.get('/home', (req, res) => {
   res.render('pages/home', {
     title: `Home — ${site.name}`,
     description: 'Shop mobiles, TVs, ACs, refrigerators and more at Enterprise Store.',
+    site,
+  });
+});
+
+// /all route resolves to /home
+app.get('/all', (req, res) => {
+  res.redirect(301, '/home');
+});
+
+app.get('/products/all', (req, res) => {
+  res.redirect(301, '/home');
+});
+
+// Trending products route (renders all trending products from DB)
+app.get('/trending', (req, res) => {
+  res.redirect(301, '/products/trending');
+});
+
+app.get('/products/trending', (req, res) => {
+  res.render('pages/products/category', {
+    title: `Trending Deals & Products — ${site.name}`,
+    pageLabel: 'Trending Deals & Products',
+    activeCategory: 'trending',
+    slug: 'trending',
     site,
   });
 });
