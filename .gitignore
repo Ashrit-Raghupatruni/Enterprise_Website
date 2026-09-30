@@ -145,3 +145,5 @@ vite.config.ts.timestamp-*
 /src/generated/prisma
 
 .enterpise website.txt
+
+/scratch
