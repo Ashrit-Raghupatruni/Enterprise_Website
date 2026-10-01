@@ -6,6 +6,7 @@ import authRoutes from './src/features/auth/routes/authRoutes.js'
 import profileRoutes from './src/features/profile/routes/profileRoutes.js'
 import productRoutes from './src/features/products/routes/productRoutes.js'
 import orderRoutes from './src/features/orders/routes/orderRoutes.js'
+import cartRoutes from './src/features/cart/routes/routes.js'
 import adminRoutes from './src/features/admin/routes/adminRoutes.js'
 import adminApiRoutes from './src/features/admin/routes/adminApiRoutes.js'
 import jwtAuthenticate from './src/middleware/jwtmiddleware.js'
@@ -58,6 +59,9 @@ app.use("/api", bannerRoutes);
 
 // Orders API Routes
 app.use("/api", orderRoutes);
+
+// Cart API Routes
+app.use("/api/cart", cartRoutes);
 
 
 // Admin API Routes (protected by JWT + admin guard)

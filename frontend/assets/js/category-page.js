@@ -116,10 +116,6 @@
 
   function buildCard(p) {
     const route = `/product/${p.slug || p.id}`;
-    const emi   = p.salePrice > 5000
-      ? `<p class="plp-card__emi">EMI from ₹${Math.ceil(p.salePrice / 12).toLocaleString('en-IN')}/mo</p>`
-      : '';
-
     const imageContent = p.imageUrl
       ? `<img src="${p.imageUrl}" alt="${p.brand} ${p.name}" class="plp-card__img" loading="lazy" />`
       : placeholder(p.color || '#1e3d8f');
@@ -154,7 +150,6 @@
               ? `<span class="plp-card__price-discount">${p.discount}% off</span>`
               : ''}
           </div>
-          ${emi}
         </div>
         <div class="plp-card__footer">
           <a href="${route}" class="btn btn--primary plp-card__cta">

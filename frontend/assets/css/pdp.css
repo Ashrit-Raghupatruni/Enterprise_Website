@@ -633,7 +633,7 @@
   transition: max-height 0.4s var(--ease-out);
 }
 
-.pdp-description__body--collapsed { max-height: 80px; }
+.pdp-description__body--collapsed { max-height: 1.625em; }
 .pdp-description__body--expanded  { max-height: 1000px; }
 
 .pdp-description__toggle {

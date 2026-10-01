@@ -2,17 +2,21 @@ import { ProductService } from "../services/productService.js";
 import { TrendingService } from "../services/trendingService.js";
 
 const CATEGORY_MAP = {
-  mobiles: "Mobile",
-  mobile: "Mobile",
-  tvs: "TV",
-  tv: "TV",
-  acs: "AC",
-  ac: "AC",
-  "home-theatres": "Home Theatre",
-  hometheatres: "Home Theatre",
-  kitchen: "Kitchen Ware",
-  refrigerators: "Refrigerator",
+  mobiles: "Mobiles",
+  mobile: "Mobiles",
+  tvs: "TVs",
+  tv: "TVs",
+  acs: "Air Conditioners",
+  ac: "Air Conditioners",
+  "air-conditioners": "Air Conditioners",
+  "air conditioners": "Air Conditioners",
+  "home-theatres": "Home Theatres",
+  hometheatres: "Home Theatres",
+  "home theatres": "Home Theatres",
+  kitchen: "Kitchen Appliances",
+  refrigerators: "Refrigerators",
 };
+
 
 export class ProductController {
   constructor() {

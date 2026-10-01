@@ -51,6 +51,50 @@
     </svg>`;
   }
 
+  function showRightToast(message) {
+    let toast = document.getElementById('top-right-toast');
+    if (!toast) {
+      const style = document.createElement('style');
+      style.textContent = `
+        #top-right-toast {
+          position: fixed;
+          top: 90px;
+          right: 20px;
+          background: #1a1a1a;
+          color: #fff;
+          padding: 12px 20px;
+          border-radius: 8px;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+          z-index: 9999;
+          transform: translateX(150%);
+          transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          font-family: Inter, sans-serif;
+          font-weight: 500;
+          font-size: 14px;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          max-width: 350px;
+        }
+        #top-right-toast.show { transform: translateX(0); }
+        @media (max-width: 768px) {
+          #top-right-toast {
+            top: 75px; right: 16px; width: calc(100vw - 32px); max-width: none;
+          }
+        }
+      `;
+      document.head.appendChild(style);
+      toast = document.createElement('div');
+      toast.id = 'top-right-toast';
+      toast.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> <span class="toast-msg"></span>`;
+      document.body.appendChild(toast);
+    }
+    toast.querySelector('.toast-msg').textContent = message;
+    requestAnimationFrame(() => toast.classList.add('show'));
+    if (toast.hideTimeout) clearTimeout(toast.hideTimeout);
+    toast.hideTimeout = setTimeout(() => toast.classList.remove('show'), 3000);
+  }
+
   // ─── DOM refs ─────────────────────────────────────────────────────────────
   const mainImg     = document.getElementById('pdpMainImg');
   const pdpBadge    = document.getElementById('pdpBadge');
@@ -83,11 +127,196 @@
   let selectedColor = 0;
   let selectedVariants = {};
   let currentProductData = null;
+  let currentSelectedVariant = null;
+
+  // Pulse animation style injection
+  if (!document.getElementById('pdp-price-anim-style')) {
+    const animStyle = document.createElement('style');
+    animStyle.id = 'pdp-price-anim-style';
+    animStyle.textContent = `
+      @keyframes pdpPricePulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.08); color: var(--color-primary-600, #1e3d8f); }
+        100% { transform: scale(1); }
+      }
+      .pdp-price--updated {
+        display: inline-block;
+        animation: pdpPricePulse 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+    `;
+    document.head.appendChild(animStyle);
+  }
+
+  function updatePriceAndDetails(newPrice, isAvail) {
+    if (priceSale) {
+      priceSale.textContent = fmt(newPrice);
+      priceSale.classList.remove('pdp-price--updated');
+      void priceSale.offsetWidth;
+      priceSale.classList.add('pdp-price--updated');
+    }
+    if (barPrice) {
+      barPrice.textContent = fmt(newPrice);
+      barPrice.classList.remove('pdp-price--updated');
+      void barPrice.offsetWidth;
+      barPrice.classList.add('pdp-price--updated');
+    }
+
+    const baseOrig = (currentProductData && (currentProductData.originalPrice || currentProductData.salePrice)) || newPrice;
+    const origPrice = baseOrig > newPrice ? baseOrig : newPrice;
+    const save = origPrice - newPrice;
+
+    if (priceOrig) priceOrig.textContent = save > 0 ? fmt(origPrice) : '';
+    if (priceSave) priceSave.textContent = save > 0 ? `Save ${fmt(save)}` : '';
+    if (priceDis) {
+      if (currentProductData?.discount && currentProductData.discount > 0) {
+        priceDis.textContent = `${currentProductData.discount}% off`;
+      } else if (save > 0) {
+        priceDis.textContent = `${Math.round((save / origPrice) * 100)}% off`;
+      } else {
+        priceDis.textContent = '';
+      }
+    }
+
+    const emiFrom = Math.ceil(newPrice / 12);
+    if (emiNote) {
+      emiNote.innerHTML = `No cost EMI from <strong>${fmt(emiFrom)}/mo</strong> · 12 months`;
+    }
+    if (barEmi) {
+      barEmi.textContent = `EMI from ${fmt(emiFrom)}/mo`;
+    }
+
+    // Update buttons & badge based on variant availability
+    document.querySelectorAll('[data-action="buy-now"]').forEach(btn => {
+      btn.disabled = !isAvail;
+      btn.style.opacity = isAvail ? '1' : '0.6';
+      btn.style.cursor = isAvail ? 'pointer' : 'not-allowed';
+      const label = btn.querySelector('.pdp-buy-bar__buy-label');
+      if (label) label.textContent = isAvail ? 'Buy Now' : 'Out of Stock';
+    });
+    document.querySelectorAll('[data-action="add-cart"]').forEach(btn => {
+      btn.disabled = !isAvail;
+      btn.style.opacity = isAvail ? '1' : '0.6';
+      btn.style.cursor = isAvail ? 'pointer' : 'not-allowed';
+    });
+
+    if (pdpBadge) {
+      if (!isAvail) {
+        pdpBadge.textContent = 'Out of Stock';
+        pdpBadge.style.backgroundColor = 'var(--color-primary-700)';
+      } else if (save > 0) {
+        pdpBadge.textContent = `${Math.round((save / origPrice) * 100)}% Off`;
+        pdpBadge.style.backgroundColor = 'var(--color-accent-500)';
+      } else {
+        pdpBadge.textContent = 'Official';
+        pdpBadge.style.backgroundColor = 'var(--color-primary-700)';
+      }
+    }
+  }
+
+  function handleVariantSelection(triggerGroup, triggerValue) {
+    if (!currentProductData) return;
+    const rawVariants = currentProductData.rawVariants || [];
+
+    if (rawVariants.length > 0) {
+      // Check if there is an exact or best matching variant
+      const proposed = { ...selectedVariants, [triggerGroup]: triggerValue };
+
+      let exact = rawVariants.find(v => {
+        return v.attributeValues?.every(av => {
+          const g = av.attribute?.displayName || av.attribute?.name;
+          const val = av.displayValue || av.value;
+          return proposed[g] === undefined || proposed[g] === val;
+        });
+      });
+
+      // If no exact match with other current choices, pick the first variant matching this option
+      if (!exact) {
+        exact = rawVariants.find(v => {
+          return v.attributeValues?.some(av => {
+            const g = av.attribute?.displayName || av.attribute?.name;
+            const val = av.displayValue || av.value;
+            return g === triggerGroup && val === triggerValue;
+          });
+        }) || rawVariants[0];
+      }
+
+      // Synchronize all attributes to the selected variant
+      if (exact && exact.attributeValues) {
+        exact.attributeValues.forEach(av => {
+          const g = av.attribute?.displayName || av.attribute?.name;
+          selectedVariants[g] = av.displayValue || av.value;
+        });
+        currentSelectedVariant = exact;
+      } else {
+        selectedVariants[triggerGroup] = triggerValue;
+      }
+
+      // Update variant buttons & labels in DOM
+      if (variantsEl) {
+        for (const [grp, val] of Object.entries(selectedVariants)) {
+          variantsEl.querySelectorAll(`.pdp-variant-btn[data-group="${grp}"]`).forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.value === val);
+          });
+          const lbl = document.getElementById(`varLabel-${grp.replace(/\s+/g, '-')}`);
+          if (lbl) lbl.textContent = val;
+        }
+      }
+
+      // Update color button in DOM if applicable
+      if (colorsEl && selectedVariants['Color']) {
+        const curCol = selectedVariants['Color'];
+        colorsEl.querySelectorAll('.pdp-color-btn').forEach(btn => {
+          const nameSpan = btn.querySelector('.pdp-color-btn__name');
+          const isAct = nameSpan && nameSpan.textContent.trim() === curCol;
+          btn.classList.toggle('active', isAct);
+        });
+        if (colorLbl) colorLbl.textContent = curCol;
+      }
+
+      // Update price and availability
+      const effectivePrice = (currentSelectedVariant && currentSelectedVariant.priceOverride)
+        ? parseFloat(currentSelectedVariant.priceOverride)
+        : (currentProductData.originalPrice || currentProductData.salePrice);
+      const isAvail = currentSelectedVariant
+        ? currentSelectedVariant.availability === 'AVAILABLE'
+        : true;
+
+      updatePriceAndDetails(effectivePrice, isAvail);
+
+      // If variant has an image, show it
+      if (currentSelectedVariant?.images && currentSelectedVariant.images.length > 0 && mainImg) {
+        mainImg.innerHTML = `<img src="${currentSelectedVariant.images[0].imageUrl}" alt="${currentProductData.name}" class="pdp-gallery__img" />`;
+      }
+    } else {
+      // Fallback without raw variants
+      selectedVariants[triggerGroup] = triggerValue;
+      const lbl = document.getElementById(`varLabel-${triggerGroup.replace(/\s+/g, '-')}`);
+      if (lbl) lbl.textContent = triggerValue;
+      if (variantsEl) {
+        variantsEl.querySelectorAll(`.pdp-variant-btn[data-group="${triggerGroup}"]`).forEach(b => {
+          b.classList.toggle('active', b.dataset.value === triggerValue);
+        });
+      }
+    }
+  }
 
   // ─── Main Render Function ─────────────────────────────────────────────────
   function renderProduct(product) {
     if (!product) return;
     currentProductData = product;
+
+    // Initialize default variant if present
+    if (product.rawVariants && product.rawVariants.length > 0) {
+      currentSelectedVariant = product.rawVariants[0];
+      currentSelectedVariant.attributeValues?.forEach(av => {
+        const g = av.attribute?.displayName || av.attribute?.name;
+        selectedVariants[g] = av.displayValue || av.value;
+      });
+      if (currentSelectedVariant.priceOverride) {
+        product.salePrice = parseFloat(currentSelectedVariant.priceOverride);
+      }
+      product.availability = currentSelectedVariant.availability;
+    }
 
     const isAvailable = product.availability ? product.availability === 'AVAILABLE' : true;
 
@@ -490,22 +719,24 @@
 
     // ─── Colors ─────────────────────────────────────────────────────────────
     if (colorsEl && product.colors && product.colors.length > 1) {
+      const parentColorSec = colorsEl.closest('.pdp-colors');
+      if (parentColorSec) parentColorSec.style.display = '';
+
+      const currentColorVal = selectedVariants['Color'] || product.colors[0].label;
+      if (colorLbl) colorLbl.textContent = currentColorVal;
+
       colorsEl.innerHTML = product.colors.map((c, i) => `
-        <button class="pdp-color-btn${i === 0 ? ' active' : ''}"
-          data-idx="${i}" data-color="${c.hex}" aria-label="${c.label}">
+        <button class="pdp-color-btn${c.label === currentColorVal ? ' active' : ''}"
+          data-idx="${i}" data-color="${c.hex}" data-label="${c.label}" aria-label="${c.label}">
           <span class="pdp-color-btn__swatch" style="background-color:${c.hex};"></span>
           <span class="pdp-color-btn__name">${c.label}</span>
         </button>`
       ).join('');
 
-      if (colorLbl) colorLbl.textContent = product.colors[0].label;
-
       colorsEl.querySelectorAll('.pdp-color-btn').forEach(btn => {
         btn.addEventListener('click', () => {
-          selectedColor = parseInt(btn.dataset.idx);
-          colorsEl.querySelectorAll('.pdp-color-btn').forEach(b => b.classList.remove('active'));
-          btn.classList.add('active');
-          if (colorLbl) colorLbl.textContent = product.colors[selectedColor].label;
+          const colLabel = btn.dataset.label || btn.querySelector('.pdp-color-btn__name')?.textContent.trim();
+          handleVariantSelection('Color', colLabel);
           if (!product.imageUrl && mainImg) {
             mainImg.innerHTML = placeholder(btn.dataset.color, 400);
           }
@@ -529,13 +760,21 @@
     if (descBody && product.description) {
       descBody.textContent = product.description;
       
-      if (product.description.length <= 150) {
-        descBody.classList.remove('pdp-description__body--collapsed');
+      // Temporarily expand to measure total height
+      descBody.classList.remove('pdp-description__body--collapsed');
+      descBody.style.maxHeight = 'none';
+      
+      const scrollHeight = descBody.scrollHeight;
+      
+      // 1 line is ~23px (14px * 1.625). 2 lines is ~46px.
+      // Safe threshold to distinguish 1 line from 2+ lines is 34px.
+      if (scrollHeight <= 34) {
         if (descToggle) descToggle.style.display = 'none';
       } else {
         descBody.classList.add('pdp-description__body--collapsed');
         if (descToggle) descToggle.style.display = 'inline-flex';
       }
+      descBody.style.maxHeight = '';
     }
 
     if (descToggle) {
@@ -965,7 +1204,7 @@
   if (submitBtn) {
     submitBtn.addEventListener('click', async () => {
       if (currentRating === 0) {
-        alert('Please select a star rating.');
+        showRightToast('Please select a star rating.');
         return;
       }
       try {
@@ -981,21 +1220,21 @@
           credentials: 'same-origin'
         });
         if (res.status === 401) {
-          alert('Please login to rate this product.');
-          window.location.href = '/profile';
+          showRightToast('Please login to rate this product.');
+          setTimeout(() => window.location.href = '/profile', 1500);
           return;
         }
         const json = await res.json();
         if (json.success) {
-          alert('Review submitted successfully!');
+          showRightToast('Review submitted successfully!');
           // Clear box
           currentRating = 0;
           updateInteractiveStars(0);
           if (submitComment) submitComment.value = '';
           // Optionally, reload page to fetch fresh reviews
-          window.location.reload();
+          setTimeout(() => window.location.reload(), 1500);
         } else {
-          alert(json.message || 'Failed to submit review.');
+          showRightToast(json.message || 'Failed to submit review.');
         }
       } catch (error) {
         console.error('Submit review error:', error);
@@ -1085,6 +1324,7 @@
         const origText = label ? label.textContent : 'Add to Cart';
         if (label) label.textContent = 'Added ✓';
         setTimeout(() => { if (label) label.textContent = origText; }, 2000);
+        showRightToast(`Added ${currentProductData.name} (${variantDesc}) to cart!`);
       }
     });
   });
