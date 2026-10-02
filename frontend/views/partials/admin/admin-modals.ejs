@@ -423,6 +423,42 @@
     <div class="admin-modal__footer">
       <button type="button" class="btn btn--outline btn--sm" data-close-modal="createAttributeModal">Cancel</button>
       <button type="button" class="btn btn--primary btn--sm" id="saveAttributeBtn">Create Attribute</button>
+     7. REUSABLE CONFIRMATION DIALOG MODAL
+════════════════════════════════════════ -->
+<div class="admin-modal-backdrop" id="adminConfirmModal" role="alertdialog" aria-modal="true" aria-labelledby="confirmModalTitle" aria-describedby="confirmModalDesc" aria-hidden="true">
+  <div class="admin-modal admin-modal--sm">
+    <div class="admin-modal__header admin-modal__header--danger">
+      <div style="display: flex; align-items: center; gap: var(--space-3);">
+        <div class="admin-modal__icon-wrap admin-modal__icon-wrap--danger">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+        </div>
+        <div>
+          <h3 class="admin-modal__title" id="confirmModalTitle" style="font-size: var(--text-base); margin: 0;">Confirm Deletion</h3>
+          <p class="admin-modal__subtitle" id="confirmModalSubtitle" style="font-size: var(--text-xs); color: var(--color-text-muted); margin: 2px 0 0 0;">This action cannot be undone</p>
+        </div>
+      </div>
+      <button class="admin-modal__close" data-close-modal="adminConfirmModal" aria-label="Close dialog">&times;</button>
+    </div>
+    
+    <div class="admin-modal__body" style="padding: var(--space-5);">
+      <p class="admin-confirm-text" id="confirmModalDesc" style="font-size: var(--text-sm); color: var(--color-text-secondary); margin: 0 0 var(--space-3) 0;">
+        Are you sure you want to delete this record?
+      </p>
+      <div class="admin-confirm-target" id="confirmModalTargetPreview" style="display: none;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; color: #ef4444;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+        <span id="confirmModalTargetName" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"></span>
+      </div>
+    </div>
+    
+    <div class="admin-modal__footer">
+      <button type="button" class="btn btn--outline btn--sm" id="confirmModalCancelBtn" data-close-modal="adminConfirmModal">Cancel</button>
+      <button type="button" class="btn btn--danger btn--sm" id="confirmModalSubmitBtn">
+        <span id="confirmModalSubmitText">Delete</span>
+      </button>
     </div>
   </div>
 </div>

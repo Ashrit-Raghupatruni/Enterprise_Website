@@ -456,6 +456,110 @@
     }
   });
 
+  /**
+   * Reusable Custom UI Confirmation Dialog.
+   * Replaces native window.confirm() with an accessible modal popup.
+   *
+   * @param {Object} options
+   * @param {string} options.title - Heading text
+   * @param {string} [options.subtitle] - Subtitle or reminder
+   * @param {string} options.message - Confirmation prompt message
+   * @param {string} [options.itemName] - Name or label of item to highlight
+   * @param {string} [options.confirmText] - Button text (default: "Delete")
+   * @param {boolean} [options.isDanger] - Style as destructive action (default: true)
+   * @returns {Promise<boolean>} Resolves true if confirmed, false if cancelled
+   */
+  function showConfirmDialog({
+    title = 'Confirm Deletion',
+    subtitle = 'This action cannot be undone',
+    message = 'Are you sure you want to delete this record?',
+    itemName = null,
+    confirmText = 'Delete',
+    isDanger = true
+  } = {}) {
+    return new Promise((resolve) => {
+      const modal = document.getElementById('adminConfirmModal');
+      const titleEl = document.getElementById('confirmModalTitle');
+      const subtitleEl = document.getElementById('confirmModalSubtitle');
+      const descEl = document.getElementById('confirmModalDesc');
+      const targetWrap = document.getElementById('confirmModalTargetPreview');
+      const targetName = document.getElementById('confirmModalTargetName');
+      const submitBtn = document.getElementById('confirmModalSubmitBtn');
+      const submitText = document.getElementById('confirmModalSubmitText');
+      const cancelBtn = document.getElementById('confirmModalCancelBtn');
+
+      if (!modal || !submitBtn) {
+        return resolve(window.confirm(message));
+      }
+
+      if (titleEl) titleEl.textContent = title;
+      if (subtitleEl) subtitleEl.textContent = subtitle;
+      if (descEl) descEl.textContent = message;
+      if (submitText) submitText.textContent = confirmText;
+
+      if (submitBtn) {
+        submitBtn.className = `btn btn--sm ${isDanger ? 'btn--danger' : 'btn--primary'}`;
+        submitBtn.disabled = false;
+      }
+
+      if (itemName && targetWrap && targetName) {
+        targetName.textContent = itemName;
+        targetWrap.style.display = 'flex';
+      } else if (targetWrap) {
+        targetWrap.style.display = 'none';
+      }
+
+      let settled = false;
+
+      function finish(result) {
+        if (settled) return;
+        settled = true;
+        closeModal('adminConfirmModal');
+        cleanup();
+        resolve(result);
+      }
+
+      function onConfirm() {
+        finish(true);
+      }
+
+      function onCancel() {
+        finish(false);
+      }
+
+      function onBackdrop(e) {
+        if (e.target === modal) {
+          finish(false);
+        }
+      }
+
+      function onKeyDown(e) {
+        if (e.key === 'Escape') {
+          finish(false);
+        }
+      }
+
+      function cleanup() {
+        submitBtn.removeEventListener('click', onConfirm);
+        if (cancelBtn) cancelBtn.removeEventListener('click', onCancel);
+        modal.removeEventListener('click', onBackdrop);
+        document.removeEventListener('keydown', onKeyDown);
+        const closeBtn = modal.querySelector('.admin-modal__close');
+        if (closeBtn) closeBtn.removeEventListener('click', onCancel);
+      }
+
+      submitBtn.addEventListener('click', onConfirm);
+      if (cancelBtn) cancelBtn.addEventListener('click', onCancel);
+      modal.addEventListener('click', onBackdrop);
+      document.addEventListener('keydown', onKeyDown);
+      const closeBtn = modal.querySelector('.admin-modal__close');
+      if (closeBtn) closeBtn.addEventListener('click', onCancel);
+
+      openModal('adminConfirmModal');
+      submitBtn.focus();
+    });
+  }
+
   /* =========================================================================
      4. DASHBOARD VIEW CONTROLLER
      ========================================================================= */
@@ -897,13 +1001,26 @@
     grid.querySelectorAll('[data-delete-banner]').forEach(btn => {
       btn.addEventListener('click', async () => {
         const bannerId = btn.dataset.deleteBanner;
-        if (!confirm('Are you sure you want to delete this banner?')) return;
+        const targetBanner = data.banners.find(b => b.id === bannerId);
+        const bannerTitle = targetBanner?.title || 'this promotional banner';
+
+        const confirmed = await showConfirmDialog({
+          title: 'Delete Banner',
+          subtitle: 'This promotional banner will be immediately removed from the customer carousel.',
+          message: 'Are you sure you want to delete this banner?',
+          itemName: bannerTitle,
+          confirmText: 'Delete Banner',
+          isDanger: true
+        });
+
+        if (!confirmed) return;
+
         if (useApi) {
           try {
             await API.deleteBanner(bannerId);
             await loadLiveBanners();
             renderBanners();
-            showAdminToast('Banner deleted successfully.');
+            showAdminToast(`Banner "${bannerTitle}" deleted successfully.`);
             return;
           } catch (err) {
             showAdminToast('Failed to delete banner.', 'error');
@@ -995,7 +1112,7 @@
       const status = document.getElementById('bannerStatus').value;
 
       if (!title || !slug) {
-        alert('Please provide a banner title and target slug.');
+        showAdminToast('Please provide a banner title and target slug.', 'warning');
         return;
       }
 
@@ -1480,13 +1597,26 @@
     tbody.querySelectorAll('[data-delete-product]').forEach(btn => {
       btn.addEventListener('click', async () => {
         const prodId = btn.dataset.deleteProduct;
-        if (!confirm('Are you sure you want to delete this product?')) return;
+        const targetProduct = data.products.find(p => p.id === prodId);
+        const prodName = targetProduct?.name || 'this product';
+
+        const confirmed = await showConfirmDialog({
+          title: 'Delete Product',
+          subtitle: 'This product and its variant data will be permanently removed from inventory.',
+          message: 'Are you sure you want to delete this product?',
+          itemName: prodName,
+          confirmText: 'Delete Product',
+          isDanger: true
+        });
+
+        if (!confirmed) return;
+
         if (useApi) {
           try {
             await API.deleteProduct(prodId);
             await loadLiveProducts();
             renderProducts();
-            showAdminToast('Product deleted successfully.');
+            showAdminToast(`Product "${prodName}" deleted successfully.`);
             return;
           } catch (err) {
             showAdminToast('Failed to delete product.', 'error');
