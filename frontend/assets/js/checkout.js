@@ -608,7 +608,13 @@
               || p.productImages?.[0]?.imageUrl
               || rawItem.imageUrl
               || '';
-            const price = Number(p.price) || 0;
+            let price = Number(rawItem.price) || Number(p.price) || 0;
+            if (rawItem.variantId && p.variants && p.variants.length > 0) {
+              const matchedVar = p.variants.find(v => v.id === rawItem.variantId);
+              if (matchedVar && matchedVar.priceOverride) {
+                price = Number(matchedVar.priceOverride);
+              }
+            }
             const originalPrice = rawItem.originalPrice || Math.round(price * 1.15);
 
             checkoutItems.push({

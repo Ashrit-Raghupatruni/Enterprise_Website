@@ -1,11 +1,26 @@
 import prisma from "../../../config/prisma.js";
 
+const VARIANT_INCLUDE = {
+  include: {
+    attributeValues: {
+      include: {
+        attribute: true,
+      },
+    },
+    images: true,
+  },
+  orderBy: {
+    createdAt: "asc",
+  },
+};
+
 export class ProductRepository {
   async findAll() {
     return await prisma.product.findMany({
       include: {
         productImages: true,
         category: true,
+        variants: VARIANT_INCLUDE,
       },
       orderBy: { createdAt: "desc" },
     });
@@ -92,6 +107,7 @@ export class ProductRepository {
       include: {
         productImages: true,
         category: true,
+        variants: VARIANT_INCLUDE,
       },
       orderBy: { createdAt: "desc" },
     });
@@ -108,6 +124,7 @@ export class ProductRepository {
       include: {
         productImages: true,
         category: true,
+        variants: VARIANT_INCLUDE,
         productReviews: {
           include: { user: true },
           orderBy: { createdAt: 'desc' },
