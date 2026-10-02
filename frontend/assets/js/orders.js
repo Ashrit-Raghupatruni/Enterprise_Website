@@ -432,11 +432,11 @@
       </div>
 
       <!-- Customer Rate & Review Section for Delivered Orders -->
-      ${o.status === 'delivered' && o.items && o.items.length > 0 ? `
+      ${o.status === 'delivered' && o.items && o.items.filter(item => item.productId).length > 0 ? `
         <div class="drawer-section" id="customerReviewSection">
           <p class="drawer-section__title">Rate & Review Products</p>
           <div style="display:flex; flex-direction:column; gap:var(--space-3);">
-            ${o.items.map(item => `
+            ${o.items.filter(item => item.productId).map(item => `
               <div class="drawer-review-card" style="padding:var(--space-3) var(--space-4); background:var(--color-bg-secondary); border-radius:var(--radius-lg); border:1px solid var(--color-border-light);" data-review-product-id="${item.productId}">
                 <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:var(--space-2);">
                   <strong style="font-size:var(--text-sm);">${item.name}</strong>
